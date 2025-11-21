@@ -261,33 +261,15 @@ export const useAppStore = create<AppStore>()(
           localStorage.removeItem(name)
         }
       } : undefined,
-      partialize: (state) => ({
+      partialize: (state: AppStore) => ({
         currentView: state.currentView,
         selectedListId: state.selectedListId,
         showCompleted: state.showCompleted,
         searchQuery: state.searchQuery,
         tasks: state.tasks,
         lists: state.lists,
-        labels: state.labels,
-        setCurrentView: undefined,
-        setSelectedListId: undefined,
-        setShowCompleted: undefined,
-        setSearchQuery: undefined,
-        addTask: undefined,
-        updateTask: undefined,
-        deleteTask: undefined,
-        toggleTaskComplete: undefined,
-        addList: undefined,
-        updateList: undefined,
-        deleteList: undefined,
-        addLabel: undefined,
-        updateLabel: undefined,
-        deleteLabel: undefined,
-        loadData: undefined,
-        getFilteredTasks: undefined,
-        getOverdueTaskCount: undefined,
-        getTasksByView: undefined
-      })
+        labels: state.labels
+      }) as Partial<AppStore>
     }
   )
 )
