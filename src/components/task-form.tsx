@@ -97,7 +97,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   const addSubtask = () => {
     if (newSubtask.trim()) {
       setSubtasks([...subtasks, {
-        id: `subtask-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `subtask-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
         title: newSubtask.trim(),
         completed: false,
       }])
