@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import { memo } from 'react'
 import { Task } from '@/types'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
@@ -37,7 +37,7 @@ const priorityLabels = {
   none: 'None'
 }
 
-export const TaskCard = React.memo(function TaskCard({ task, onToggleComplete, onEdit }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit }: TaskCardProps) {
   const isOverdue = task.deadline && new Date(task.deadline) < new Date() && !task.completed
 
   return (
