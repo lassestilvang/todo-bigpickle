@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
     const task = db.createTask(taskData)
     return NextResponse.json(task)
   } catch (error) {
-    console.error('Error creating task:', error)
     return NextResponse.json({ error: 'Failed to create task', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
