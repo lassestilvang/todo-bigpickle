@@ -15,7 +15,6 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const taskData = await request.json()
-    console.log('Received task data:', taskData)
     const task = db.createTask(taskData)
     return NextResponse.json(task)
   } catch (error) {
