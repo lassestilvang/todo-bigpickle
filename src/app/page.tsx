@@ -16,7 +16,7 @@ export default function Home() {
   // Load data on mount
   useEffect(() => {
     loadData()
-  }, [])
+  }, [loadData])
 
   const handleCreateTask = () => {
     setIsCreatingTask(true)
