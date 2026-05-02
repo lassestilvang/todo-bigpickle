@@ -3,6 +3,14 @@ import { persist } from 'zustand/middleware'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
 
+const handleError = (message: string, error: unknown) => {
+  if (error instanceof Error) {
+    console.error(`${message}: ${error.message}`)
+  } else {
+    console.error(message, error)
+  }
+}
+
 interface AppStore extends AppState {
   // Actions
   setCurrentView: (view: ViewType) => void
@@ -61,7 +69,7 @@ export const useAppStore = create<AppStore>()(
             tasks: [task, ...state.tasks]
           }))
         } catch (error) {
-          console.error('Failed to create task:', error)
+          handleError('Failed to create task', error)
         }
       },
 
@@ -72,7 +80,7 @@ export const useAppStore = create<AppStore>()(
             tasks: state.tasks.map(t => t.id === id ? task : t)
           }))
         } catch (error) {
-          console.error('Failed to update task:', error)
+          handleError('Failed to update task', error)
         }
       },
 
@@ -83,7 +91,7 @@ export const useAppStore = create<AppStore>()(
             tasks: state.tasks.filter(t => t.id !== id)
           }))
         } catch (error) {
-          console.error('Failed to delete task:', error)
+          handleError('Failed to delete task', error)
         }
       },
 
@@ -105,7 +113,7 @@ export const useAppStore = create<AppStore>()(
             lists: [...state.lists, list]
           }))
         } catch (error) {
-          console.error('Failed to create list:', error)
+          handleError('Failed to create list', error)
         }
       },
 
@@ -135,7 +143,7 @@ export const useAppStore = create<AppStore>()(
             labels: [...state.labels, label]
           }))
         } catch (error) {
-          console.error('Failed to create label:', error)
+          handleError('Failed to create label', error)
         }
       },
 
@@ -167,7 +175,7 @@ export const useAppStore = create<AppStore>()(
           
           set({ tasks, lists, labels })
         } catch (error) {
-          console.error('Failed to load data:', error)
+          handleError('Failed to load data', error)
         }
       },
 
