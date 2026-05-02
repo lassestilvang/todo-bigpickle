@@ -1,5 +1,5 @@
 import { DatabaseService } from '@/lib/database'
-import { Task, List, Label } from '@/types'
+import { List, Label } from '@/types'
 
 describe('DatabaseService', () => {
   let db: DatabaseService
