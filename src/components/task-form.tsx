@@ -62,6 +62,9 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   })
 
   const dateValue = useWatch({ control: form.control, name: 'date' })
+  const deadlineValue = useWatch({ control: form.control, name: 'deadline' })
+  const priorityValue = useWatch({ control: form.control, name: 'priority' })
+  const listIdValue = useWatch({ control: form.control, name: 'listId' })
 
   const onSubmit = (data: TaskFormData) => {
     const estimateMinutes = data.estimate ? 
@@ -169,7 +172,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={form.watch('date')}
+                    selected={dateValue}
                     onSelect={(date) => form.setValue('date', date)}
                     initialFocus
                   />
@@ -186,8 +189,8 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                     className="w-full justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {form.watch('deadline') ? (
-                      format(form.watch('deadline')!, 'PPP')
+                    {deadlineValue ? (
+                      format(deadlineValue, 'PPP')
                     ) : (
                       <span>Pick a deadline</span>
                     )}
@@ -196,7 +199,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={form.watch('deadline')}
+                    selected={deadlineValue}
                     onSelect={(date) => form.setValue('deadline', date)}
                     initialFocus
                   />
@@ -218,7 +221,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
             <div className="space-y-2">
               <FormLabel htmlFor="priority">Priority</FormLabel>
-              <Select value={form.watch('priority')} onValueChange={(value) => form.setValue('priority', value as Priority)}>
+              <Select value={priorityValue} onValueChange={(value) => form.setValue('priority', value as Priority)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -234,7 +237,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
           <div className="space-y-2">
             <FormLabel htmlFor="listId">List</FormLabel>
-            <Select value={form.watch('listId')} onValueChange={(value) => form.setValue('listId', value)}>
+              <Select value={listIdValue} onValueChange={(value) => form.setValue('listId', value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
