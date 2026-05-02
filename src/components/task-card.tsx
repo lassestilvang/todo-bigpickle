@@ -172,4 +172,4 @@ export const TaskCard = React.memo(function TaskCard({ task, onToggleComplete, o
       </Card>
     </motion.div>
   )
-}
+})

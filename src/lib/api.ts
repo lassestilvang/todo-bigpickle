@@ -3,12 +3,6 @@ import { Task, List, Label } from '@/types'
 
 const API_BASE = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3000/api'
 
-const getAbortSignal = (timeoutMs = 10000) => {
-  const controller = new AbortController()
-  setTimeout(() => controller.abort(), timeoutMs)
-  return controller.signal
-}
-
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Request failed' }))
