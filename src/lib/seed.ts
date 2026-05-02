@@ -176,5 +176,4 @@ export function seedDatabase() {
     completed: false
   })
 
-  console.log('Database seeded with sample data')
 }
