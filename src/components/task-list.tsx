@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Task } from '@/types'
 import { useAppStore } from '@/store'
 import { TaskCard } from '@/components/task-card'
@@ -10,6 +10,24 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, SortAsc } from 'lucide-react'
 import { format } from 'date-fns'
 
+const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 }
+
+const viewTitles = {
+  today: 'Today',
+  next7days: 'Next 7 Days',
+  upcoming: 'Upcoming',
+  all: 'All Tasks'
+}
+
+function getCurrentViewTitle(currentView: string, selectedListId: string | undefined, lists: { id: string; icon: string; name: string }[]) {
+  if (selectedListId) {
+    const list = lists.find(l => l.id === selectedListId)
+    return list ? `${list.icon} ${list.name}` : 'Tasks'
+  }
+  
+  return viewTitles[currentView as keyof typeof viewTitles] || 'Tasks'
+}
+
 export function TaskList() {
   const { getFilteredTasks, toggleTaskComplete, currentView, selectedListId, lists } = useAppStore()
   const [editingTask, setEditingTask] = useState<Task | undefined>()
@@ -18,39 +36,26 @@ export function TaskList() {
 
   const tasks = getFilteredTasks()
   
-  const sortedTasks = [...tasks].sort((a, b) => {
-    switch (sortBy) {
-      case 'date':
-        if (!a.date && !b.date) return 0
-        if (!a.date) return 1
-        if (!b.date) return -1
-        return new Date(a.date).getTime() - new Date(b.date).getTime()
-      case 'priority':
-        const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 }
-        return priorityOrder[a.priority] - priorityOrder[b.priority]
-      case 'name':
-        return a.name.localeCompare(b.name)
-      default:
-        return 0
-    }
-  })
+  const sortedTasks = useMemo(() => {
+    const sorted = [...tasks].sort((a, b) => {
+      switch (sortBy) {
+        case 'date':
+          if (!a.date && !b.date) return 0
+          if (!a.date) return 1
+          if (!b.date) return -1
+          return new Date(a.date).getTime() - new Date(b.date).getTime()
+        case 'priority':
+          return priorityOrder[a.priority] - priorityOrder[b.priority]
+        case 'name':
+          return a.name.localeCompare(b.name)
+        default:
+          return 0
+      }
+    })
+    return sorted
+  }, [tasks, sortBy])
 
-  const getCurrentViewTitle = () => {
-    if (selectedListId) {
-      const list = lists.find(l => l.id === selectedListId)
-      return list ? `${list.icon} ${list.name}` : 'Tasks'
-    }
-    
-    const viewTitles = {
-      today: 'Today',
-      next7days: 'Next 7 Days',
-      upcoming: 'Upcoming',
-      all: 'All Tasks'
-    }
-    return viewTitles[currentView]
-  }
-
-  const groupedTasks = sortedTasks.reduce((groups, task) => {
+  const groupedTasks = useMemo(() => sortedTasks.reduce((groups, task) => {
     if (currentView === 'today' || currentView === 'next7days' || currentView === 'upcoming') {
       const dateKey = task.date ? format(new Date(task.date), 'yyyy-MM-dd') : 'no-date'
       if (!groups[dateKey]) {
@@ -64,7 +69,7 @@ export function TaskList() {
       groups['all'] = { date: null, tasks: [...(groups['all']?.tasks || []), task] }
     }
     return groups
-  }, {} as Record<string, { date: Date | null; tasks: Task[] }>)
+  }, {} as Record<string, { date: Date | null; tasks: Task[] }>), [sortedTasks, currentView])
 
   return (
     <div className="flex-1 p-6">
@@ -72,7 +77,7 @@ export function TaskList() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold">{getCurrentViewTitle()}</h1>
+            <h1 className="text-3xl font-bold">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
             <p className="text-muted-foreground">
               {tasks.length} task{tasks.length !== 1 ? 's' : ''}
               {tasks.filter(t => t.completed).length > 0 && 
