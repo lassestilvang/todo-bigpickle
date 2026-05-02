@@ -174,6 +174,15 @@ export class DatabaseService {
       )
     `)
 
+    // Create indexes for better query performance
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_list_id ON tasks(list_id)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON subtasks(task_id)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_history_task_id ON task_history(task_id)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_labels_task_id ON task_labels(task_id)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_labels_label_id ON task_labels(label_id)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_reminders_task_id ON reminders(task_id)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_attachments_task_id ON attachments(task_id)`)
+  
     // Create default inbox list if it doesn't exist
     this.createDefaultInbox()
   }
