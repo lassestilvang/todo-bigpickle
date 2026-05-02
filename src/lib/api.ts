@@ -1,7 +1,7 @@
 // Client-side API utilities
 import { Task, List, Label } from '@/types'
 
-const API_BASE = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3000/api'
+const API_BASE = '/api'
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
