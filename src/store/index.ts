@@ -124,22 +124,29 @@ export const useAppStore = create<AppStore>()(
         }
       },
 
-      updateList: (id, updates) => {
-        // For now, we'll just update the local state
-        // In a real app, you'd want to update the database too
-        set((state) => ({
-          lists: state.lists.map(l => l.id === id ? { ...l, ...updates } : l)
-        }))
+      updateList: async (id, updates) => {
+        try {
+          const list = await api.updateList(id, updates)
+          set((state) => ({
+            lists: state.lists.map(l => l.id === id ? list : l)
+          }))
+        } catch (error) {
+          handleError('Failed to update list', error)
+        }
       },
 
-      deleteList: (id) => {
-        // Don't allow deleting the default inbox
-        const list = get().lists.find(l => l.id === id)
-        if (list?.isDefault) return
-        
-        set((state) => ({
-          lists: state.lists.filter(l => l.id !== id)
-        }))
+      deleteList: async (id) => {
+        try {
+          const list = get().lists.find(l => l.id === id)
+          if (list?.isDefault) return
+          
+          await api.deleteList(id)
+          set((state) => ({
+            lists: state.lists.filter(l => l.id !== id)
+          }))
+        } catch (error) {
+          handleError('Failed to delete list', error)
+        }
       },
 
       // Label actions

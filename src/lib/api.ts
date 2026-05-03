@@ -62,6 +62,24 @@ export const api = {
     return handleResponse<List>(response)
   },
 
+  async updateList(id: string, updates: Partial<Omit<List, 'id' | 'createdAt' | 'updatedAt'>>, signal?: AbortSignal) {
+    const response = await fetch(`${API_BASE}/lists/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+      signal,
+    })
+    return handleResponse<List>(response)
+  },
+
+  async deleteList(id: string, signal?: AbortSignal) {
+    const response = await fetch(`${API_BASE}/lists/${id}`, {
+      method: 'DELETE',
+      signal,
+    })
+    return handleResponse<void>(response)
+  },
+
   // Labels
   async getLabels(signal?: AbortSignal) {
     const response = await fetch(`${API_BASE}/labels`, { signal })

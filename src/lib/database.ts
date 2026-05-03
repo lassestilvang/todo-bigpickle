@@ -230,6 +230,66 @@ export class DatabaseService {
     }
   }
 
+  getListById(id: string): List | undefined {
+    const row = this.db.prepare('SELECT * FROM lists WHERE id = ?').get(id) as ListRow | undefined
+    if (!row) return undefined
+    
+    return {
+      id: row.id,
+      name: row.name,
+      color: row.color,
+      icon: row.icon,
+      isDefault: Boolean(row.is_default),
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at)
+    }
+  }
+
+  updateList(id: string, updates: Partial<Omit<List, 'id' | 'createdAt' | 'updatedAt'>>): List {
+    const existing = this.getListById(id)
+    if (!existing) throw new Error('List not found')
+
+    const fields: string[] = []
+    const values: (string | number)[] = []
+
+    if (updates.name !== undefined) {
+      fields.push('name = ?')
+      values.push(updates.name)
+    }
+    if (updates.color !== undefined) {
+      fields.push('color = ?')
+      values.push(updates.color)
+    }
+    if (updates.icon !== undefined) {
+      fields.push('icon = ?')
+      values.push(updates.icon)
+    }
+    if (updates.isDefault !== undefined) {
+      fields.push('is_default = ?')
+      values.push(updates.isDefault ? 1 : 0)
+    }
+
+    fields.push('updated_at = ?')
+    values.push(new Date().toISOString())
+
+    values.push(id)
+
+    this.db.prepare(`UPDATE lists SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+
+    return this.getListById(id)!
+  }
+
+  deleteList(id: string): void {
+    const existing = this.getListById(id)
+    if (!existing) throw new Error('List not found')
+    if (existing.isDefault) throw new Error('Cannot delete default list')
+
+    // Delete associated tasks first
+    this.db.prepare('DELETE FROM tasks WHERE list_id = ?').run(id)
+    
+    this.db.prepare('DELETE FROM lists WHERE id = ?').run(id)
+  }
+
   // Labels
   getLabels(): Label[] {
     const rows = this.db.prepare('SELECT * FROM labels ORDER BY created_at').all() as LabelRow[]
