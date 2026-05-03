@@ -61,8 +61,9 @@ interface LabelRow {
 export class DatabaseService {
   private db: Database.Database
 
-  constructor(dbPath: string = './todo.db') {
-    this.db = new Database(dbPath)
+  constructor(dbPath?: string) {
+    const path = dbPath || process.env.DATABASE_PATH || './todo.db'
+    this.db = new Database(path)
     this.initializeTables()
   }
 
