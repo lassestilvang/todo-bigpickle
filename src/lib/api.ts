@@ -2,9 +2,49 @@
 import { Task, List, Label } from '@/types'
 
 const API_BASE = '/api'
+const DEFAULT_TIMEOUT = 30000 // 30 seconds
+
+interface FetchOptions extends RequestInit {
+  signal?: AbortSignal
+  timeout?: number
+}
+
+async function fetchWithTimeout(url: string, options: FetchOptions = {}): Promise<Response> {
+  const { timeout = DEFAULT_TIMEOUT, ...fetchOptions } = options
+  
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+  
+  // Merge abort signals
+  if (fetchOptions.signal) {
+    fetchOptions.signal.addEventListener('abort', () => controller.abort())
+  }
+  
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    throw error
+  }
+}
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
+    if (response.status === 400) {
+      const error = await response.json().catch(() => ({ message: 'Invalid request' }))
+      throw new Error(error.message || 'Invalid request')
+    }
+    if (response.status === 404) {
+      throw new Error('Resource not found')
+    }
+    if (response.status >= 500) {
+      throw new Error('Server error, please try again later')
+    }
     const error = await response.json().catch(() => ({ message: 'Request failed' }))
     throw new Error(error.message || `Failed to fetch`)
   }
@@ -14,12 +54,12 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
 export const api = {
   // Tasks
   async getTasks(signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/tasks`, { signal })
+    const response = await fetchWithTimeout(`${API_BASE}/tasks`, { signal })
     return handleResponse<Task[]>(response)
   },
 
   async createTask(taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history'>, signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/tasks`, {
+    const response = await fetchWithTimeout(`${API_BASE}/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(taskData),
@@ -29,7 +69,7 @@ export const api = {
   },
 
   async updateTask(id: string, updates: Partial<Task>, signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/tasks/${id}`, {
+    const response = await fetchWithTimeout(`${API_BASE}/tasks/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -39,7 +79,7 @@ export const api = {
   },
 
   async deleteTask(id: string, signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/tasks/${id}`, {
+    const response = await fetchWithTimeout(`${API_BASE}/tasks/${id}`, {
       method: 'DELETE',
       signal,
     })
@@ -48,12 +88,12 @@ export const api = {
 
   // Lists
   async getLists(signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/lists`, { signal })
+    const response = await fetchWithTimeout(`${API_BASE}/lists`, { signal })
     return handleResponse<List[]>(response)
   },
 
   async createList(listData: Omit<List, 'id' | 'createdAt' | 'updatedAt'>, signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/lists`, {
+    const response = await fetchWithTimeout(`${API_BASE}/lists`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(listData),
@@ -63,7 +103,7 @@ export const api = {
   },
 
   async updateList(id: string, updates: Partial<Omit<List, 'id' | 'createdAt' | 'updatedAt'>>, signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/lists/${id}`, {
+    const response = await fetchWithTimeout(`${API_BASE}/lists/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -73,7 +113,7 @@ export const api = {
   },
 
   async deleteList(id: string, signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/lists/${id}`, {
+    const response = await fetchWithTimeout(`${API_BASE}/lists/${id}`, {
       method: 'DELETE',
       signal,
     })
@@ -82,12 +122,12 @@ export const api = {
 
   // Labels
   async getLabels(signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/labels`, { signal })
+    const response = await fetchWithTimeout(`${API_BASE}/labels`, { signal })
     return handleResponse<Label[]>(response)
   },
 
   async createLabel(labelData: Omit<Label, 'id' | 'createdAt' | 'updatedAt'>, signal?: AbortSignal) {
-    const response = await fetch(`${API_BASE}/labels`, {
+    const response = await fetchWithTimeout(`${API_BASE}/labels`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(labelData),
