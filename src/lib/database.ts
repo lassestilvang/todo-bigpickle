@@ -200,6 +200,10 @@ export class DatabaseService {
   }
 
   // Lists
+  /**
+   * Get all lists from the database
+   * @returns {List[]} Array of lists ordered by creation date
+   */
   getLists(): List[] {
     const rows = this.db.prepare('SELECT * FROM lists ORDER BY created_at').all() as ListRow[]
     return rows.map(row => ({
@@ -213,6 +217,11 @@ export class DatabaseService {
     }))
   }
 
+  /**
+   * Create a new list in the database
+   * @param {Omit<List, 'id' | 'createdAt' | 'updatedAt'>} list - The list data without id and timestamps
+   * @returns {List} The created list with generated id and timestamps
+   */
   createList(list: Omit<List, 'id' | 'createdAt' | 'updatedAt'>): List {
     const id = randomUUID()
     const now = new Date().toISOString()
@@ -230,6 +239,11 @@ export class DatabaseService {
     }
   }
 
+  /**
+   * Get a single list by its ID
+   * @param {string} id - The list ID
+   * @returns {List | undefined} The list if found, undefined otherwise
+   */
   getListById(id: string): List | undefined {
     const row = this.db.prepare('SELECT * FROM lists WHERE id = ?').get(id) as ListRow | undefined
     if (!row) return undefined
@@ -245,6 +259,13 @@ export class DatabaseService {
     }
   }
 
+  /**
+   * Update an existing list
+   * @param {string} id - The list ID
+   * @param {Partial<Omit<List, 'id' | 'createdAt' | 'updatedAt'>>} updates - The fields to update
+   * @returns {List} The updated list
+   * @throws {Error} If the list is not found
+   */
   updateList(id: string, updates: Partial<Omit<List, 'id' | 'createdAt' | 'updatedAt'>>): List {
     const existing = this.getListById(id)
     if (!existing) throw new Error('List not found')
@@ -279,6 +300,11 @@ export class DatabaseService {
     return this.getListById(id)!
   }
 
+  /**
+   * Delete a list and all its associated tasks
+   * @param {string} id - The list ID
+   * @throws {Error} If the list is not found or is the default list
+   */
   deleteList(id: string): void {
     const existing = this.getListById(id)
     if (!existing) throw new Error('List not found')
@@ -321,6 +347,10 @@ export class DatabaseService {
   }
 
   // Tasks
+  /**
+   * Get all tasks from the database with all related data
+   * @returns {Task[]} Array of tasks with subtasks, labels, reminders, and attachments
+   */
   getTasks(): Task[] {
     const rows = this.db.prepare('SELECT * FROM tasks ORDER BY created_at DESC').all() as TaskRow[]
     
@@ -356,6 +386,12 @@ export class DatabaseService {
     })
   }
 
+  /**
+   * Create a new task in the database
+   * @param {Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history'>} task - The task data without id and timestamps
+   * @returns {Task} The created task with generated id and timestamps
+   * @throws {Error} If no default list found and no listId provided
+   */
   createTask(task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history'>): Task {
     const id = randomUUID()
     const now = new Date().toISOString()
