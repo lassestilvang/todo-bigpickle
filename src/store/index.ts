@@ -13,6 +13,10 @@ const handleError = (message: string, error: unknown) => {
 }
 
 interface AppStore extends AppState {
+  // UI state
+  isLoading: boolean
+  error: string | null
+  
   // Actions
   setCurrentView: (view: ViewType) => void
   setSelectedListId: (listId: string | undefined) => void
@@ -55,6 +59,8 @@ export const useAppStore = create<AppStore>()(
       selectedListId: undefined,
       showCompleted: false,
       searchQuery: '',
+      isLoading: false,
+      error: null,
 
       // View actions
       setCurrentView: (view) => set({ currentView: view }),
@@ -167,6 +173,7 @@ export const useAppStore = create<AppStore>()(
 
       // Data loading
       loadData: async () => {
+        set({ isLoading: true, error: null })
         try {
           const [tasks, lists, labels] = await Promise.all([
             api.getTasks(),
@@ -174,9 +181,13 @@ export const useAppStore = create<AppStore>()(
             api.getLabels()
           ])
           
-          set({ tasks, lists, labels })
+          set({ tasks, lists, labels, isLoading: false })
         } catch (error) {
           handleError('Failed to load data', error)
+          set({ 
+            error: error instanceof Error ? error.message : 'Failed to load data',
+            isLoading: false 
+          })
         }
       },
 
