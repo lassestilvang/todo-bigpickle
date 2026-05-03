@@ -45,7 +45,7 @@ export default function Home() {
       disableTransitionOnChange
     >
       <SidebarProvider>
-        <div className="flex h-screen overflow-hidden">
+        <div id="main-content" className="flex h-screen overflow-hidden">
           <AppSidebar onCreateTask={handleCreateTask} />
           
           <SidebarInset className="flex-1">
