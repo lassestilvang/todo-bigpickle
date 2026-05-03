@@ -281,8 +281,3 @@ export const useAppStore = create<AppStore>()(
     }
   )
 )
-
-// Initialize data on app start
-if (typeof window !== 'undefined') {
-  useAppStore.getState().loadData()
-}
