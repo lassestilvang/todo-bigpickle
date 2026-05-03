@@ -1,6 +1,5 @@
 import { useAppStore } from '@/store'
-import { api } from '@/lib/api'
-import { Task, List, Label } from '@/types'
+import { Task } from '@/types'
 
 // Mock the API module
 jest.mock('@/lib/api', () => ({
@@ -122,12 +121,11 @@ describe('Task filtering', () => {
   })
 })
 
-  describe('getTasksByView', () => {
-    const today = new Date()
-    const todayStr = today.toISOString()
+describe('getTasksByView', () => {
+  const today = new Date()
 
-    beforeEach(() => {
-      const mockTasks: Task[] = [
+  beforeEach(() => {
+    const mockTasks: Task[] = [
         {
           id: '1',
           name: 'Today task',
