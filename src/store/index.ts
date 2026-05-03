@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import Fuse from 'fuse.js'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
 
@@ -198,12 +199,13 @@ export const useAppStore = create<AppStore>()(
 
         // Apply search
         if (state.searchQuery) {
-          // Simple search implementation for now
-          const query = state.searchQuery.toLowerCase()
-          tasks = tasks.filter(task => 
-            task.name.toLowerCase().includes(query) ||
-            (task.description && task.description.toLowerCase().includes(query))
-          )
+          const fuse = new Fuse(tasks, {
+            keys: ['name', 'description'],
+            threshold: 0.3,
+            includeScore: false
+          })
+          const results = fuse.search(state.searchQuery)
+          tasks = results.map(result => result.item)
         }
 
         return tasks
