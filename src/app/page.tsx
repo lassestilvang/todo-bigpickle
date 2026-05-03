@@ -11,7 +11,7 @@ import { useAppStore } from '@/store'
 
 export default function Home() {
   const [isCreatingTask, setIsCreatingTask] = useState(false)
-  const { loadData } = useAppStore()
+  const { loadData, isLoading, error } = useAppStore()
 
   // Load data on mount
   useEffect(() => {
@@ -20,6 +20,22 @@ export default function Home() {
 
   const handleCreateTask = () => {
     setIsCreatingTask(true)
+  }
+
+  if (isLoading) {
+    return (
+      <ThemeProvider
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <SidebarProvider>
+          <div className="flex h-screen items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        </SidebarProvider>
+      </ThemeProvider>
+    )
   }
 
   return (
@@ -38,6 +54,12 @@ export default function Home() {
               <div className="flex-1" />
               <ThemeToggle />
             </header>
+            
+            {error && (
+              <div className="p-4 bg-destructive/10 text-destructive text-sm">
+                {error}
+              </div>
+            )}
             
             <TaskList />
           </SidebarInset>
