@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { getDatabase } from '@/lib/database-singleton'
+import { createTaskSchema } from '@/lib/validators'
 
 const db = getDatabase()
 
@@ -14,10 +16,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const taskData = await request.json()
-    const task = db.createTask(taskData)
+    const body = await request.json()
+    const validated = createTaskSchema.parse(body)
+    const task = db.createTask(validated)
     return NextResponse.json(task)
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
+    }
     return NextResponse.json({ error: 'Failed to create task', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }

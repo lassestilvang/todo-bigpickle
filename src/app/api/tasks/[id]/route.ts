@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { getDatabase } from '@/lib/database-singleton'
+import { updateTaskSchema } from '@/lib/validators'
 
 const db = getDatabase()
 
@@ -9,10 +11,14 @@ export async function PUT(
 ) {
   try {
     const { id } = await context.params
-    const updates = await request.json()
-    const task = db.updateTask(id, updates)
+    const body = await request.json()
+    const validated = updateTaskSchema.parse(body)
+    const task = db.updateTask(id, validated)
     return NextResponse.json(task)
-  } catch {
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
+    }
     return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
   }
 }
