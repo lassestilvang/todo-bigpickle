@@ -54,6 +54,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
         onClick={() => onEdit(task)}
         role="button"
         tabIndex={0}
+        aria-label={`Task: ${task.name}. Priority: ${priorityLabels[task.priority]}. ${task.completed ? 'Completed.' : 'Not completed.'} ${isOverdue ? 'Overdue!' : ''} Click to edit.`}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
@@ -67,6 +68,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
               checked={task.completed}
               onCheckedChange={() => onToggleComplete(task.id)}
               onClick={(e) => e.stopPropagation()}
+              aria-label={`Mark "${task.name}" as ${task.completed ? 'incomplete' : 'complete'}`}
             />
             
             <div className="flex-1 min-w-0">
@@ -76,9 +78,9 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
                 }`}>
                   {task.name}
                 </h3>
-            {isOverdue && (
-              <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" data-testid="alert-triangle" />
-            )}
+                {isOverdue && (
+                  <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" data-testid="alert-triangle" />
+                )}
               </div>
 
               {task.description && (
