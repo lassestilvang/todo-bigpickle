@@ -1,8 +1,8 @@
-import { DatabaseService } from '@/lib/database'
+import { getDatabase } from '@/lib/database-singleton'
 
 // Initialize some sample data for development
 export function seedDatabase() {
-  const db = new DatabaseService()
+  const db = getDatabase()
 
   // Create sample labels
   const workLabel = db.createLabel({
