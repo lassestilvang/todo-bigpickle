@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { ThemeProvider } from '@/components/theme-provider'
 import { useAppStore } from '@/store'
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 
 export default function Home() {
   const [isCreatingTask, setIsCreatingTask] = useState(false)
@@ -17,6 +18,32 @@ export default function Home() {
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      metaKey: true,
+      handler: () => setIsCreatingTask(true),
+    },
+    {
+      key: '/',
+      handler: () => {
+        const searchInput = document.querySelector('input[placeholder="Search tasks..."') as HTMLInputElement
+        if (searchInput) {
+          searchInput.focus()
+        }
+      },
+    },
+    {
+      key: 'Escape',
+      handler: () => {
+        if (isCreatingTask) {
+          setIsCreatingTask(false)
+        }
+      },
+    },
+  ])
 
   const handleCreateTask = () => {
     setIsCreatingTask(true)
