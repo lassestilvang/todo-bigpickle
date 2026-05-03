@@ -73,13 +73,13 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           <CheckCircle2 className="h-6 w-6 text-primary" />
           <span className="font-semibold text-lg">Todo</span>
         </div>
-        <div className="px-2 pb-2">
+        <div className="px-2 pb-2 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search tasks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-            startIcon={<Search className="h-4 w-4" />}
+            className="w-full pl-8"
           />
         </div>
       </SidebarHeader>
