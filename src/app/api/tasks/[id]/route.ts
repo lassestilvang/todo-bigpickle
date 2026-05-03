@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { DatabaseService } from '@/lib/database'
+import { getDatabase } from '@/lib/database-singleton'
 
-const db = new DatabaseService()
+const db = getDatabase()
 
 export async function PUT(
   request: NextRequest,
