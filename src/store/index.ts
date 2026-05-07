@@ -103,10 +103,10 @@ export const useAppStore = create<AppStore>()(
         }
       },
 
-      toggleTaskComplete: (id) => {
+      toggleTaskComplete: async (id) => {
         const task = get().tasks.find(t => t.id === id)
         if (task) {
-          get().updateTask(id, { 
+          await get().updateTask(id, { 
             completed: !task.completed,
             completedAt: !task.completed ? new Date() : undefined
           })
@@ -292,8 +292,12 @@ export const useAppStore = create<AppStore>()(
       name: 'todo-app-storage',
       storage: typeof window !== 'undefined' ? {
         getItem: (name) => {
-          const item = localStorage.getItem(name)
-          return item ? JSON.parse(item) : null
+          try {
+            const item = localStorage.getItem(name)
+            return item ? JSON.parse(item) : null
+          } catch {
+            return null
+          }
         },
         setItem: (name, value) => {
           localStorage.setItem(name, JSON.stringify(value))
