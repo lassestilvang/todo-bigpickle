@@ -229,20 +229,8 @@ describe('DatabaseService', () => {
         priority: 'medium',
         labels: [],
         subtasks: [
-          {
-            id: crypto.randomUUID(),
-            title: 'Subtask 1',
-            completed: false,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          },
-          {
-            id: crypto.randomUUID(),
-            title: 'Subtask 2',
-            completed: true,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }
+          { title: 'Subtask 1', completed: false },
+          { title: 'Subtask 2', completed: true }
         ],
         listId: testList.id,
         completed: false

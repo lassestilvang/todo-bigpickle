@@ -2,6 +2,28 @@ import Database from 'better-sqlite3'
 import { Task, List, Label, Subtask, TaskHistory, Priority, RecurringType } from '@/types'
 import { randomUUID } from 'crypto'
 
+type LabelRef = { id: string }
+type SubtaskInput = { title: string; completed?: boolean }
+interface TaskInput {
+  name: string
+  description?: string
+  date?: Date | string
+  deadline?: Date | string
+  estimate?: number
+  actualTime?: number
+  labels?: LabelRef[]
+  priority?: Priority
+  subtasks?: SubtaskInput[]
+  recurring?: RecurringType
+  recurringConfig?: Record<string, unknown>
+  listId: string
+  completed?: boolean
+  completedAt?: Date
+  reminders?: Date[]
+  attachments?: string[]
+}
+type TaskUpdate = Partial<TaskInput>
+
 // Database row types
 interface ListRow {
   id: string
@@ -387,7 +409,7 @@ export class DatabaseService {
    * @returns {Task} The created task with generated id and timestamps
    * @throws {Error} If no default list found and no listId provided
    */
-  createTask(task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history'>): Task {
+  createTask(task: TaskInput): Task {
     const id = randomUUID()
     const now = new Date().toISOString()
     
@@ -425,14 +447,18 @@ export class DatabaseService {
     )
 
     // Add labels
-    for (const label of task.labels) {
-      this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)')
-        .run(id, label.id)
+    if (task.labels) {
+      for (const label of task.labels) {
+        this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)')
+          .run(id, label.id)
+      }
     }
 
     // Add subtasks
-    for (const subtask of task.subtasks) {
-      this.createSubtask(id, subtask)
+    if (task.subtasks) {
+      for (const subtask of task.subtasks) {
+        this.createSubtask(id, subtask)
+      }
     }
 
     // Add reminders
@@ -452,7 +478,7 @@ export class DatabaseService {
     return this.getTaskById(id)!
   }
 
-  updateTask(id: string, updates: Partial<Task>): Task {
+  updateTask(id: string, updates: TaskUpdate): Task {
     const existingTask = this.getTaskById(id)
     if (!existingTask) throw new Error('Task not found')
 
@@ -480,11 +506,11 @@ export class DatabaseService {
     }
     if (updates.date !== undefined) {
       updateFields.push('date = ?')
-      updateValues.push(updates.date?.toISOString())
+      updateValues.push(typeof updates.date === 'string' ? updates.date : updates.date?.toISOString() ?? null)
     }
     if (updates.deadline !== undefined) {
       updateFields.push('deadline = ?')
-      updateValues.push(updates.deadline?.toISOString())
+      updateValues.push(typeof updates.deadline === 'string' ? updates.deadline : updates.deadline?.toISOString() ?? null)
     }
     if (updates.estimate !== undefined) {
       updateFields.push('estimate = ?')
@@ -570,7 +596,7 @@ export class DatabaseService {
     }))
   }
 
-  private createSubtask(taskId: string, subtask: Omit<Subtask, 'id' | 'createdAt' | 'updatedAt'>): void {
+  private createSubtask(taskId: string, subtask: SubtaskInput): void {
     const id = randomUUID()
     const now = new Date().toISOString()
     

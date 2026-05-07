@@ -53,27 +53,9 @@ export function seedDatabase() {
     priority: 'high',
     labels: [workLabel, urgentLabel],
     subtasks: [
-      {
-        id: crypto.randomUUID(),
-        title: 'Research competitors',
-        completed: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: crypto.randomUUID(),
-        title: 'Write executive summary',
-        completed: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: crypto.randomUUID(),
-        title: 'Create budget estimate',
-        completed: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
+      { title: 'Research competitors', completed: true },
+      { title: 'Write executive summary', completed: false },
+      { title: 'Create budget estimate', completed: false }
     ],
     listId: workList.id,
     completed: false
@@ -100,20 +82,8 @@ export function seedDatabase() {
     priority: 'medium',
     labels: [personalLabel],
     subtasks: [
-      {
-        id: crypto.randomUUID(),
-        title: 'Vegetables and fruits',
-        completed: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: crypto.randomUUID(),
-        title: 'Protein and dairy',
-        completed: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
+      { title: 'Vegetables and fruits', completed: false },
+      { title: 'Protein and dairy', completed: false }
     ],
     listId: personalList.id,
     completed: false
@@ -129,20 +99,8 @@ export function seedDatabase() {
     priority: 'high',
     labels: [workLabel, urgentLabel],
     subtasks: [
-      {
-        id: crypto.randomUUID(),
-        title: 'Prepare slides',
-        completed: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: crypto.randomUUID(),
-        title: 'Practice presentation',
-        completed: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
+      { title: 'Prepare slides', completed: false },
+      { title: 'Practice presentation', completed: false }
     ],
     listId: workList.id,
     completed: false

@@ -17,7 +17,7 @@ export async function PUT(
     return NextResponse.json(task)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
+      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
     }
     return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
   }

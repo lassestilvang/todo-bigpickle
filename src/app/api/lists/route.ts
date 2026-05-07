@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { getDatabase } from '@/lib/database-singleton'
 import { createListSchema } from '@/lib/validators'
 
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(list)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
+      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
     }
     return NextResponse.json({ error: 'Failed to create list' }, { status: 500 })
   }
