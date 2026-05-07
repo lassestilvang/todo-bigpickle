@@ -29,7 +29,7 @@ export default function Home() {
     {
       key: '/',
       handler: () => {
-        const searchInput = document.querySelector('input[placeholder="Search tasks..."') as HTMLInputElement
+        const searchInput = document.querySelector('input[placeholder="Search tasks..."]') as HTMLInputElement
         if (searchInput) {
           searchInput.focus()
         }
