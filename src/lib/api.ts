@@ -135,4 +135,22 @@ export const api = {
     })
     return handleResponse<Label>(response)
   },
+
+  async updateLabel(id: string, updates: Partial<Omit<Label, 'id' | 'createdAt' | 'updatedAt'>>, signal?: AbortSignal) {
+    const response = await fetchWithTimeout(`${API_BASE}/labels/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+      signal,
+    })
+    return handleResponse<Label>(response)
+  },
+
+  async deleteLabel(id: string, signal?: AbortSignal) {
+    const response = await fetchWithTimeout(`${API_BASE}/labels/${id}`, {
+      method: 'DELETE',
+      signal,
+    })
+    return handleResponse<void>(response)
+  },
 }

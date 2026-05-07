@@ -368,6 +368,47 @@ export class DatabaseService {
     }
   }
 
+  updateLabel(id: string, updates: Partial<Omit<Label, 'id' | 'createdAt' | 'updatedAt'>>): Label | undefined {
+    const existing = this.db.prepare('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow | undefined
+    if (!existing) return undefined
+
+    const fields: string[] = []
+    const values: (string | number)[] = []
+
+    if (updates.name !== undefined) {
+      fields.push('name = ?')
+      values.push(updates.name)
+    }
+    if (updates.color !== undefined) {
+      fields.push('color = ?')
+      values.push(updates.color)
+    }
+    if (updates.icon !== undefined) {
+      fields.push('icon = ?')
+      values.push(updates.icon)
+    }
+
+    fields.push('updated_at = ?')
+    values.push(new Date().toISOString())
+    values.push(id)
+
+    this.db.prepare(`UPDATE labels SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+
+    const updated = this.db.prepare('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow
+    return updated ? {
+      id: updated.id,
+      name: updated.name,
+      color: updated.color,
+      icon: updated.icon,
+      createdAt: new Date(updated.created_at),
+      updatedAt: new Date(updated.updated_at)
+    } : undefined
+  }
+
+  deleteLabel(id: string): void {
+    this.db.prepare('DELETE FROM labels WHERE id = ?').run(id)
+  }
+
   // Tasks
   /**
    * Get all tasks from the database with all related data

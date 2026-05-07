@@ -166,22 +166,32 @@ export const useAppStore = create<AppStore>()(
         }
       },
 
-      updateLabel: (id, updates) => {
-        set((state) => ({
-          labels: state.labels.map(l => l.id === id ? { ...l, ...updates } : l),
-          error: null
-        }))
+      updateLabel: async (id, updates) => {
+        try {
+          const label = await api.updateLabel(id, updates)
+          set((state) => ({
+            labels: state.labels.map(l => l.id === id ? label : l),
+            error: null
+          }))
+        } catch (error) {
+          handleError('Failed to update label', error, set)
+        }
       },
 
-      deleteLabel: (id) => {
-        set((state) => ({
-          labels: state.labels.filter(l => l.id !== id),
-          tasks: state.tasks.map(task => ({
-            ...task,
-            labels: task.labels.filter(l => l.id !== id)
-          })),
-          error: null
-        }))
+      deleteLabel: async (id) => {
+        try {
+          await api.deleteLabel(id)
+          set((state) => ({
+            labels: state.labels.filter(l => l.id !== id),
+            tasks: state.tasks.map(task => ({
+              ...task,
+              labels: task.labels.filter(l => l.id !== id)
+            })),
+            error: null
+          }))
+        } catch (error) {
+          handleError('Failed to delete label', error, set)
+        }
       },
 
       // Data loading
