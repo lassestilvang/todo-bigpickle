@@ -4,6 +4,11 @@ import { getDatabase } from '@/lib/database-singleton'
 export function seedDatabase() {
   const db = getDatabase()
 
+  if (db.getLabels().length > 0) {
+    console.log('Database already has data, skipping seed')
+    return
+  }
+
   // Create sample labels
   const workLabel = db.createLabel({
     name: 'Work',
