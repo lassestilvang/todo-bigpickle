@@ -18,9 +18,9 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
         if (shortcut.disabled) continue
 
         const keyMatch = e.key.toLowerCase() === shortcut.key.toLowerCase()
-        const ctrlMatch = shortcut.ctrlKey ? e.ctrlKey : true
-        const shiftMatch = shortcut.shiftKey ? e.shiftKey : !shortcut.shiftKey || e.shiftKey
-        const metaMatch = shortcut.metaKey ? e.metaKey : !shortcut.metaKey || e.metaKey
+        const ctrlMatch = shortcut.ctrlKey === undefined || shortcut.ctrlKey === e.ctrlKey
+        const shiftMatch = shortcut.shiftKey === undefined || shortcut.shiftKey === e.shiftKey
+        const metaMatch = shortcut.metaKey === undefined || shortcut.metaKey === e.metaKey
 
         if (keyMatch && ctrlMatch && shiftMatch && metaMatch) {
           e.preventDefault()
