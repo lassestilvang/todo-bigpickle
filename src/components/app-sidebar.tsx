@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { useAppStore } from '@/store'
 import { ViewType } from '@/types'
 import { Button } from '@/components/ui/button'
@@ -48,23 +48,44 @@ interface AppSidebarProps {
 }
 
 export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarProps) {
-  const { 
-    lists, 
-    currentView, 
-    selectedListId, 
-    showCompleted, 
-    searchQuery,
-    setCurrentView,
-    setSelectedListId,
-    setShowCompleted,
-    setSearchQuery,
-    getOverdueTaskCount,
-    getTasksByView
-  } = useAppStore()
+  const lists = useAppStore(s => s.lists)
+  const currentView = useAppStore(s => s.currentView)
+  const selectedListId = useAppStore(s => s.selectedListId)
+  const showCompleted = useAppStore(s => s.showCompleted)
+  const searchQuery = useAppStore(s => s.searchQuery)
+  const setCurrentView = useAppStore(s => s.setCurrentView)
+  const setSelectedListId = useAppStore(s => s.setSelectedListId)
+  const setShowCompleted = useAppStore(s => s.setShowCompleted)
+  const setSearchQuery = useAppStore(s => s.setSearchQuery)
+  const tasks = useAppStore(s => s.tasks)
 
-  const overdueCount = getOverdueTaskCount()
-  const todayCount = getTasksByView('today').filter(t => !t.completed).length
-  const next7Count = getTasksByView('next7days').filter(t => !t.completed).length
+  const overdueCount = useMemo(() => {
+    const now = new Date()
+    return tasks.filter(t => !t.completed && t.deadline && t.deadline < now).length
+  }, [tasks])
+
+  const todayCount = useMemo(() => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    return tasks.filter(t => {
+      if (!t.date || t.completed) return false
+      const taskDate = new Date(t.date)
+      const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
+      return taskDateOnly.getTime() === today.getTime()
+    }).length
+  }, [tasks])
+
+  const next7Count = useMemo(() => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+    return tasks.filter(t => {
+      if (!t.date || t.completed) return false
+      const taskDate = new Date(t.date)
+      const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
+      return taskDateOnly >= today && taskDateOnly <= nextWeek
+    }).length
+  }, [tasks])
 
   return (
     <Sidebar>
