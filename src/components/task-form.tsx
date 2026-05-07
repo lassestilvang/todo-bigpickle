@@ -279,7 +279,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                 value={newSubtask}
                 onChange={(e) => setNewSubtask(e.target.value)}
                 placeholder="Add a subtask..."
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSubtask())}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSubtask())}
               />
               <Button type="button" onClick={addSubtask} size="sm">
                 <Plus className="h-4 w-4" />
