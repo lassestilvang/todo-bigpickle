@@ -4,6 +4,9 @@ import Fuse from 'fuse.js'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
 
+let cachedFuseKey = ''
+let cachedFuse: Fuse<Task> | null = null
+
 const handleError = (message: string, error: unknown, set?: (state: Partial<AppStore>) => void) => {
   const errorMessage = error instanceof Error ? error.message : message
   console.error(`${message}: ${errorMessage}`)
@@ -228,14 +231,18 @@ export const useAppStore = create<AppStore>()(
           tasks = tasks.filter(task => !task.completed)
         }
 
-        // Apply search
+        // Apply search (with cached Fuse index)
         if (state.searchQuery) {
-          const fuse = new Fuse(tasks, {
-            keys: ['name', 'description'],
-            threshold: 0.3,
-            includeScore: false
-          })
-          const results = fuse.search(state.searchQuery)
+          const fuseKey = tasks.map(t => t.id).join(',')
+          if (!cachedFuse || cachedFuseKey !== fuseKey) {
+            cachedFuse = new Fuse(tasks, {
+              keys: ['name', 'description'],
+              threshold: 0.3,
+              includeScore: false
+            })
+            cachedFuseKey = fuseKey
+          }
+          const results = cachedFuse.search(state.searchQuery)
           tasks = results.map(result => result.item)
         }
 
