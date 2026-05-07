@@ -524,10 +524,11 @@ export class DatabaseService {
     if (!existingTask) throw new Error('Task not found')
 
     // Track changes
+    const trackedFields = new Set<keyof Task>(['name', 'description', 'date', 'deadline', 'priority', 'completed', 'listId', 'estimate', 'actualTime', 'recurring'])
     for (const [field, newValue] of Object.entries(updates)) {
-      if (field === 'id' || field === 'createdAt' || field === 'updatedAt' || field === 'history') continue
-      
-      const oldValue = (existingTask as unknown as Record<string, unknown>)[field]
+      if (!trackedFields.has(field as keyof Task)) continue
+
+      const oldValue = existingTask[field as keyof Task]
       if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
         this.recordTaskHistory(id, field, oldValue, newValue)
       }
