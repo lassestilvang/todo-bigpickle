@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 interface ShortcutConfig {
   key: string
@@ -12,9 +12,15 @@ interface ShortcutConfig {
 }
 
 export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
+  const shortcutsRef = useRef(shortcuts)
+
+  useEffect(() => {
+    shortcutsRef.current = shortcuts
+  })
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      for (const shortcut of shortcuts) {
+      for (const shortcut of shortcutsRef.current) {
         if (shortcut.disabled) continue
 
         const keyMatch = e.key.toLowerCase() === shortcut.key.toLowerCase()
@@ -32,5 +38,5 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [shortcuts])
+  }, [])
 }
