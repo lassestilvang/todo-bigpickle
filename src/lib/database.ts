@@ -353,37 +353,32 @@ export class DatabaseService {
    */
   getTasks(): Task[] {
     const rows = this.db.prepare('SELECT * FROM tasks ORDER BY created_at DESC').all() as TaskRow[]
-    
-    return rows.map(row => {
-      const subtasks = this.getSubtasksForTask(row.id)
-      const history = this.getTaskHistory(row.id)
-      const labels = this.getLabelsForTask(row.id)
-      const reminders = this.getRemindersForTask(row.id)
-      const attachments = this.getAttachmentsForTask(row.id)
+    return rows.map(row => this.mapRowToTask(row))
+  }
 
-      return {
-        id: row.id,
-        name: row.name,
-        description: row.description || undefined,
-        date: row.date ? new Date(row.date) : undefined,
-        deadline: row.deadline ? new Date(row.deadline) : undefined,
-        reminders,
-        estimate: row.estimate || undefined,
-        actualTime: row.actual_time || undefined,
-        labels,
-        priority: row.priority as Priority,
-        subtasks,
-        recurring: row.recurring as RecurringType || undefined,
-        recurringConfig: row.recurring_config ? JSON.parse(row.recurring_config) : undefined,
-        listId: row.list_id,
-        completed: row.completed === 1,
-        completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
-        createdAt: new Date(row.created_at),
-        updatedAt: new Date(row.updated_at),
-        history,
-        attachments
-      }
-    })
+  private mapRowToTask(row: TaskRow): Task {
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description || undefined,
+      date: row.date ? new Date(row.date) : undefined,
+      deadline: row.deadline ? new Date(row.deadline) : undefined,
+      reminders: this.getRemindersForTask(row.id),
+      estimate: row.estimate || undefined,
+      actualTime: row.actual_time || undefined,
+      labels: this.getLabelsForTask(row.id),
+      priority: row.priority as Priority,
+      subtasks: this.getSubtasksForTask(row.id),
+      recurring: row.recurring as RecurringType || undefined,
+      recurringConfig: row.recurring_config ? JSON.parse(row.recurring_config) : undefined,
+      listId: row.list_id,
+      completed: row.completed === 1,
+      completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
+      history: this.getTaskHistory(row.id),
+      attachments: this.getAttachmentsForTask(row.id)
+    }
   }
 
   /**
@@ -557,8 +552,9 @@ export class DatabaseService {
   }
 
   getTaskById(id: string): Task | undefined {
-    const tasks = this.getTasks()
-    return tasks.find(task => task.id === id)
+    const row = this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as TaskRow | undefined
+    if (!row) return undefined
+    return this.mapRowToTask(row)
   }
 
   private getSubtasksForTask(taskId: string): Subtask[] {
