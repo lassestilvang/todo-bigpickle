@@ -12,7 +12,7 @@ export const createTaskSchema = z.object({
   completed: z.boolean().optional(),
 })
 
-export const updateTaskSchema = createTaskSchema.partial().omit({ listId: true })
+export const updateTaskSchema = createTaskSchema.partial()
 
 export const createListSchema = z.object({
   name: z.string().min(1, 'List name is required'),
