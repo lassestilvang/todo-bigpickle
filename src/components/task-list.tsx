@@ -33,6 +33,7 @@ export function TaskList() {
   const [editingTask, setEditingTask] = useState<Task | undefined>()
   const [isCreatingTask, setIsCreatingTask] = useState(false)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
+  const [formKey, setFormKey] = useState(0)
 
   const tasks = getFilteredTasks()
   
@@ -96,7 +97,7 @@ export function TaskList() {
               Sort: {sortBy === 'date' ? 'Date' : sortBy === 'priority' ? 'Priority' : 'Name'}
             </Button>
             
-            <Button onClick={() => setIsCreatingTask(true)}>
+            <Button onClick={() => { setFormKey(k => k + 1); setIsCreatingTask(true) }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Task
             </Button>
@@ -116,7 +117,7 @@ export function TaskList() {
                 <p className="text-lg">No tasks found</p>
                 <p className="text-sm">Create a new task to get started</p>
               </div>
-              <Button onClick={() => setIsCreatingTask(true)}>
+              <Button onClick={() => { setFormKey(k => k + 1); setIsCreatingTask(true) }}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Task
               </Button>
@@ -145,7 +146,7 @@ export function TaskList() {
                         key={task.id}
                         task={task}
                         onToggleComplete={toggleTaskComplete}
-                        onEdit={setEditingTask}
+                        onEdit={(task) => { setFormKey(k => k + 1); setEditingTask(task) }}
                       />
                     ))}
                   </AnimatePresence>
@@ -158,6 +159,7 @@ export function TaskList() {
 
       {/* Task Form Dialog */}
       <TaskForm
+        key={formKey}
         task={editingTask}
         isOpen={isCreatingTask || !!editingTask}
         onClose={() => {
