@@ -4,12 +4,10 @@ import Fuse from 'fuse.js'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
 
-const handleError = (message: string, error: unknown) => {
-  if (error instanceof Error) {
-    console.error(`${message}: ${error.message}`)
-  } else {
-    console.error(message, error)
-  }
+const handleError = (message: string, error: unknown, set?: (state: Partial<AppStore>) => void) => {
+  const errorMessage = error instanceof Error ? error.message : message
+  console.error(`${message}: ${errorMessage}`)
+  set?.({ error: errorMessage })
 }
 
 interface AppStore extends AppState {
@@ -73,10 +71,11 @@ export const useAppStore = create<AppStore>()(
         try {
           const task = await api.createTask(taskData)
           set((state) => ({
-            tasks: [task, ...state.tasks]
+            tasks: [task, ...state.tasks],
+            error: null
           }))
         } catch (error) {
-          handleError('Failed to create task', error)
+          handleError('Failed to create task', error, set)
         }
       },
 
@@ -84,10 +83,11 @@ export const useAppStore = create<AppStore>()(
         try {
           const task = await api.updateTask(id, updates)
           set((state) => ({
-            tasks: state.tasks.map(t => t.id === id ? task : t)
+            tasks: state.tasks.map(t => t.id === id ? task : t),
+            error: null
           }))
         } catch (error) {
-          handleError('Failed to update task', error)
+          handleError('Failed to update task', error, set)
         }
       },
 
@@ -95,10 +95,11 @@ export const useAppStore = create<AppStore>()(
         try {
           await api.deleteTask(id)
           set((state) => ({
-            tasks: state.tasks.filter(t => t.id !== id)
+            tasks: state.tasks.filter(t => t.id !== id),
+            error: null
           }))
         } catch (error) {
-          handleError('Failed to delete task', error)
+          handleError('Failed to delete task', error, set)
         }
       },
 
@@ -117,10 +118,11 @@ export const useAppStore = create<AppStore>()(
         try {
           const list = await api.createList(listData)
           set((state) => ({
-            lists: [...state.lists, list]
+            lists: [...state.lists, list],
+            error: null
           }))
         } catch (error) {
-          handleError('Failed to create list', error)
+          handleError('Failed to create list', error, set)
         }
       },
 
@@ -128,10 +130,11 @@ export const useAppStore = create<AppStore>()(
         try {
           const list = await api.updateList(id, updates)
           set((state) => ({
-            lists: state.lists.map(l => l.id === id ? list : l)
+            lists: state.lists.map(l => l.id === id ? list : l),
+            error: null
           }))
         } catch (error) {
-          handleError('Failed to update list', error)
+          handleError('Failed to update list', error, set)
         }
       },
 
@@ -142,10 +145,11 @@ export const useAppStore = create<AppStore>()(
           
           await api.deleteList(id)
           set((state) => ({
-            lists: state.lists.filter(l => l.id !== id)
+            lists: state.lists.filter(l => l.id !== id),
+            error: null
           }))
         } catch (error) {
-          handleError('Failed to delete list', error)
+          handleError('Failed to delete list', error, set)
         }
       },
 
@@ -154,27 +158,29 @@ export const useAppStore = create<AppStore>()(
         try {
           const label = await api.createLabel(labelData)
           set((state) => ({
-            labels: [...state.labels, label]
+            labels: [...state.labels, label],
+            error: null
           }))
         } catch (error) {
-          handleError('Failed to create label', error)
+          handleError('Failed to create label', error, set)
         }
       },
 
       updateLabel: (id, updates) => {
         set((state) => ({
-          labels: state.labels.map(l => l.id === id ? { ...l, ...updates } : l)
+          labels: state.labels.map(l => l.id === id ? { ...l, ...updates } : l),
+          error: null
         }))
       },
 
       deleteLabel: (id) => {
         set((state) => ({
           labels: state.labels.filter(l => l.id !== id),
-          // Remove label from all tasks
           tasks: state.tasks.map(task => ({
             ...task,
             labels: task.labels.filter(l => l.id !== id)
-          }))
+          })),
+          error: null
         }))
       },
 
@@ -190,11 +196,8 @@ export const useAppStore = create<AppStore>()(
           
           set({ tasks, lists, labels, isLoading: false })
         } catch (error) {
-          handleError('Failed to load data', error)
-          set({ 
-            error: error instanceof Error ? error.message : 'Failed to load data',
-            isLoading: false 
-          })
+          handleError('Failed to load data', error, set)
+          set({ isLoading: false })
         }
       },
 
