@@ -144,7 +144,10 @@ export const useAppStore = create<AppStore>()(
       deleteList: async (id) => {
         try {
           const list = get().lists.find(l => l.id === id)
-          if (list?.isDefault) return
+          if (list?.isDefault) {
+            set({ error: 'Cannot delete the default list' })
+            return
+          }
           
           await api.deleteList(id)
           set((state) => ({
