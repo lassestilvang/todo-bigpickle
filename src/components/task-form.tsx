@@ -96,7 +96,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
   const addSubtask = () => {
     if (newSubtask.trim()) {
-      setSubtasks([...subtasks, {
+      setSubtasks(prev => [...prev, {
         id: `subtask-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
         title: newSubtask.trim(),
         completed: false,
@@ -106,11 +106,11 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   }
 
   const removeSubtask = (id: string) => {
-    setSubtasks(subtasks.filter(st => st.id !== id))
+    setSubtasks(prev => prev.filter(st => st.id !== id))
   }
 
   const toggleSubtask = (id: string) => {
-    setSubtasks(subtasks.map(st => 
+    setSubtasks(prev => prev.map(st =>
       st.id === id ? { ...st, completed: !st.completed } : st
     ))
   }
