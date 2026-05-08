@@ -16,7 +16,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+    }
     const validated = createTaskSchema.parse(body)
     const task = db.createTask(validated)
     return NextResponse.json(task)

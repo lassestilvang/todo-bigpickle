@@ -13,7 +13,12 @@ export async function PUT(
 ) {
   try {
     const { id } = await context.params
-    const body = await request.json()
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+    }
     const validated = updateLabelSchema.parse(body)
 
     const label = db.updateLabel(id, validated)
@@ -36,6 +41,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params
+
+    const labels = db.getLabels()
+    if (!labels.find(l => l.id === id)) {
+      return NextResponse.json({ error: 'Label not found' }, { status: 404 })
+    }
+
     db.deleteLabel(id)
     return NextResponse.json({ success: true })
   } catch {

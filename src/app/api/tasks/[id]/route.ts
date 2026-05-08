@@ -11,8 +11,19 @@ export async function PUT(
 ) {
   try {
     const { id } = await context.params
-    const body = await request.json()
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+    }
     const validated = updateTaskSchema.parse(body)
+
+    const existing = db.getTaskById(id)
+    if (!existing) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
     const task = db.updateTask(id, validated)
     return NextResponse.json(task)
   } catch (error) {
@@ -29,6 +40,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params
+
+    const existing = db.getTaskById(id)
+    if (!existing) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
     db.deleteTask(id)
     return NextResponse.json({ success: true })
   } catch {
