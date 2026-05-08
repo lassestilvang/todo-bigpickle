@@ -6,7 +6,7 @@ import { useAppStore } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Search, SortAsc } from 'lucide-react'
+import { Plus, ListTodo, Search, SortAsc } from 'lucide-react'
 import { format } from 'date-fns'
 
 const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 }
@@ -124,7 +124,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
               className="text-center py-12"
             >
               <div className="text-muted-foreground mb-4">
-                <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <ListTodo className="size-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg">No tasks found</p>
                 <p className="text-sm">Create a new task to get started</p>
               </div>
