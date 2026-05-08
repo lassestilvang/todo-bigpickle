@@ -109,7 +109,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
             </Button>
             
             <Button onClick={onCreateTask}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="size-4 mr-2" />
               Add Task
             </Button>
           </div>

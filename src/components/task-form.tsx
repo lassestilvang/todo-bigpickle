@@ -165,7 +165,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                     variant="outline"
                     className="w-full justify-start text-left font-normal"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 size-4" />
                     {dateValue ? format(dateValue, 'PPP') : 'Pick a date'}
                   </Button>
                 </PopoverTrigger>
@@ -188,7 +188,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                     variant="outline"
                     className="w-full justify-start text-left font-normal"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 size-4" />
                     {deadlineValue ? (
                       format(deadlineValue, 'PPP')
                     ) : (
@@ -284,7 +284,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSubtask())}
               />
               <Button type="button" onClick={addSubtask} size="sm">
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
               </Button>
             </div>
             <AnimatePresence>
@@ -310,7 +310,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                     onClick={() => removeSubtask(subtask.id)}
                     className="ml-auto"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="size-4" />
                   </Button>
                 </motion.div>
               ))}

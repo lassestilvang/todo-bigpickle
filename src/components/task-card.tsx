@@ -79,7 +79,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
                   {task.name}
                 </h3>
                 {isOverdue && (
-                  <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" data-testid="alert-triangle" />
+                  <AlertTriangle className="size-4 text-red-500 flex-shrink-0" data-testid="alert-triangle" />
                 )}
               </div>
 
@@ -92,7 +92,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                 {task.date && (
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
+                    <Calendar className="size-3" />
                     {format(new Date(task.date), 'MMM d')}
                   </div>
                 )}
@@ -101,20 +101,20 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
                   <div className={`flex items-center gap-1 ${
                     isOverdue ? 'text-red-500' : ''
                   }`}>
-                    <Clock className="h-3 w-3" />
+                    <Clock className="size-3" />
                     {format(new Date(task.deadline), 'MMM d')}
                   </div>
                 )}
 
                 {task.estimate && (
                   <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="size-3" />
                     {Math.floor(task.estimate / 60)}h {task.estimate % 60}m
                   </div>
                 )}
 
                 <div className="flex items-center gap-1">
-                  <Flag className="h-3 w-3" />
+                  <Flag className="size-3" />
                   <Badge 
                     variant="secondary" 
                     className={`text-xs px-1 py-0 ${priorityColors[task.priority]} text-white`}
@@ -125,7 +125,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
 
                 {task.labels.length > 0 && (
                   <div className="flex items-center gap-1">
-                    <Tag className="h-3 w-3" />
+                    <Tag className="size-3" />
                     {task.labels.map((label) => (
                       <Badge 
                         key={label.id} 
@@ -141,7 +141,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
 
                 {task.subtasks.length > 0 && (
                   <div className="flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
+                    <CheckCircle2 className="size-3" />
                     {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
                   </div>
                 )}
@@ -152,9 +152,9 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
                   {task.subtasks.slice(0, 3).map((subtask) => (
                     <div key={subtask.id} className="flex items-center gap-2 text-xs">
                       {subtask.completed ? (
-                        <CheckCircle2 className="h-3 w-3 text-green-500" />
+                        <CheckCircle2 className="size-3 text-green-500" />
                       ) : (
-                        <Circle className="h-3 w-3 text-muted-foreground" />
+                        <Circle className="size-3 text-muted-foreground" />
                       )}
                       <span className={subtask.completed ? 'line-through text-muted-foreground' : ''}>
                         {subtask.title}
