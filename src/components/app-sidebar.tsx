@@ -90,12 +90,12 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <CheckCircle2 className="h-6 w-6 text-primary" />
+        <div className="flex items-center gap-2 p-2">
+          <CheckCircle2 className="size-6 text-primary" />
           <span className="font-semibold text-lg">Todo</span>
         </div>
         <div className="px-2 pb-2 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search tasks..."
             aria-label="Search tasks"
@@ -124,7 +124,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                         setSelectedListId(undefined)
                       }}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="size-4" />
                       <span>{label}</span>
                       {count !== undefined && count > 0 && (
                         <Badge variant="secondary" className="ml-auto">
@@ -154,7 +154,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                       setCurrentView('all')
                     }}
                   >
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: list.color }} />
+                    <div className="size-3 rounded-full" style={{ backgroundColor: list.color }} />
                     <span>{list.name}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -168,7 +168,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
             <Separator className="my-2" />
             <SidebarGroup>
               <SidebarGroupLabel className="text-destructive">
-                <AlertTriangle className="h-4 w-4 mr-1" />
+                <AlertTriangle className="size-4 mr-1" />
                 Overdue
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -184,7 +184,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
       <SidebarFooter>
         <div className="p-2">
           <Button onClick={onCreateTask} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="size-4 mr-2" />
             New Task
           </Button>
         </div>

@@ -89,7 +89,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
+            <h1 className="text-3xl font-semibold">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
             <p className="text-muted-foreground">
               {tasks.length} task{tasks.length !== 1 ? 's' : ''}
               {tasks.filter(t => t.completed).length > 0 && 
@@ -104,7 +104,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
               size="sm"
               onClick={cycleSort}
             >
-              <SortAsc className="h-4 w-4 mr-2" />
+              <SortAsc className="size-4 mr-2" />
               Sort: {sortBy === 'date' ? 'Date' : sortBy === 'priority' ? 'Priority' : 'Name'}
             </Button>
             
@@ -129,7 +129,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
                 <p className="text-sm">Create a new task to get started</p>
               </div>
               <Button onClick={onCreateTask}>
-                <Plus className="h-4 w-4 mr-2" />
+<Plus className="size-4 mr-2" />
                 Create Your First Task
               </Button>
             </motion.div>
