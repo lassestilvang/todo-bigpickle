@@ -55,22 +55,42 @@ export function ThemeProvider({
       root.style.transition = ''
     }
 
-    if (attribute === 'class') {
+    const applyTheme = (preferDark: boolean) => {
       root.classList.remove('light', 'dark')
+      root.classList.add(preferDark ? 'dark' : 'light')
+    }
 
+    if (attribute === 'class') {
       if (theme === 'system' && enableSystem) {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-          .matches
-          ? 'dark'
-          : 'light'
-
-        root.classList.add(systemTheme)
+        const mql = window.matchMedia('(prefers-color-scheme: dark)')
+        applyTheme(mql.matches)
         return
       }
 
+      root.classList.remove('light', 'dark')
       root.classList.add(theme)
     }
   }, [theme, attribute, enableSystem, disableTransitionOnChange])
+
+  // Listen for system theme changes when in system mode
+  useEffect(() => {
+    if (theme !== 'system' || !enableSystem) return
+
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = (e: MediaQueryListEvent) => {
+      const root = window.document.documentElement
+      if (disableTransitionOnChange) {
+        root.style.transition = 'none'
+        void root.offsetHeight
+        root.style.transition = ''
+      }
+      root.classList.remove('light', 'dark')
+      root.classList.add(e.matches ? 'dark' : 'light')
+    }
+
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [theme, enableSystem, disableTransitionOnChange])
 
   const value = {
     theme,
