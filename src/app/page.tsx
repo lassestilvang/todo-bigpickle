@@ -9,9 +9,12 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { ThemeProvider } from '@/components/theme-provider'
 import { useAppStore } from '@/store'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { Task } from '@/types'
 
 export default function Home() {
   const [isCreatingTask, setIsCreatingTask] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | undefined>()
+  const [formKey, setFormKey] = useState(0)
   const { loadData, isLoading, error } = useAppStore()
 
   // Load data on mount
@@ -24,7 +27,11 @@ export default function Home() {
     {
       key: 'n',
       metaKey: true,
-      handler: () => setIsCreatingTask(true),
+      handler: () => {
+        setEditingTask(undefined)
+        setFormKey(k => k + 1)
+        setIsCreatingTask(true)
+      },
     },
     {
       key: '/',
@@ -38,15 +45,28 @@ export default function Home() {
     {
       key: 'Escape',
       handler: () => {
-        if (isCreatingTask) {
+        if (isCreatingTask || editingTask) {
           setIsCreatingTask(false)
+          setEditingTask(undefined)
         }
       },
     },
   ])
 
   const handleCreateTask = () => {
+    setEditingTask(undefined)
+    setFormKey(k => k + 1)
     setIsCreatingTask(true)
+  }
+
+  const handleEditTask = (task: Task) => {
+    setFormKey(k => k + 1)
+    setEditingTask(task)
+  }
+
+  const handleCloseForm = () => {
+    setIsCreatingTask(false)
+    setEditingTask(undefined)
   }
 
   if (isLoading) {
@@ -88,13 +108,15 @@ export default function Home() {
               </div>
             )}
             
-            <TaskList />
+            <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
           </SidebarInset>
         </div>
 
         <TaskForm
-          isOpen={isCreatingTask}
-          onClose={() => setIsCreatingTask(false)}
+          key={formKey}
+          task={editingTask}
+          isOpen={isCreatingTask || !!editingTask}
+          onClose={handleCloseForm}
         />
       </SidebarProvider>
     </ThemeProvider>

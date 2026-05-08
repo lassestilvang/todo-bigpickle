@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback } from 'react'
 import { Task } from '@/types'
 import { useAppStore } from '@/store'
 import { TaskCard } from '@/components/task-card'
-import { TaskForm } from '@/components/task-form'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, SortAsc } from 'lucide-react'
@@ -28,17 +27,14 @@ function getCurrentViewTitle(currentView: string, selectedListId: string | undef
   return viewTitles[currentView as keyof typeof viewTitles] || 'Tasks'
 }
 
-export function TaskList() {
-  const { getFilteredTasks, toggleTaskComplete, currentView, selectedListId, lists } = useAppStore()
-  const [editingTask, setEditingTask] = useState<Task | undefined>()
-  const [isCreatingTask, setIsCreatingTask] = useState(false)
-  const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
-  const [formKey, setFormKey] = useState(0)
+interface TaskListProps {
+  onCreateTask: () => void
+  onEditTask: (task: Task) => void
+}
 
-  const handleEdit = useCallback((task: Task) => {
-    setFormKey(k => k + 1)
-    setEditingTask(task)
-  }, [])
+export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
+  const { getFilteredTasks, toggleTaskComplete, currentView, selectedListId, lists } = useAppStore()
+  const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
 
   const tasks = getFilteredTasks()
   
@@ -83,6 +79,10 @@ export function TaskList() {
     return groups
   }, [sortedTasks, currentView])
 
+  const cycleSort = useCallback(() => {
+    setSortBy(prev => prev === 'date' ? 'priority' : prev === 'priority' ? 'name' : 'date')
+  }, [])
+
   return (
     <div className="flex-1 p-6">
       <div className="max-w-4xl mx-auto">
@@ -102,13 +102,13 @@ export function TaskList() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setSortBy(sortBy === 'date' ? 'priority' : sortBy === 'priority' ? 'name' : 'date')}
+              onClick={cycleSort}
             >
               <SortAsc className="h-4 w-4 mr-2" />
               Sort: {sortBy === 'date' ? 'Date' : sortBy === 'priority' ? 'Priority' : 'Name'}
             </Button>
             
-            <Button onClick={() => { setFormKey(k => k + 1); setIsCreatingTask(true) }}>
+            <Button onClick={onCreateTask}>
               <Plus className="h-4 w-4 mr-2" />
               Add Task
             </Button>
@@ -128,7 +128,7 @@ export function TaskList() {
                 <p className="text-lg">No tasks found</p>
                 <p className="text-sm">Create a new task to get started</p>
               </div>
-              <Button onClick={() => { setFormKey(k => k + 1); setIsCreatingTask(true) }}>
+              <Button onClick={onCreateTask}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Task
               </Button>
@@ -157,7 +157,7 @@ export function TaskList() {
                         key={task.id}
                         task={task}
                         onToggleComplete={toggleTaskComplete}
-                        onEdit={handleEdit}
+                        onEdit={onEditTask}
                       />
                     ))}
                   </AnimatePresence>
@@ -167,17 +167,6 @@ export function TaskList() {
           )}
         </AnimatePresence>
       </div>
-
-      {/* Task Form Dialog */}
-      <TaskForm
-        key={formKey}
-        task={editingTask}
-        isOpen={isCreatingTask || !!editingTask}
-        onClose={() => {
-          setIsCreatingTask(false)
-          setEditingTask(undefined)
-        }}
-      />
     </div>
   )
 }
