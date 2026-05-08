@@ -100,7 +100,7 @@ describe('TaskCard', () => {
   it('shows overdue indicator for overdue tasks', () => {
     const overdueTask = {
       ...mockTask,
-      deadline: new Date('2024-01-01') // Past date
+      deadline: new Date(Date.now() - 86400000) // Yesterday
     }
     const onToggleComplete = jest.fn()
     const onEdit = jest.fn()
