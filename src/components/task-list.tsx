@@ -151,16 +151,14 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
                 )}
                 
                 <div className="space-y-3">
-                  <AnimatePresence>
-                    {group.tasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onToggleComplete={toggleTaskComplete}
-                        onEdit={onEditTask}
-                      />
-                    ))}
-                  </AnimatePresence>
+                  {group.tasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onToggleComplete={toggleTaskComplete}
+                      onEdit={onEditTask}
+                    />
+                  ))}
                 </div>
               </motion.div>
             ))
