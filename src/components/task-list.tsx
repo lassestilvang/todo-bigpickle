@@ -45,7 +45,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
           if (!a.date && !b.date) return 0
           if (!a.date) return 1
           if (!b.date) return -1
-          return new Date(a.date).getTime() - new Date(b.date).getTime()
+          return a.date.getTime() - b.date.getTime()
         case 'priority':
           return priorityOrder[a.priority] - priorityOrder[b.priority]
         case 'name':
@@ -61,7 +61,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
     const groups: Record<string, { date: Date | null; tasks: Task[] }> = {}
     for (const task of sortedTasks) {
       if (currentView === 'today' || currentView === 'next7days' || currentView === 'upcoming') {
-        const dateKey = task.date ? format(new Date(task.date), 'yyyy-MM-dd') : 'no-date'
+        const dateKey = task.date ? format(task.date, 'yyyy-MM-dd') : 'no-date'
         if (!groups[dateKey]) {
           groups[dateKey] = {
             date: task.date || null,
@@ -145,7 +145,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
                 {group.date && (
                   <div className="mb-4">
                     <h2 className="text-lg font-semibold text-muted-foreground">
-                      {format(new Date(group.date), 'EEEE, MMMM d')}
+                      {format(group.date, 'EEEE, MMMM d')}
                     </h2>
                   </div>
                 )}

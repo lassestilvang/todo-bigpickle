@@ -38,7 +38,7 @@ const priorityLabels = {
 }
 
 export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit }: TaskCardProps) {
-  const isOverdue = task.deadline && new Date(task.deadline) < new Date() && !task.completed
+  const isOverdue = task.deadline && task.deadline < new Date() && !task.completed
 
   return (
     <motion.div
@@ -93,7 +93,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
                 {task.date && (
                   <div className="flex items-center gap-1">
                     <Calendar className="size-3" />
-                    {format(new Date(task.date), 'MMM d')}
+                    {format(task.date, 'MMM d')}
                   </div>
                 )}
 
@@ -102,7 +102,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
                     isOverdue ? 'text-red-500' : ''
                   }`}>
                     <Clock className="size-3" />
-                    {format(new Date(task.deadline), 'MMM d')}
+                    {format(task.deadline, 'MMM d')}
                   </div>
                 )}
 
