@@ -25,7 +25,7 @@ const taskSchema = z.object({
   description: z.string().optional(),
   date: z.date().optional(),
   deadline: z.date().optional(),
-  estimate: z.string().optional(),
+  estimate: z.string().regex(/^\d+:[0-5]\d$/, 'Use format HH:MM (e.g. 1:30)').optional(),
   priority: z.enum(['high', 'medium', 'low', 'none']),
   recurring: z.enum(['daily', 'weekly', 'weekdays', 'monthly', 'yearly', 'custom']).optional(),
   listId: z.string(),
@@ -215,8 +215,10 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                 id="estimate"
                 {...form.register('estimate')}
                 placeholder="1:30"
-                pattern="^[0-9]+:[0-5][0-9]$"
               />
+              {form.formState.errors.estimate && (
+                <p className="text-sm text-red-500">{form.formState.errors.estimate.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
