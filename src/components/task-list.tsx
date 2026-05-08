@@ -61,21 +61,27 @@ export function TaskList() {
     return sorted
   }, [tasks, sortBy])
 
-  const groupedTasks = useMemo(() => sortedTasks.reduce((groups, task) => {
-    if (currentView === 'today' || currentView === 'next7days' || currentView === 'upcoming') {
-      const dateKey = task.date ? format(new Date(task.date), 'yyyy-MM-dd') : 'no-date'
-      if (!groups[dateKey]) {
-        groups[dateKey] = {
-          date: task.date || null,
-          tasks: []
+  const groupedTasks = useMemo(() => {
+    const groups: Record<string, { date: Date | null; tasks: Task[] }> = {}
+    for (const task of sortedTasks) {
+      if (currentView === 'today' || currentView === 'next7days' || currentView === 'upcoming') {
+        const dateKey = task.date ? format(new Date(task.date), 'yyyy-MM-dd') : 'no-date'
+        if (!groups[dateKey]) {
+          groups[dateKey] = {
+            date: task.date || null,
+            tasks: []
+          }
         }
+        groups[dateKey].tasks.push(task)
+      } else {
+        if (!groups['all']) {
+          groups['all'] = { date: null, tasks: [] }
+        }
+        groups['all'].tasks.push(task)
       }
-      groups[dateKey].tasks.push(task)
-    } else {
-      groups['all'] = { date: null, tasks: [...(groups['all']?.tasks || []), task] }
     }
     return groups
-  }, {} as Record<string, { date: Date | null; tasks: Task[] }>), [sortedTasks, currentView])
+  }, [sortedTasks, currentView])
 
   return (
     <div className="flex-1 p-6">
