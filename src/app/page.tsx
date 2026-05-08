@@ -93,8 +93,14 @@ export default function Home() {
                 </header>
                 
                 {error && (
-                  <div className="p-4 bg-destructive/10 text-destructive text-sm">
-                    {error}
+                  <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive text-sm">
+                    <span className="flex-1">{error}</span>
+                    <button
+                      onClick={() => loadData()}
+                      className="px-3 py-1 rounded bg-destructive/20 hover:bg-destructive/30 text-xs font-medium"
+                    >
+                      Retry
+                    </button>
                   </div>
                 )}
                 
