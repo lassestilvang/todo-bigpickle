@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Task } from '@/types'
 import { useAppStore } from '@/store'
 import { TaskCard } from '@/components/task-card'
@@ -34,6 +34,11 @@ export function TaskList() {
   const [isCreatingTask, setIsCreatingTask] = useState(false)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
   const [formKey, setFormKey] = useState(0)
+
+  const handleEdit = useCallback((task: Task) => {
+    setFormKey(k => k + 1)
+    setEditingTask(task)
+  }, [])
 
   const tasks = getFilteredTasks()
   
@@ -146,7 +151,7 @@ export function TaskList() {
                         key={task.id}
                         task={task}
                         onToggleComplete={toggleTaskComplete}
-                        onEdit={(task) => { setFormKey(k => k + 1); setEditingTask(task) }}
+                        onEdit={handleEdit}
                       />
                     ))}
                   </AnimatePresence>
