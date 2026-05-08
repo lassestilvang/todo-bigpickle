@@ -60,7 +60,7 @@ export const useAppStore = create<AppStore>()(
       selectedListId: undefined,
       showCompleted: false,
       searchQuery: '',
-      isLoading: false,
+      isLoading: true,
       error: null,
 
       // View actions

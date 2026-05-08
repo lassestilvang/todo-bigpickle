@@ -69,22 +69,6 @@ export default function Home() {
     setEditingTask(undefined)
   }
 
-  if (isLoading) {
-    return (
-      <ThemeProvider
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <SidebarProvider>
-          <div className="flex h-screen items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
-        </SidebarProvider>
-      </ThemeProvider>
-    )
-  }
-
   return (
     <ThemeProvider
       defaultTheme="system"
@@ -92,32 +76,40 @@ export default function Home() {
       disableTransitionOnChange
     >
       <SidebarProvider>
-        <div id="main-content" className="flex h-screen overflow-hidden">
-          <AppSidebar onCreateTask={handleCreateTask} />
-          
-          <SidebarInset className="flex-1">
-            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-              <SidebarTrigger className="-ml-1" />
-              <div className="flex-1" />
-              <ThemeToggle />
-            </header>
-            
-            {error && (
-              <div className="p-4 bg-destructive/10 text-destructive text-sm">
-                {error}
-              </div>
-            )}
-            
-            <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
-          </SidebarInset>
-        </div>
+        {isLoading ? (
+          <div className="flex h-screen w-full items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        ) : (
+          <>
+            <div id="main-content" className="flex h-screen overflow-hidden">
+              <AppSidebar onCreateTask={handleCreateTask} />
+              
+              <SidebarInset className="flex-1">
+                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="flex-1" />
+                  <ThemeToggle />
+                </header>
+                
+                {error && (
+                  <div className="p-4 bg-destructive/10 text-destructive text-sm">
+                    {error}
+                  </div>
+                )}
+                
+                <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
+              </SidebarInset>
+            </div>
 
-        <TaskForm
-          key={formKey}
-          task={editingTask}
-          isOpen={isCreatingTask || !!editingTask}
-          onClose={handleCloseForm}
-        />
+            <TaskForm
+              key={formKey}
+              task={editingTask}
+              isOpen={isCreatingTask || !!editingTask}
+              onClose={handleCloseForm}
+            />
+          </>
+        )}
       </SidebarProvider>
     </ThemeProvider>
   )
