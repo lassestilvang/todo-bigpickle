@@ -39,7 +39,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
   const tasks = getFilteredTasks()
   
   const sortedTasks = useMemo(() => {
-    const sorted = [...tasks].sort((a, b) => {
+    const sorted = tasks.toSorted((a, b) => {
       switch (sortBy) {
         case 'date':
           if (!a.date && !b.date) return 0
