@@ -15,9 +15,10 @@ async function fetchWithTimeout(url: string, options: FetchOptions = {}): Promis
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeout)
   
-  // Merge abort signals
+  const onAbort = () => controller.abort()
+  
   if (fetchOptions.signal) {
-    fetchOptions.signal.addEventListener('abort', () => controller.abort())
+    fetchOptions.signal.addEventListener('abort', onAbort)
   }
   
   try {
@@ -25,11 +26,12 @@ async function fetchWithTimeout(url: string, options: FetchOptions = {}): Promis
       ...fetchOptions,
       signal: controller.signal,
     })
-    clearTimeout(timeoutId)
     return response
-  } catch (error) {
+  } finally {
     clearTimeout(timeoutId)
-    throw error
+    if (fetchOptions.signal) {
+      fetchOptions.signal.removeEventListener('abort', onAbort)
+    }
   }
 }
 
