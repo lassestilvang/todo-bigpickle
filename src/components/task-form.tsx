@@ -46,6 +46,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
     task?.subtasks.map(st => ({ id: st.id, title: st.title, completed: st.completed })) || []
   )
   const [newSubtask, setNewSubtask] = useState('')
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -66,9 +67,11 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   const priorityValue = useWatch({ control: form.control, name: 'priority' })
   const listIdValue = useWatch({ control: form.control, name: 'listId' })
 
-  const onSubmit = (data: TaskFormData) => {
-    const estimateMinutes = data.estimate ? 
-      parseInt(data.estimate.split(':')[0]) * 60 + parseInt(data.estimate.split(':')[1]) : 
+  const onSubmit = async (data: TaskFormData) => {
+    setSubmitError(null)
+
+    const estimateMinutes = data.estimate ?
+      parseInt(data.estimate.split(':')[0]) * 60 + parseInt(data.estimate.split(':')[1]) :
       undefined
 
     const taskData = {
@@ -76,22 +79,22 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
       estimate: estimateMinutes,
       labels: labels.filter(l => selectedLabels.includes(l.id)),
       subtasks: subtasks.map(st => ({
-        id: st.id,
         title: st.title,
         completed: st.completed,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       })),
       completed: task?.completed || false,
     }
 
-    if (task) {
-      updateTask(task.id, taskData)
-    } else {
-      addTask(taskData)
+    try {
+      if (task) {
+        await updateTask(task.id, taskData)
+      } else {
+        await addTask(taskData)
+      }
+      onClose()
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to save task')
     }
-
-    onClose()
   }
 
   const addSubtask = () => {
@@ -134,6 +137,11 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {submitError && (
+            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950 rounded-md">
+              {submitError}
+            </div>
+          )}
           <div className="space-y-2">
             <FormLabel htmlFor="name">Task Name *</FormLabel>
             <Input
