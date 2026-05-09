@@ -246,9 +246,9 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
           </div>
 
           <div className="space-y-2">
-            <FormLabel htmlFor="listId">List</FormLabel>
+            <FormLabel htmlFor="list-select">List</FormLabel>
               <Select value={listIdValue} onValueChange={(value) => form.setValue('listId', value)}>
-              <SelectTrigger>
+              <SelectTrigger id="list-select">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -269,12 +269,20 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                   key={label.id}
                   variant={selectedLabels.includes(label.id) ? "default" : "outline"}
                   className="cursor-pointer"
-                  style={{ 
+                  style={{
                     backgroundColor: selectedLabels.includes(label.id) ? label.color : undefined,
                     borderColor: label.color,
                     color: selectedLabels.includes(label.id) ? 'white' : label.color
                   }}
                   onClick={() => toggleLabel(label.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      toggleLabel(label.id)
+                    }
+                  }}
                 >
                   {label.icon} {label.name}
                 </Badge>
