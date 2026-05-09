@@ -30,10 +30,8 @@ This is a **modern task planner application** built with Next.js 16 using the Ap
 - Modern UI with dark mode support
 
 **Initial Weaknesses:**
-- Limited test coverage
-- Database service instantiated per-request in API routes
+- Limited test coverage (23 tests across 3 files)
 - Some inconsistency between local state updates and API calls
-- Missing input validation on API routes
 
 ---
 
@@ -42,8 +40,8 @@ This is a **modern task planner application** built with Next.js 16 using the Ap
 | Feature | Score | Notes |
 |---------|-------|-------|
 | Task CRUD | **9** | Full create, read, update, delete with history tracking |
-| Projects / Lists | **7** | Lists implemented with colors/icons, but no list CRUD in UI |
-| Tags / Labels | **7** | Labels with colors/icons exist, but limited management UI |
+| Projects / Lists | **7** | Lists implemented with colors/icons via Zustand store + API, but no list management UI |
+| Tags / Labels | **7** | Labels with colors/icons via Zustand store + API, but no label management UI |
 | Scheduling (dates, reminders, recurrence) | **6** | Dates/deadlines work; reminders stored but not triggered; recurrence defined but not executed |
 | Templates / reusable presets | **1** | Not implemented |
 | Sync / backend communication | **7** | REST API with SQLite backend; no real-time sync |
@@ -66,7 +64,7 @@ This is a **modern task planner application** built with Next.js 16 using the Ap
 | Modularity & separation of concerns | **7** | Clear separation: types/, store/, lib/, components/; API layer abstracted; some coupling in store |
 | Error handling | **5** | Try-catch in store actions with console.error; API routes return generic errors; no user-facing error states |
 | Performance optimization | **6** | React Compiler enabled; no explicit memoization; AnimatePresence for list animations; potential re-render issues in TaskList |
-| API layer structure | **7** | Clean REST routes; proper Next.js 16 async params; but DatabaseService instantiated per-request |
+| API layer structure | **8** | Clean REST routes; proper Next.js 16 async params; singleton DatabaseService via getDatabase() |
 | Data modeling | **8** | Comprehensive schema with foreign keys, junction tables, history tracking; Zod validation in forms |
 | Frontend architecture decisions | **7** | App Router used correctly; client components marked; but entire page is client-rendered |
 
@@ -81,11 +79,11 @@ This is a **modern task planner application** built with Next.js 16 using the Ap
 | Folder structure clarity | **8** | Standard Next.js App Router structure; clear separation of concerns; components/ui for primitives |
 | Naming conventions | **8** | Consistent PascalCase components, camelCase functions, kebab-case files; clear naming |
 | Dependency hygiene | **7** | Modern dependencies; some unused (fuse.js imported but search is basic); bun.lock present |
-| Code smells / anti-patterns | **6** | DatabaseService instantiated per-request; mixed async patterns in store; some any-like patterns |
-| Tests (unit/integration/e2e) | **4** | Only 2 test files (task-card.test.tsx, database.test.ts); no store tests; no e2e; empty __tests__ folders |
+| Code smells / anti-patterns | **7** | React Compiler enabled; clean patterns overall; mixed async error handling in store |
+| Tests (unit/integration/e2e) | **5** | 3 test files (task-card, store, database) with ~23 tests; no e2e tests |
 | Linting & formatting | **8** | ESLint configured with Next.js rules; consistent formatting; no semicolons per style guide |
 | Documentation quality | **7** | Comprehensive README; inline comments sparse; no JSDoc; AGENTS.md for dev guidance |
-| CI/CD configuration | **1** | No CI/CD configuration files present |
+| CI/CD configuration | **6** | GitHub Actions CI with lint, test, build steps; uses npm instead of bun |
 
 ### ➤ Best Practices Total: **6.1/10**
 
@@ -136,23 +134,23 @@ This is a **modern task planner application** built with Next.js 16 using the Ap
 
 ## 🔍 8. Weaknesses (Top 5)
 
-1. **Insufficient Test Coverage** - Only 2 test files exist; store has no tests; no integration or e2e tests; empty __tests__ directories suggest abandoned testing efforts
+1. **Insufficient Test Coverage** - Only 3 test files with ~23 tests; no integration or e2e tests
 
-2. **Database Connection Anti-Pattern** - `new DatabaseService()` is called in every API route handler, creating new connections per request instead of using a singleton or connection pool
+2. **Missing Server-Side Rendering** - The entire page is client-rendered despite Next.js App Router capabilities; initial data could be fetched server-side for better performance and SEO
 
-3. **Missing Server-Side Rendering** - The entire page is client-rendered despite Next.js App Router capabilities; initial data could be fetched server-side for better performance and SEO
+3. **Incomplete Feature Implementation** - Recurring tasks, reminders, and attachments have database schemas but no runtime UI; recurring tasks are not auto-generated
 
-4. **Incomplete Feature Implementation** - Recurring tasks, reminders, and attachments have database schemas but no runtime implementation; fuse.js is imported but fuzzy search isn't used
+4. **Client-Side Performance** - TaskList re-renders entirely on every state change due to object destructuring in Zustand; Fuse.js cache is a module-level mutable variable
 
-5. **No API Input Validation** - API routes accept JSON directly without Zod validation; potential for malformed data to corrupt the database
+5. **Fire-and-Forget Async Actions** - Store actions are not awaited in UI components, so API failures are silent (dialog closes regardless of save success)
 
-### Mandatory Refactors Before Adoption:
+### Recommended Improvements:
 
-1. **Implement database singleton pattern** - Create a single DatabaseService instance or use connection pooling
-2. **Add Zod validation to API routes** - Validate all incoming request bodies
-3. **Increase test coverage to >70%** - Add store tests, API route tests, and critical path e2e tests
-4. **Implement proper error boundaries** - Add React error boundaries and user-facing error states
-5. **Add server-side data fetching** - Use server components or `getServerSideProps` equivalent for initial load
+1. **Increase test coverage** - Add API route tests and critical path e2e tests
+2. **Add server-side data fetching** - Use server components for initial data load to improve perceived performance
+3. **Add server-side data fetching** - Use server components to pre-fetch data instead of client-side loading spinner
+4. **Optimize Zustand selectors** - Use individual selectors instead of object destructuring to prevent unnecessary re-renders
+5. **Implement list/label management UI** - Add UI for creating, editing, and deleting lists and labels
 
 ---
 
@@ -164,12 +162,11 @@ This is a **modern task planner application** built with Next.js 16 using the Ap
 
 ### What must be fixed before adoption?
 
-1. **Critical:** Database connection management (singleton pattern)
-2. **Critical:** API input validation with Zod
-3. **High:** Test coverage expansion (target 70%+)
-4. **High:** Error handling and user feedback
-5. **Medium:** Server-side rendering for initial data
-6. **Medium:** CI/CD pipeline setup
+1. **High:** Test coverage expansion (target 70%+)
+2. **High:** Error handling and user feedback for async operations
+3. **Medium:** Server-side rendering for initial data
+4. **Medium:** Optimize re-render performance with Zustand selectors
+5.**Medium:** Implement list/label management UI
 
 ### Architectural risks:
 
@@ -217,4 +214,4 @@ Final Score = 6.405 × 10 = 64.05
 
 ---
 
-*Evaluation completed on December 7, 2025*
+*Evaluation completed on December 7, 2025 — last updated May 9, 2026*
