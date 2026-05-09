@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -47,6 +47,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   )
   const [newSubtask, setNewSubtask] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const subtaskIdCounter = useRef(0)
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -99,8 +100,9 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
   const addSubtask = () => {
     if (newSubtask.trim()) {
+      subtaskIdCounter.current += 1
       setSubtasks(prev => [...prev, {
-        id: `subtask-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+        id: `_new_${subtaskIdCounter.current}`,
         title: newSubtask.trim(),
         completed: false,
       }])
