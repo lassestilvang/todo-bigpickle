@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { Task } from '@/types'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
@@ -38,7 +38,12 @@ const priorityLabels = {
 }
 
 export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit }: TaskCardProps) {
-  const isOverdue = task.deadline && task.deadline < new Date() && !task.completed
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000)
+    return () => clearInterval(timer)
+  }, [])
+  const isOverdue = task.deadline && task.deadline < now && !task.completed
 
   return (
     <motion.div
