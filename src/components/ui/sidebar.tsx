@@ -606,10 +606,7 @@ function SidebarMenuSkeleton({
 }: React.ComponentProps<"div"> & {
   showIcon?: boolean
 }) {
-  // Fixed width for demo purposes.
-  const width = React.useMemo(() => {
-    return '70%'
-  }, [])
+  const width = '70%'
 
   return (
     <div
