@@ -88,9 +88,9 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
     try {
       if (task) {
-        await updateTask(task.id, taskData)
+        await updateTask(task.id, taskData as Parameters<typeof updateTask>[1])
       } else {
-        await addTask(taskData)
+        await addTask(taskData as Parameters<typeof addTask>[0])
       }
       onClose()
     } catch (error) {

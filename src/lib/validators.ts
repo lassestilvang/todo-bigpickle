@@ -9,13 +9,13 @@ export const createTaskSchema = z.object({
   actualTime: z.number().int().positive().optional(),
   priority: z.enum(['high', 'medium', 'low', 'none']).default('none'),
   recurring: z.enum(['daily', 'weekly', 'weekdays', 'monthly', 'yearly', 'custom']).optional(),
-  recurringConfig: z.record(z.unknown()).optional(),
+  recurringConfig: z.record(z.string(), z.unknown()).optional(),
   labels: z.array(z.object({ id: z.string() })).optional(),
   subtasks: z.array(z.object({ title: z.string(), completed: z.boolean().optional() })).optional(),
   listId: z.string().min(1, 'List ID is required'),
   completed: z.boolean().optional(),
   completedAt: z.string().datetime().transform(s => new Date(s)).optional(),
-  reminders: z.array(z.string().datetime()).optional(),
+  reminders: z.array(z.string().datetime().transform(s => new Date(s))).optional(),
   attachments: z.array(z.string()).optional(),
 })
 
