@@ -119,6 +119,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                   <SidebarMenuItem key={view}>
                     <SidebarMenuButton
                       isActive={currentView === view && !selectedListId}
+                      aria-current={currentView === view && !selectedListId ? 'page' : undefined}
                       onClick={() => {
                         setCurrentView(view as ViewType)
                         setSelectedListId(undefined)
@@ -149,6 +150,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                 <SidebarMenuItem key={list.id}>
                   <SidebarMenuButton
                     isActive={selectedListId === list.id}
+                    aria-current={selectedListId === list.id ? 'page' : undefined}
                     onClick={() => {
                       setSelectedListId(list.id)
                       setCurrentView('all')
