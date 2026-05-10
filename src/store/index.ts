@@ -319,10 +319,18 @@ export const useAppStore = create<AppStore>()(
           }
         },
         setItem: (name, value) => {
-          localStorage.setItem(name, JSON.stringify(value))
+          try {
+            localStorage.setItem(name, JSON.stringify(value))
+          } catch {
+            // localStorage might be full or unavailable
+          }
         },
         removeItem: (name) => {
-          localStorage.removeItem(name)
+          try {
+            localStorage.removeItem(name)
+          } catch {
+            // localStorage might be unavailable
+          }
         }
       } : undefined,
       partialize: (state: AppStore) => ({
