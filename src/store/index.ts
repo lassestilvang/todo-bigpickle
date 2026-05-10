@@ -7,6 +7,11 @@ import { api } from '@/lib/api'
 let cachedFuseKey = ''
 let cachedFuse: Fuse<Task> | null = null
 
+const invalidateFuseCache = () => {
+  cachedFuseKey = ''
+  cachedFuse = null
+}
+
 const handleError = (message: string, error: unknown, set?: (state: Partial<AppStore>) => void) => {
   const errorMessage = error instanceof Error ? error.message : message
   console.error(`${message}: ${errorMessage}`)
@@ -73,6 +78,7 @@ export const useAppStore = create<AppStore>()(
       addTask: async (taskData) => {
         try {
           const task = await api.createTask(taskData)
+          invalidateFuseCache()
           set((state) => ({
             tasks: [task, ...state.tasks],
             error: null
@@ -85,6 +91,7 @@ export const useAppStore = create<AppStore>()(
       updateTask: async (id, updates) => {
         try {
           const task = await api.updateTask(id, updates)
+          invalidateFuseCache()
           set((state) => ({
             tasks: state.tasks.map(t => t.id === id ? task : t),
             error: null
@@ -97,6 +104,7 @@ export const useAppStore = create<AppStore>()(
       deleteTask: async (id) => {
         try {
           await api.deleteTask(id)
+          invalidateFuseCache()
           set((state) => ({
             tasks: state.tasks.filter(t => t.id !== id),
             error: null
@@ -109,6 +117,7 @@ export const useAppStore = create<AppStore>()(
       toggleTaskComplete: async (id) => {
         const task = get().tasks.find(t => t.id === id)
         if (task) {
+          invalidateFuseCache()
           await get().updateTask(id, { 
             completed: !task.completed,
             completedAt: !task.completed ? new Date() : undefined
