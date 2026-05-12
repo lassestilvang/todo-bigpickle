@@ -85,6 +85,7 @@ export const useAppStore = create<AppStore>()(
           }))
         } catch (error) {
           handleError('Failed to create task', error, set)
+          throw error
         }
       },
 
@@ -98,6 +99,7 @@ export const useAppStore = create<AppStore>()(
           }))
         } catch (error) {
           handleError('Failed to update task', error, set)
+          throw error
         }
       },
 
@@ -111,6 +113,7 @@ export const useAppStore = create<AppStore>()(
           }))
         } catch (error) {
           handleError('Failed to delete task', error, set)
+          throw error
         }
       },
 
