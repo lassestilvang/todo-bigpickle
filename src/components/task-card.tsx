@@ -1,7 +1,8 @@
 'use client'
 
-import { memo, useState, useEffect } from 'react'
+import { memo } from 'react'
 import { Task } from '@/types'
+import { useNow } from '@/hooks/use-now'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -38,11 +39,7 @@ const priorityLabels = {
 }
 
 export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit }: TaskCardProps) {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60000)
-    return () => clearInterval(timer)
-  }, [])
+  const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
 
   return (
