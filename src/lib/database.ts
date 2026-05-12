@@ -451,71 +451,76 @@ export class DatabaseService {
    * @throws {Error} If no default list found and no listId provided
    */
   createTask(task: TaskInput): Task {
-    const id = randomUUID()
-    const now = new Date().toISOString()
-    
-    // Get default inbox list if no listId provided
-    let listId = task.listId
-    if (!listId) {
-      const defaultList = this.db.prepare('SELECT id FROM lists WHERE is_default = TRUE').get() as { id: string } | undefined
-      listId = defaultList?.id || ''
+    const insert = this.db.transaction(() => {
+      const id = randomUUID()
+      const now = new Date().toISOString()
+      
+      // Get default inbox list if no listId provided
+      let listId = task.listId
       if (!listId) {
-        throw new Error('No default list found and no listId provided')
+        const defaultList = this.db.prepare('SELECT id FROM lists WHERE is_default = TRUE').get() as { id: string } | undefined
+        listId = defaultList?.id || ''
+        if (!listId) {
+          throw new Error('No default list found and no listId provided')
+        }
       }
-    }
-    
-    this.db.prepare(`
-      INSERT INTO tasks (
-        id, name, description, date, deadline, estimate, actual_time,
-        priority, recurring, recurring_config, list_id, completed,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      id,
-      task.name,
-      task.description,
-      task.date ? (typeof task.date === 'string' ? task.date : task.date.toISOString()) : null,
-      task.deadline ? (typeof task.deadline === 'string' ? task.deadline : task.deadline.toISOString()) : null,
-      task.estimate,
-      task.actualTime,
-      task.priority,
-      task.recurring,
-      task.recurringConfig ? JSON.stringify(task.recurringConfig) : null,
-      listId,
-      task.completed ? 1 : 0,
-      now,
-      now
-    )
+      
+      this.db.prepare(`
+        INSERT INTO tasks (
+          id, name, description, date, deadline, estimate, actual_time,
+          priority, recurring, recurring_config, list_id, completed,
+          created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        id,
+        task.name,
+        task.description,
+        task.date ? (typeof task.date === 'string' ? task.date : task.date.toISOString()) : null,
+        task.deadline ? (typeof task.deadline === 'string' ? task.deadline : task.deadline.toISOString()) : null,
+        task.estimate,
+        task.actualTime,
+        task.priority,
+        task.recurring,
+        task.recurringConfig ? JSON.stringify(task.recurringConfig) : null,
+        listId,
+        task.completed ? 1 : 0,
+        now,
+        now
+      )
 
-    // Add labels
-    if (task.labels) {
-      for (const label of task.labels) {
-        this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)')
-          .run(id, label.id)
+      // Add labels
+      if (task.labels) {
+        for (const label of task.labels) {
+          this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)')
+            .run(id, label.id)
+        }
       }
-    }
 
-    // Add subtasks
-    if (task.subtasks) {
-      for (const subtask of task.subtasks) {
-        this.createSubtask(id, subtask)
+      // Add subtasks
+      if (task.subtasks) {
+        for (const subtask of task.subtasks) {
+          this.createSubtask(id, subtask)
+        }
       }
-    }
 
-    // Add reminders
-    if (task.reminders) {
-      for (const reminder of task.reminders) {
-        this.addReminder(id, reminder)
+      // Add reminders
+      if (task.reminders) {
+        for (const reminder of task.reminders) {
+          this.addReminder(id, reminder)
+        }
       }
-    }
 
-    // Add attachments
-    if (task.attachments) {
-      for (const attachment of task.attachments) {
-        this.addAttachment(id, attachment)
+      // Add attachments
+      if (task.attachments) {
+        for (const attachment of task.attachments) {
+          this.addAttachment(id, attachment)
+        }
       }
-    }
 
+      return id
+    })
+
+    const id = insert()
     return this.getTaskById(id)!
   }
 
@@ -523,95 +528,98 @@ export class DatabaseService {
     const existingTask = this.getTaskById(id)
     if (!existingTask) throw new Error('Task not found')
 
-    // Track changes
-    const trackedFields = new Set<keyof Task>(['name', 'description', 'date', 'deadline', 'priority', 'completed', 'listId', 'estimate', 'actualTime', 'recurring'])
-    for (const [field, newValue] of Object.entries(updates)) {
-      if (!trackedFields.has(field as keyof Task)) continue
+    const update = this.db.transaction(() => {
+      // Track changes
+      const trackedFields = new Set<keyof Task>(['name', 'description', 'date', 'deadline', 'priority', 'completed', 'listId', 'estimate', 'actualTime', 'recurring'])
+      for (const [field, newValue] of Object.entries(updates)) {
+        if (!trackedFields.has(field as keyof Task)) continue
 
-      const oldValue = existingTask[field as keyof Task]
-      if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
-        this.recordTaskHistory(id, field, oldValue, newValue)
+        const oldValue = existingTask[field as keyof Task]
+        if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+          this.recordTaskHistory(id, field, oldValue, newValue)
+        }
       }
-    }
 
-    // Update main task fields
-    const updateFields: string[] = []
-    const updateValues: (string | number | null)[] = []
+      // Update main task fields
+      const updateFields: string[] = []
+      const updateValues: (string | number | null)[] = []
 
-    if (updates.name !== undefined) {
-      updateFields.push('name = ?')
-      updateValues.push(updates.name)
-    }
-    if (updates.description !== undefined) {
-      updateFields.push('description = ?')
-      updateValues.push(updates.description)
-    }
-    if (updates.date !== undefined) {
-      updateFields.push('date = ?')
-      updateValues.push(typeof updates.date === 'string' ? updates.date : updates.date?.toISOString() ?? null)
-    }
-    if (updates.deadline !== undefined) {
-      updateFields.push('deadline = ?')
-      updateValues.push(typeof updates.deadline === 'string' ? updates.deadline : updates.deadline?.toISOString() ?? null)
-    }
-    if (updates.estimate !== undefined) {
-      updateFields.push('estimate = ?')
-      updateValues.push(updates.estimate)
-    }
-    if (updates.actualTime !== undefined) {
-      updateFields.push('actual_time = ?')
-      updateValues.push(updates.actualTime)
-    }
-    if (updates.priority !== undefined) {
-      updateFields.push('priority = ?')
-      updateValues.push(updates.priority)
-    }
-    if (updates.recurring !== undefined) {
-      updateFields.push('recurring = ?')
-      updateValues.push(updates.recurring)
-    }
-    if (updates.recurringConfig !== undefined) {
-      updateFields.push('recurring_config = ?')
-      updateValues.push(updates.recurringConfig ? JSON.stringify(updates.recurringConfig) : null)
-    }
-    if (updates.listId !== undefined) {
-      updateFields.push('list_id = ?')
-      updateValues.push(updates.listId)
-    }
-    if (updates.completed !== undefined) {
-      updateFields.push('completed = ?')
-      updateValues.push(updates.completed ? 1 : 0)
-      updateFields.push('completed_at = ?')
-      updateValues.push(updates.completed ? new Date().toISOString() : null)
-    }
-
-    if (updateFields.length > 0) {
-      updateFields.push('updated_at = ?')
-      updateValues.push(new Date().toISOString())
-      updateValues.push(id)
-
-      this.db.prepare(`
-        UPDATE tasks SET ${updateFields.join(', ')} WHERE id = ?
-      `).run(...updateValues)
-    }
-
-    // Update labels
-    if (updates.labels !== undefined) {
-      this.db.prepare('DELETE FROM task_labels WHERE task_id = ?').run(id)
-      for (const label of updates.labels) {
-        this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)')
-          .run(id, label.id)
+      if (updates.name !== undefined) {
+        updateFields.push('name = ?')
+        updateValues.push(updates.name)
       }
-    }
-
-    // Update subtasks
-    if (updates.subtasks !== undefined) {
-      this.db.prepare('DELETE FROM subtasks WHERE task_id = ?').run(id)
-      for (const subtask of updates.subtasks) {
-        this.createSubtask(id, subtask)
+      if (updates.description !== undefined) {
+        updateFields.push('description = ?')
+        updateValues.push(updates.description)
       }
-    }
+      if (updates.date !== undefined) {
+        updateFields.push('date = ?')
+        updateValues.push(typeof updates.date === 'string' ? updates.date : updates.date?.toISOString() ?? null)
+      }
+      if (updates.deadline !== undefined) {
+        updateFields.push('deadline = ?')
+        updateValues.push(typeof updates.deadline === 'string' ? updates.deadline : updates.deadline?.toISOString() ?? null)
+      }
+      if (updates.estimate !== undefined) {
+        updateFields.push('estimate = ?')
+        updateValues.push(updates.estimate)
+      }
+      if (updates.actualTime !== undefined) {
+        updateFields.push('actual_time = ?')
+        updateValues.push(updates.actualTime)
+      }
+      if (updates.priority !== undefined) {
+        updateFields.push('priority = ?')
+        updateValues.push(updates.priority)
+      }
+      if (updates.recurring !== undefined) {
+        updateFields.push('recurring = ?')
+        updateValues.push(updates.recurring)
+      }
+      if (updates.recurringConfig !== undefined) {
+        updateFields.push('recurring_config = ?')
+        updateValues.push(updates.recurringConfig ? JSON.stringify(updates.recurringConfig) : null)
+      }
+      if (updates.listId !== undefined) {
+        updateFields.push('list_id = ?')
+        updateValues.push(updates.listId)
+      }
+      if (updates.completed !== undefined) {
+        updateFields.push('completed = ?')
+        updateValues.push(updates.completed ? 1 : 0)
+        updateFields.push('completed_at = ?')
+        updateValues.push(updates.completed ? new Date().toISOString() : null)
+      }
 
+      if (updateFields.length > 0) {
+        updateFields.push('updated_at = ?')
+        updateValues.push(new Date().toISOString())
+        updateValues.push(id)
+
+        this.db.prepare(`
+          UPDATE tasks SET ${updateFields.join(', ')} WHERE id = ?
+        `).run(...updateValues)
+      }
+
+      // Update labels
+      if (updates.labels !== undefined) {
+        this.db.prepare('DELETE FROM task_labels WHERE task_id = ?').run(id)
+        for (const label of updates.labels) {
+          this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)')
+            .run(id, label.id)
+        }
+      }
+
+      // Update subtasks
+      if (updates.subtasks !== undefined) {
+        this.db.prepare('DELETE FROM subtasks WHERE task_id = ?').run(id)
+        for (const subtask of updates.subtasks) {
+          this.createSubtask(id, subtask)
+        }
+      }
+    })
+
+    update()
     return this.getTaskById(id)!
   }
 
