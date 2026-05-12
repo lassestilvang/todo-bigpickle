@@ -4,14 +4,6 @@ import Fuse from 'fuse.js'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
 
-let cachedFuseKey = ''
-let cachedFuse: Fuse<Task> | null = null
-
-const invalidateFuseCache = () => {
-  cachedFuseKey = ''
-  cachedFuse = null
-}
-
 const handleError = (message: string, error: unknown, set?: (state: Partial<AppStore>) => void) => {
   const errorMessage = error instanceof Error ? error.message : message
   console.error(`${message}: ${errorMessage}`)
@@ -56,7 +48,16 @@ interface AppStore extends AppState {
 
 export const useAppStore = create<AppStore>()(
   persist(
-    (set, get) => ({
+    (set, get) => {
+      let cachedFuseKey = ''
+      let cachedFuse: Fuse<Task> | null = null
+
+      const invalidateFuseCache = () => {
+        cachedFuseKey = ''
+        cachedFuse = null
+      }
+
+      return {
       // Initial state
       tasks: [],
       lists: [],
@@ -309,7 +310,8 @@ export const useAppStore = create<AppStore>()(
             return tasks
         }
       }
-    }),
+    }
+    },
     {
       name: 'todo-app-storage',
       storage: typeof window !== 'undefined' ? {
