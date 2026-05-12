@@ -140,5 +140,3 @@ export function seedDatabase() {
   })
 
 }
-
-seedDatabase()
