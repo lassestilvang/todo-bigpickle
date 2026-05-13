@@ -59,32 +59,27 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   const setSearchQuery = useAppStore(s => s.setSearchQuery)
   const tasks = useAppStore(s => s.tasks)
 
-  const overdueCount = useMemo(() => {
-    const now = new Date()
-    return tasks.filter(t => !t.completed && t.deadline && t.deadline < now).length
-  }, [tasks])
-
-  const todayCount = useMemo(() => {
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    return tasks.filter(t => {
-      if (!t.date || t.completed) return false
-      const taskDate = new Date(t.date)
-      const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
-      return taskDateOnly.getTime() === today.getTime()
-    }).length
-  }, [tasks])
-
-  const next7Count = useMemo(() => {
+  const { overdueCount, todayCount, next7Count } = useMemo(() => {
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-    return tasks.filter(t => {
-      if (!t.date || t.completed) return false
+
+    let overdue = 0
+    let todayCount = 0
+    let next7Count = 0
+
+    for (const t of tasks) {
+      if (!t.completed && t.deadline && t.deadline < now) overdue++
+
+      if (!t.date || t.completed) continue
       const taskDate = new Date(t.date)
       const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
-      return taskDateOnly >= today && taskDateOnly <= nextWeek
-    }).length
+
+      if (taskDateOnly.getTime() === today.getTime()) todayCount++
+      if (taskDateOnly >= today && taskDateOnly <= nextWeek) next7Count++
+    }
+
+    return { overdueCount: overdue, todayCount, next7Count }
   }, [tasks])
 
   return (
