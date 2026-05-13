@@ -346,7 +346,7 @@ export const useAppStore = create<AppStore>()(
         tasks: state.tasks,
         lists: state.lists,
         labels: state.labels
-      }) as Partial<AppStore>
+      }) satisfies AppState
     }
   )
 )
