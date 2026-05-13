@@ -186,8 +186,9 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           </Button>
         </div>
         <div className="px-2 pb-2">
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <label htmlFor="show-completed" className="flex items-center gap-2 text-sm cursor-pointer">
             <Checkbox
+              id="show-completed"
               checked={showCompleted}
               onCheckedChange={(checked) => setShowCompleted(checked === true)}
             />
