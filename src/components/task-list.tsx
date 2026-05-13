@@ -37,6 +37,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
 
   const tasks = getFilteredTasks()
+  const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
   
   const sortedTasks = useMemo(() => {
     const sorted = tasks.toSorted((a, b) => {
@@ -92,9 +93,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
             <h1 className="text-3xl font-semibold">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
             <p className="text-muted-foreground">
               {tasks.length} task{tasks.length !== 1 ? 's' : ''}
-              {tasks.filter(t => t.completed).length > 0 && 
-                ` (${tasks.filter(t => t.completed).length} completed)`
-              }
+              {completedCount > 0 && ` (${completedCount} completed)`}
             </p>
           </div>
           
