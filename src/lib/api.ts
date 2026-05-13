@@ -37,18 +37,19 @@ async function fetchWithTimeout(url: string, options: FetchOptions = {}): Promis
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
+    const body = await response.json().catch(() => ({}))
+    const message = body.error || body.message || 'Request failed'
+
     if (response.status === 400) {
-      const error = await response.json().catch(() => ({ message: 'Invalid request' }))
-      throw new Error(error.message || 'Invalid request')
+      throw new Error(message)
     }
     if (response.status === 404) {
-      throw new Error('Resource not found')
+      throw new Error(message)
     }
     if (response.status >= 500) {
-      throw new Error('Server error, please try again later')
+      throw new Error(message)
     }
-    const error = await response.json().catch(() => ({ message: 'Request failed' }))
-    throw new Error(error.message || `Failed to fetch`)
+    throw new Error(message)
   }
   return response.json()
 }
