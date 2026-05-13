@@ -9,29 +9,33 @@ interface FetchOptions extends RequestInit {
   timeout?: number
 }
 
+function createTimeoutSignal(timeout: number): [AbortController, ReturnType<typeof setTimeout>] {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), timeout)
+  return [controller, id]
+}
+
 async function fetchWithTimeout(url: string, options: FetchOptions = {}): Promise<Response> {
   const { timeout = DEFAULT_TIMEOUT, ...fetchOptions } = options
   
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeout)
-  
-  const onAbort = () => controller.abort()
-  
-  if (fetchOptions.signal) {
-    fetchOptions.signal.addEventListener('abort', onAbort)
+  const [timeoutController, timeoutId] = createTimeoutSignal(timeout)
+  const signal = fetchOptions.signal
+
+  if (signal) {
+    if (signal.aborted) {
+      clearTimeout(timeoutId)
+      throw new DOMException('The operation was aborted', 'AbortError')
+    }
+    signal.addEventListener('abort', () => timeoutController.abort(), { once: true })
   }
   
   try {
-    const response = await fetch(url, {
+    return await fetch(url, {
       ...fetchOptions,
-      signal: controller.signal,
+      signal: timeoutController.signal,
     })
-    return response
   } finally {
     clearTimeout(timeoutId)
-    if (fetchOptions.signal) {
-      fetchOptions.signal.removeEventListener('abort', onAbort)
-    }
   }
 }
 
