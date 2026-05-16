@@ -368,9 +368,9 @@ export class DatabaseService {
     }
   }
 
-  updateLabel(id: string, updates: Partial<Omit<Label, 'id' | 'createdAt' | 'updatedAt'>>): Label | undefined {
+  updateLabel(id: string, updates: Partial<Omit<Label, 'id' | 'createdAt' | 'updatedAt'>>): Label {
     const existing = this.db.prepare('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow | undefined
-    if (!existing) return undefined
+    if (!existing) throw new Error('Label not found')
 
     const fields: string[] = []
     const values: (string | number)[] = []
@@ -395,14 +395,14 @@ export class DatabaseService {
     this.db.prepare(`UPDATE labels SET ${fields.join(', ')} WHERE id = ?`).run(...values)
 
     const updated = this.db.prepare('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow
-    return updated ? {
+    return {
       id: updated.id,
       name: updated.name,
       color: updated.color,
       icon: updated.icon,
       createdAt: new Date(updated.created_at),
       updatedAt: new Date(updated.updated_at)
-    } : undefined
+    }
   }
 
   deleteLabel(id: string): void {
