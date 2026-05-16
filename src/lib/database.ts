@@ -469,8 +469,8 @@ export class DatabaseService {
         INSERT INTO tasks (
           id, name, description, date, deadline, estimate, actual_time,
           priority, recurring, recurring_config, list_id, completed,
-          created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          completed_at, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         id,
         task.name,
@@ -484,6 +484,7 @@ export class DatabaseService {
         task.recurringConfig ? JSON.stringify(task.recurringConfig) : null,
         listId,
         task.completed ? 1 : 0,
+        task.completedAt ? (typeof task.completedAt === 'string' ? task.completedAt : task.completedAt.toISOString()) : null,
         now,
         now
       )
