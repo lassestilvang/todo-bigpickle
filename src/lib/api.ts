@@ -42,18 +42,7 @@ async function fetchWithTimeout(url: string, options: FetchOptions = {}): Promis
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    const message = body.error || body.message || 'Request failed'
-
-    if (response.status === 400) {
-      throw new Error(message)
-    }
-    if (response.status === 404) {
-      throw new Error(message)
-    }
-    if (response.status >= 500) {
-      throw new Error(message)
-    }
-    throw new Error(message)
+    throw new Error(body.error || body.message || 'Request failed')
   }
   return response.json()
 }
