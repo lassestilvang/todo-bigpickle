@@ -20,8 +20,14 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      const isInput = target?.matches?.('input, textarea, select, [contenteditable]')
+      const hasModifier = e.ctrlKey || e.metaKey
+
       for (const shortcut of shortcutsRef.current) {
         if (shortcut.disabled) continue
+
+        if (isInput && !hasModifier) continue
 
         const keyMatch = e.key.toLowerCase() === shortcut.key.toLowerCase()
         const ctrlMatch = shortcut.ctrlKey === undefined || shortcut.ctrlKey === e.ctrlKey
