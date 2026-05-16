@@ -15,7 +15,9 @@ export default function Home() {
   const [isCreatingTask, setIsCreatingTask] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>()
   const [formKey, setFormKey] = useState(0)
-  const { loadData, isLoading, error } = useAppStore()
+  const loadData = useAppStore(s => s.loadData)
+  const isLoading = useAppStore(s => s.isLoading)
+  const error = useAppStore(s => s.error)
 
   // Load data on mount
   useEffect(() => {
