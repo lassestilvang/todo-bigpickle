@@ -33,7 +33,11 @@ interface TaskListProps {
 }
 
 export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
-  const { getFilteredTasks, toggleTaskComplete, currentView, selectedListId, lists } = useAppStore()
+  const getFilteredTasks = useAppStore(s => s.getFilteredTasks)
+  const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
+  const currentView = useAppStore(s => s.currentView)
+  const selectedListId = useAppStore(s => s.selectedListId)
+  const lists = useAppStore(s => s.lists)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
 
   const tasks = getFilteredTasks()
