@@ -77,7 +77,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
     const taskData = {
       ...data,
-      estimate: estimateMinutes,
+      estimate: estimateMinutes || undefined,
       labels: labels.filter(l => selectedLabels.includes(l.id)),
       subtasks: subtasks.map(st => ({
         title: st.title,
