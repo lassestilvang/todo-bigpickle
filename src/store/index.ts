@@ -139,6 +139,7 @@ export const useAppStore = create<AppStore>()(
           }))
         } catch (error) {
           handleError('Failed to create list', error, set)
+          throw error
         }
       },
 
@@ -151,6 +152,7 @@ export const useAppStore = create<AppStore>()(
           }))
         } catch (error) {
           handleError('Failed to update list', error, set)
+          throw error
         }
       },
 
@@ -169,6 +171,7 @@ export const useAppStore = create<AppStore>()(
           }))
         } catch (error) {
           handleError('Failed to delete list', error, set)
+          throw error
         }
       },
 
@@ -182,6 +185,7 @@ export const useAppStore = create<AppStore>()(
           }))
         } catch (error) {
           handleError('Failed to create label', error, set)
+          throw error
         }
       },
 
@@ -194,6 +198,7 @@ export const useAppStore = create<AppStore>()(
           }))
         } catch (error) {
           handleError('Failed to update label', error, set)
+          throw error
         }
       },
 
@@ -210,6 +215,7 @@ export const useAppStore = create<AppStore>()(
           }))
         } catch (error) {
           handleError('Failed to delete label', error, set)
+          throw error
         }
       },
 
