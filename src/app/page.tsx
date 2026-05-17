@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { ThemeProvider } from '@/components/theme-provider'
 import { useAppStore } from '@/store'
+import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
 
@@ -97,12 +98,13 @@ export default function Home() {
                 {error && (
                   <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive text-sm">
                     <span className="flex-1">{error}</span>
-                    <button
+                    <Button
                       onClick={() => loadData()}
-                      className="px-3 py-1 rounded bg-destructive/20 hover:bg-destructive/30 text-xs font-medium"
+                      variant="destructive"
+                      size="sm"
                     >
                       Retry
-                    </button>
+                    </Button>
                   </div>
                 )}
                 
