@@ -2,6 +2,7 @@
 
 import { memo, useMemo } from 'react'
 import { useAppStore } from '@/store'
+import { useNow } from '@/hooks/use-now'
 import { ViewType } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -59,8 +60,9 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   const setSearchQuery = useAppStore(s => s.setSearchQuery)
   const tasks = useAppStore(s => s.tasks)
 
+  const now = useNow()
+
   const { overdueCount, todayCount, next7Count } = useMemo(() => {
-    const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
 
@@ -80,7 +82,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
     }
 
     return { overdueCount: overdue, todayCount, next7Count }
-  }, [tasks])
+  }, [tasks, now])
 
   return (
     <Sidebar>
