@@ -24,6 +24,11 @@ interface TaskInput {
 }
 type TaskUpdate = Partial<TaskInput>
 
+const TRACKED_TASK_FIELDS = new Set<keyof Task>([
+  'name', 'description', 'date', 'deadline', 'priority',
+  'completed', 'listId', 'estimate', 'actualTime', 'recurring'
+])
+
 // Database row types
 interface ListRow {
   id: string
@@ -545,9 +550,8 @@ export class DatabaseService {
 
     const update = this.db.transaction(() => {
       // Track changes
-      const trackedFields = new Set<keyof Task>(['name', 'description', 'date', 'deadline', 'priority', 'completed', 'listId', 'estimate', 'actualTime', 'recurring'])
       for (const [field, newValue] of Object.entries(updates)) {
-        if (!trackedFields.has(field as keyof Task)) continue
+        if (!TRACKED_TASK_FIELDS.has(field as keyof Task)) continue
 
         const oldValue = existingTask[field as keyof Task]
         if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
