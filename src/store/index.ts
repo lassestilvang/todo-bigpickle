@@ -4,10 +4,10 @@ import Fuse from 'fuse.js'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
 
-const handleError = (message: string, error: unknown, set?: (state: Partial<AppStore>) => void) => {
+const handleError = (message: string, error: unknown, set: (state: Partial<AppStore>) => void) => {
   const errorMessage = error instanceof Error ? error.message : message
   console.error(`${message}: ${errorMessage}`)
-  set?.({ error: errorMessage })
+  set({ error: errorMessage })
 }
 
 interface AppStore extends AppState {
