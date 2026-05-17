@@ -63,6 +63,21 @@ describe('DatabaseService', () => {
       expect(newLabel.icon).toBe('🔥')
     })
 
+    it('should retrieve a label by id', () => {
+      const newLabel = db.createLabel({
+        name: 'Urgent',
+        color: '#ef4444',
+        icon: '🔥'
+      })
+
+      const found = db.getLabelById(newLabel.id)
+      expect(found).toBeDefined()
+      expect(found?.name).toBe('Urgent')
+
+      const notFound = db.getLabelById('nonexistent')
+      expect(notFound).toBeUndefined()
+    })
+
     it('should retrieve all labels', () => {
       db.createLabel({
         name: 'Work',

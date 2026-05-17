@@ -351,6 +351,20 @@ export class DatabaseService {
     }))
   }
 
+  getLabelById(id: string): Label | undefined {
+    const row = this.db.prepare('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow | undefined
+    if (!row) return undefined
+
+    return {
+      id: row.id,
+      name: row.name,
+      color: row.color,
+      icon: row.icon,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at)
+    }
+  }
+
   createLabel(label: Omit<Label, 'id' | 'createdAt' | 'updatedAt'>): Label {
     const id = randomUUID()
     const now = new Date().toISOString()

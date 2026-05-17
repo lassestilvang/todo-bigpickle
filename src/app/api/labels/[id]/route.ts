@@ -21,14 +21,16 @@ export async function PUT(
     }
     const validated = updateLabelSchema.parse(body)
 
+    const existing = db.getLabelById(id)
+    if (!existing) {
+      return NextResponse.json({ error: 'Label not found' }, { status: 404 })
+    }
+
     const label = db.updateLabel(id, validated)
     return NextResponse.json(label)
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
-    }
-    if (error instanceof Error && error.message === 'Label not found') {
-      return NextResponse.json({ error: 'Label not found' }, { status: 404 })
     }
     return NextResponse.json({ error: 'Failed to update label' }, { status: 500 })
   }
@@ -41,8 +43,8 @@ export async function DELETE(
   try {
     const { id } = await context.params
 
-    const labels = db.getLabels()
-    if (!labels.find(l => l.id === id)) {
+    const existing = db.getLabelById(id)
+    if (!existing) {
       return NextResponse.json({ error: 'Label not found' }, { status: 404 })
     }
 
