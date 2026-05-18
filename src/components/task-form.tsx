@@ -69,6 +69,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   const dateValue = useWatch({ control: form.control, name: 'date' })
   const deadlineValue = useWatch({ control: form.control, name: 'deadline' })
   const priorityValue = useWatch({ control: form.control, name: 'priority' })
+  const recurringValue = useWatch({ control: form.control, name: 'recurring' })
   const listIdValue = useWatch({ control: form.control, name: 'listId' })
 
   const onSubmit = async (data: TaskFormData) => {
@@ -248,6 +249,23 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <FormLabel htmlFor="recurring">Repeat</FormLabel>
+            <Select value={recurringValue || ''} onValueChange={(value) => form.setValue('recurring', value === '' ? undefined : value as Task['recurring'])}>
+              <SelectTrigger id="recurring">
+                <SelectValue placeholder="Does not repeat" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Does not repeat</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekdays">Weekdays</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="yearly">Yearly</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
