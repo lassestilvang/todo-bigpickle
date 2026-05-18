@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AppSidebar } from '@/components/app-sidebar'
 import { TaskList } from '@/components/task-list'
 import { TaskForm } from '@/components/task-form'
@@ -56,21 +56,21 @@ export default function Home() {
     },
   ])
 
-  const handleCreateTask = () => {
+  const handleCreateTask = useCallback(() => {
     setEditingTask(undefined)
     setFormKey(k => k + 1)
     setIsCreatingTask(true)
-  }
+  }, [])
 
-  const handleEditTask = (task: Task) => {
+  const handleEditTask = useCallback((task: Task) => {
     setFormKey(k => k + 1)
     setEditingTask(task)
-  }
+  }, [])
 
-  const handleCloseForm = () => {
+  const handleCloseForm = useCallback(() => {
     setIsCreatingTask(false)
     setEditingTask(undefined)
-  }
+  }, [])
 
   return (
     <ThemeProvider
