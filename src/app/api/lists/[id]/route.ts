@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/database-singleton'
 import { createListSchema } from '@/lib/validators'
 import { z } from 'zod'
+import { parseJSONBody } from '@/lib/api-utils'
 
 const db = getDatabase()
 
@@ -13,13 +14,9 @@ export async function PUT(
 ) {
   try {
     const { id } = await context.params
-    let body: unknown
-    try {
-      body = await request.json()
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
-    }
-    const validated = updateListSchema.parse(body)
+    const result = await parseJSONBody(request)
+    if (!result.success) return result.response
+    const validated = updateListSchema.parse(result.data)
     
     // Check if list exists
     const existing = db.getListById(id)
