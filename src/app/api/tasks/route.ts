@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getDatabase } from '@/lib/database-singleton'
 import { createTaskSchema } from '@/lib/validators'
+import { parseJSONBody } from '@/lib/api-utils'
 
 const db = getDatabase()
 
@@ -16,13 +17,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    let body: unknown
-    try {
-      body = await request.json()
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
-    }
-    const validated = createTaskSchema.parse(body)
+    const result = await parseJSONBody(request)
+    if (!result.success) return result.response
+    const validated = createTaskSchema.parse(result.data)
     const task = db.createTask(validated)
     return NextResponse.json(task)
   } catch (error) {
