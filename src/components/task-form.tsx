@@ -40,7 +40,10 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
-  const { lists, labels, addTask, updateTask } = useAppStore()
+  const lists = useAppStore(s => s.lists)
+  const labels = useAppStore(s => s.labels)
+  const addTask = useAppStore(s => s.addTask)
+  const updateTask = useAppStore(s => s.updateTask)
   const [selectedLabels, setSelectedLabels] = useState<string[]>(task?.labels.map(l => l.id) || [])
   const [subtasks, setSubtasks] = useState(
     task?.subtasks.map(st => ({ id: st.id, title: st.title, completed: st.completed })) || []
