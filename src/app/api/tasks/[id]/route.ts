@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getDatabase } from '@/lib/database-singleton'
 import { updateTaskSchema } from '@/lib/validators'
+import { parseJSONBody } from '@/lib/api-utils'
 
 const db = getDatabase()
 
@@ -11,13 +12,9 @@ export async function PUT(
 ) {
   try {
     const { id } = await context.params
-    let body: unknown
-    try {
-      body = await request.json()
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
-    }
-    const validated = updateTaskSchema.parse(body)
+    const result = await parseJSONBody(request)
+    if (!result.success) return result.response
+    const validated = updateTaskSchema.parse(result.data)
 
     const existing = db.getTaskById(id)
     if (!existing) {
