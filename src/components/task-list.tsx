@@ -37,10 +37,17 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
   const currentView = useAppStore(s => s.currentView)
   const selectedListId = useAppStore(s => s.selectedListId)
+  const showCompleted = useAppStore(s => s.showCompleted)
+  const searchQuery = useAppStore(s => s.searchQuery)
+  const allTasks = useAppStore(s => s.tasks)
   const lists = useAppStore(s => s.lists)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
 
-  const tasks = getFilteredTasks()
+  const tasks = useMemo(
+    () => getFilteredTasks(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [getFilteredTasks, allTasks, currentView, selectedListId, showCompleted, searchQuery]
+  )
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
   
   const sortedTasks = useMemo(() => {
