@@ -138,5 +138,7 @@ export function seedDatabase() {
     listId: workList.id,
     completed: false
   })
-
 }
+
+// Auto-run when executed directly via `bun run seed`
+seedDatabase()
