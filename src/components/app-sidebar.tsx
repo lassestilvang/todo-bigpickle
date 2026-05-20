@@ -1,8 +1,9 @@
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState, useEffect } from 'react'
 import { useAppStore } from '@/store'
 import { useNow } from '@/hooks/use-now'
+import { useDebounce } from '@/hooks/use-debounce'
 import { ViewType } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -62,6 +63,17 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
 
   const now = useNow()
 
+  const [localSearch, setLocalSearch] = useState(searchQuery)
+  const debouncedSearch = useDebounce(localSearch, 150)
+
+  useEffect(() => {
+    setSearchQuery(debouncedSearch)
+  }, [debouncedSearch, setSearchQuery])
+
+  useEffect(() => {
+    setLocalSearch(searchQuery)
+  }, [searchQuery])
+
   const { overdueCount, todayCount, next7Count } = useMemo(() => {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -96,8 +108,8 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           <Input
             placeholder="Search tasks..."
             aria-label="Search tasks"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="w-full pl-8"
           />
         </div>
