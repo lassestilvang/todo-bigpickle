@@ -3,7 +3,7 @@
 import { memo } from 'react'
 import { Task } from '@/types'
 import { useNow } from '@/hooks/use-now'
-import { format } from 'date-fns'
+import { format, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
@@ -38,6 +38,13 @@ const priorityLabels = {
   medium: 'Medium', 
   low: 'Low',
   none: 'None'
+}
+
+function formatRelativeDate(date: Date): string {
+  if (isToday(date)) return 'Today'
+  if (isTomorrow(date)) return 'Tomorrow'
+  if (isYesterday(date)) return 'Yesterday'
+  return format(date, 'MMM d')
 }
 
 export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit, onDelete }: TaskCardProps) {
@@ -109,7 +116,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                 {task.date && (
                   <div className="flex items-center gap-1">
                     <Calendar className="size-3" />
-                    {format(task.date, 'MMM d')}
+                    {formatRelativeDate(task.date)}
                   </div>
                 )}
 
@@ -118,7 +125,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                     isOverdue ? 'text-red-500' : ''
                   }`}>
                     <Clock className="size-3" />
-                    {format(task.deadline, 'MMM d')}
+                    {isOverdue ? 'Overdue!' : formatRelativeDate(task.deadline)}
                   </div>
                 )}
 
