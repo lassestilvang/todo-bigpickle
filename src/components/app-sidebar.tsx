@@ -4,6 +4,7 @@ import { memo, useMemo, useState, useEffect } from 'react'
 import { useAppStore } from '@/store'
 import { useNow } from '@/hooks/use-now'
 import { useDebounce } from '@/hooks/use-debounce'
+import { motion } from 'framer-motion'
 import { ViewType } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -138,7 +139,14 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                       <span>{label}</span>
                       {count !== undefined && count > 0 && (
                         <Badge variant="secondary" className="ml-auto">
-                          {count}
+                          <motion.span
+                            key={count}
+                            initial={{ scale: 1.3, y: -2 }}
+                            animate={{ scale: 1, y: 0 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          >
+                            {count}
+                          </motion.span>
                         </Badge>
                       )}
                     </SidebarMenuButton>

@@ -118,7 +118,6 @@ export default function Home() {
     <ThemeProvider
       defaultTheme="system"
       enableSystem
-      disableTransitionOnChange
     >
       <SidebarProvider>
           <div id="main-content" className="flex h-screen overflow-hidden">
