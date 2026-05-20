@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -50,7 +50,14 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   )
   const [newSubtask, setNewSubtask] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const subtaskIdCounter = useRef(0)
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => nameInputRef.current?.focus(), 100)
+    }
+  }, [isOpen])
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -152,6 +159,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             <FormLabel htmlFor="name">Task Name *</FormLabel>
             <Input
               id="name"
+              ref={nameInputRef}
               {...form.register('name')}
               placeholder="Enter task name..."
             />

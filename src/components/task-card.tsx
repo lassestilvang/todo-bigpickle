@@ -45,13 +45,14 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
   return (
     <motion.div
       data-task-card
+      layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.2, layout: { duration: 0.3, ease: 'easeOut' } }}
     >
       <Card 
-        className={`cursor-pointer transition-all hover:shadow-md ${
+        className={`cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 ${
           task.completed ? 'opacity-60' : ''
         } ${isOverdue ? 'border-red-200 dark:border-red-800' : ''}`}
         onClick={() => onEdit(task)}

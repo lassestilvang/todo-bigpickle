@@ -163,12 +163,13 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
               )}
             </motion.div>
           ) : (
-            Object.entries(groupedTasks).map(([groupKey, group]) => (
+            Object.entries(groupedTasks).map(([groupKey, group], idx) => (
               <motion.div
                 key={groupKey}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: idx * 0.03, duration: 0.25 }}
                 className="mb-8"
               >
                 {group.date && (

@@ -25,7 +25,9 @@ import {
 } from '@/components/ui/sidebar'
 import { 
   CalendarDays, 
+  CalendarRange,
   List, 
+  LayoutList,
   Plus, 
   Search, 
   CheckCircle2,
@@ -34,9 +36,9 @@ import {
 
 const viewIcons = {
   today: CalendarDays,
-  next7days: CalendarDays,
+  next7days: CalendarRange,
   upcoming: List,
-  all: List,
+  all: LayoutList,
 }
 
 const viewLabels = {
