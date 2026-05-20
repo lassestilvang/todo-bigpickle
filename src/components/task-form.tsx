@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { CalendarIcon, Plus, X } from 'lucide-react'
+import { CalendarIcon, Plus, X, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -44,6 +44,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   const labels = useAppStore(s => s.labels)
   const addTask = useAppStore(s => s.addTask)
   const updateTask = useAppStore(s => s.updateTask)
+  const deleteTask = useAppStore(s => s.deleteTask)
   const [selectedLabels, setSelectedLabels] = useState<string[]>(task?.labels.map(l => l.id) || [])
   const [subtasks, setSubtasks] = useState(
     task?.subtasks.map(st => ({ id: st.id, title: st.title, completed: st.completed })) || []
@@ -368,6 +369,20 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
           </div>
 
           <DialogFooter>
+            {task && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={async () => {
+                  await deleteTask(task.id)
+                  onClose()
+                }}
+                className="mr-auto"
+              >
+                <Trash2 className="size-4 mr-2" />
+                Delete
+              </Button>
+            )}
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>

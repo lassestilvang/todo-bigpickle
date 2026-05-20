@@ -15,13 +15,15 @@ import {
   Tag, 
   CheckCircle2, 
   Circle,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from 'lucide-react'
 
 interface TaskCardProps {
   task: Task
   onToggleComplete: (id: string) => void
   onEdit: (task: Task) => void
+  onDelete: (id: string) => void
 }
 
 const priorityColors = {
@@ -38,7 +40,7 @@ const priorityLabels = {
   none: 'None'
 }
 
-export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit, onDelete }: TaskCardProps) {
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
 
@@ -52,7 +54,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
       transition={{ duration: 0.2, layout: { duration: 0.3, ease: 'easeOut' } }}
     >
       <Card 
-        className={`cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 ${
+        className={`group relative cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 ${
           task.completed ? 'opacity-60' : ''
         } ${isOverdue ? 'border-red-200 dark:border-red-800' : ''}`}
         onClick={() => onEdit(task)}
@@ -67,6 +69,16 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit 
         }}
       >
         <CardContent className="p-4">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(task.id)
+            }}
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            aria-label={`Delete "${task.name}"`}
+          >
+            <Trash2 className="size-4" />
+          </button>
           <div className="flex items-start gap-3">
             <Checkbox
               checked={task.completed}

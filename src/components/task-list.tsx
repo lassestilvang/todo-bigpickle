@@ -35,6 +35,7 @@ interface TaskListProps {
 export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
   const getFilteredTasks = useAppStore(s => s.getFilteredTasks)
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
+  const deleteTask = useAppStore(s => s.deleteTask)
   const currentView = useAppStore(s => s.currentView)
   const selectedListId = useAppStore(s => s.selectedListId)
   const showCompleted = useAppStore(s => s.showCompleted)
@@ -187,6 +188,7 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
                       task={task}
                       onToggleComplete={toggleTaskComplete}
                       onEdit={onEditTask}
+                      onDelete={deleteTask}
                     />
                   ))}
                 </div>
