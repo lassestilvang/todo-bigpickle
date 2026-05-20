@@ -124,3 +124,8 @@
 html {
   transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, outline-color 0.15s ease;
 }
+
+[data-task-card] {
+  content-visibility: auto;
+  contain-intrinsic-height: 120px;
+}
