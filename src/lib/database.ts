@@ -431,26 +431,44 @@ export class DatabaseService {
   // Tasks
   /**
    * Get all tasks from the database with all related data
+   * Uses batched queries to avoid N+1 problem
    * @returns {Task[]} Array of tasks with subtasks, labels, reminders, and attachments
    */
   getTasks(): Task[] {
     const rows = this.db.prepare('SELECT * FROM tasks ORDER BY created_at DESC').all() as TaskRow[]
-    return rows.map(row => this.mapRowToTask(row))
+    const ids = rows.map(r => r.id)
+    if (ids.length === 0) return []
+
+    // Batch fetch all related data in 5 queries instead of 5 per task
+    const allLabels = this.batchGetLabelsForTasks(ids)
+    const allSubtasks = this.batchGetSubtasksForTasks(ids)
+    const allHistory = this.batchGetHistoryForTasks(ids)
+    const allReminders = this.batchGetRemindersForTasks(ids)
+    const allAttachments = this.batchGetAttachmentsForTasks(ids)
+
+    return rows.map(row => this.mapRowToTask(row, allLabels, allSubtasks, allHistory, allReminders, allAttachments))
   }
 
-  private mapRowToTask(row: TaskRow): Task {
+  private mapRowToTask(
+    row: TaskRow,
+    allLabels?: Map<string, Label[]>,
+    allSubtasks?: Map<string, Subtask[]>,
+    allHistory?: Map<string, TaskHistory[]>,
+    allReminders?: Map<string, Date[]>,
+    allAttachments?: Map<string, string[]>
+  ): Task {
     return {
       id: row.id,
       name: row.name,
       description: row.description || undefined,
       date: row.date ? new Date(row.date) : undefined,
       deadline: row.deadline ? new Date(row.deadline) : undefined,
-      reminders: this.getRemindersForTask(row.id),
+      reminders: allReminders?.get(row.id) || this.getRemindersForTask(row.id),
       estimate: row.estimate ?? undefined,
       actualTime: row.actual_time ?? undefined,
-      labels: this.getLabelsForTask(row.id),
+      labels: allLabels?.get(row.id) || this.getLabelsForTask(row.id),
       priority: row.priority as Priority,
-      subtasks: this.getSubtasksForTask(row.id),
+      subtasks: allSubtasks?.get(row.id) || this.getSubtasksForTask(row.id),
       recurring: row.recurring as RecurringType || undefined,
       recurringConfig: row.recurring_config ? JSON.parse(row.recurring_config) : undefined,
       listId: row.list_id,
@@ -458,9 +476,101 @@ export class DatabaseService {
       completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
-      history: this.getTaskHistory(row.id),
-      attachments: this.getAttachmentsForTask(row.id)
+      history: allHistory?.get(row.id) || this.getTaskHistory(row.id),
+      attachments: allAttachments?.get(row.id) || this.getAttachmentsForTask(row.id)
     }
+  }
+
+  private batchGetLabelsForTasks(taskIds: string[]): Map<string, Label[]> {
+    const placeholders = taskIds.map(() => '?').join(',')
+    const rows = this.db.prepare(`
+      SELECT tl.task_id, l.* FROM labels l
+      JOIN task_labels tl ON l.id = tl.label_id
+      WHERE tl.task_id IN (${placeholders})
+    `).all(...taskIds) as (LabelRow & { task_id: string })[]
+
+    const map = new Map<string, Label[]>()
+    for (const row of rows) {
+      if (!map.has(row.task_id)) map.set(row.task_id, [])
+      map.get(row.task_id)!.push({
+        id: row.id,
+        name: row.name,
+        color: row.color,
+        icon: row.icon,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at)
+      })
+    }
+    return map
+  }
+
+  private batchGetSubtasksForTasks(taskIds: string[]): Map<string, Subtask[]> {
+    const placeholders = taskIds.map(() => '?').join(',')
+    const rows = this.db.prepare(
+      `SELECT * FROM subtasks WHERE task_id IN (${placeholders}) ORDER BY created_at`
+    ).all(...taskIds) as (SubtaskRow)[]
+
+    const map = new Map<string, Subtask[]>()
+    for (const row of rows) {
+      if (!map.has(row.task_id)) map.set(row.task_id, [])
+      map.get(row.task_id)!.push({
+        id: row.id,
+        title: row.title,
+        completed: row.completed === 1,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at)
+      })
+    }
+    return map
+  }
+
+  private batchGetHistoryForTasks(taskIds: string[]): Map<string, TaskHistory[]> {
+    const placeholders = taskIds.map(() => '?').join(',')
+    const rows = this.db.prepare(
+      `SELECT * FROM task_history WHERE task_id IN (${placeholders}) ORDER BY changed_at DESC`
+    ).all(...taskIds) as (TaskHistoryRow)[]
+
+    const map = new Map<string, TaskHistory[]>()
+    for (const row of rows) {
+      if (!map.has(row.task_id)) map.set(row.task_id, [])
+      map.get(row.task_id)!.push({
+        id: row.id,
+        taskId: row.task_id,
+        field: row.field,
+        oldValue: row.old_value ? JSON.parse(row.old_value) : null,
+        newValue: row.new_value ? JSON.parse(row.new_value) : null,
+        changedAt: new Date(row.changed_at)
+      })
+    }
+    return map
+  }
+
+  private batchGetRemindersForTasks(taskIds: string[]): Map<string, Date[]> {
+    const placeholders = taskIds.map(() => '?').join(',')
+    const rows = this.db.prepare(
+      `SELECT task_id, reminder_time FROM reminders WHERE task_id IN (${placeholders}) ORDER BY reminder_time`
+    ).all(...taskIds) as { task_id: string; reminder_time: string }[]
+
+    const map = new Map<string, Date[]>()
+    for (const row of rows) {
+      if (!map.has(row.task_id)) map.set(row.task_id, [])
+      map.get(row.task_id)!.push(new Date(row.reminder_time))
+    }
+    return map
+  }
+
+  private batchGetAttachmentsForTasks(taskIds: string[]): Map<string, string[]> {
+    const placeholders = taskIds.map(() => '?').join(',')
+    const rows = this.db.prepare(
+      `SELECT task_id, file_path FROM attachments WHERE task_id IN (${placeholders}) ORDER BY created_at`
+    ).all(...taskIds) as { task_id: string; file_path: string }[]
+
+    const map = new Map<string, string[]>()
+    for (const row of rows) {
+      if (!map.has(row.task_id)) map.set(row.task_id, [])
+      map.get(row.task_id)!.push(row.file_path)
+    }
+    return map
   }
 
   /**
