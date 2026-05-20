@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { CalendarIcon, Plus, X, Trash2 } from 'lucide-react'
+import { CalendarIcon, Plus, X, Trash2, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -50,6 +50,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
     task?.subtasks.map(st => ({ id: st.id, title: st.title, completed: st.completed })) || []
   )
   const [newSubtask, setNewSubtask] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const subtaskIdCounter = useRef(0)
 
@@ -97,6 +98,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
       completed: task?.completed || false,
     }
 
+    setIsSubmitting(true)
     try {
       if (task) {
         await updateTask(task.id, taskData as Parameters<typeof updateTask>[1])
@@ -106,6 +108,8 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
       onClose()
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Failed to save task')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -386,8 +390,15 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">
-              {task ? 'Update Task' : 'Create Task'}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                  {task ? 'Updating...' : 'Creating...'}
+                </>
+              ) : (
+                task ? 'Update Task' : 'Create Task'
+              )}
             </Button>
           </DialogFooter>
         </form>
