@@ -6,7 +6,7 @@ import { useAppStore } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ListTodo, SortAsc } from 'lucide-react'
+import { Plus, ListTodo, SortAsc, SearchX, Calendar, CheckCircle2, Sparkles } from 'lucide-react'
 import { format } from 'date-fns'
 
 const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 }
@@ -126,22 +126,41 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
         </div>
 
         {/* Task Groups */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {Object.entries(groupedTasks).length === 0 ? (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12"
+              key="empty"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="text-center py-16"
             >
-              <div className="text-muted-foreground mb-4">
-                <ListTodo className="size-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">No tasks found</p>
-                <p className="text-sm">Create a new task to get started</p>
-              </div>
-              <Button onClick={onCreateTask}>
-<Plus className="size-4 mr-2" />
-                Create Your First Task
-              </Button>
+              {searchQuery ? (
+                <div className="text-muted-foreground">
+                  <SearchX className="size-16 mx-auto mb-4 text-muted-foreground/30" />
+                  <p className="text-lg font-medium mb-1">No results found</p>
+                  <p className="text-sm">No tasks match &ldquo;{searchQuery}&rdquo;</p>
+                </div>
+              ) : allTasks.length === 0 ? (
+                <div className="text-muted-foreground">
+                  <div className="relative mx-auto mb-6 size-24">
+                    <ListTodo className="size-24 text-muted-foreground/20" />
+                    <Sparkles className="size-6 text-primary absolute top-1 right-1" />
+                  </div>
+                  <p className="text-xl font-medium mb-1">Your task list is empty</p>
+                  <p className="text-sm mb-6">Create your first task and get things done</p>
+                  <Button onClick={onCreateTask} size="lg">
+                    <Plus className="size-4 mr-2" />
+                    Create Your First Task
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-muted-foreground">
+                  <CheckCircle2 className="size-16 mx-auto mb-4 text-green-500/40" />
+                  <p className="text-lg font-medium mb-1">All done!</p>
+                  <p className="text-sm">No uncompleted tasks match this view</p>
+                </div>
+              )}
             </motion.div>
           ) : (
             Object.entries(groupedTasks).map(([groupKey, group]) => (
