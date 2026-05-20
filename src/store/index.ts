@@ -121,12 +121,34 @@ export const useAppStore = create<AppStore>()(
       toggleTaskComplete: async (id) => {
         const task = get().tasks.find(t => t.id === id)
         if (!task) return
+
+        const newCompleted = !task.completed
+        const now = new Date()
+
+        // Optimistic update
+        set((state) => ({
+          tasks: state.tasks.map(t =>
+            t.id === id
+              ? { ...t, completed: newCompleted, completedAt: newCompleted ? now : undefined }
+              : t
+          ),
+        }))
+
         try {
-          await get().updateTask(id, {
-            completed: !task.completed,
-            completedAt: !task.completed ? new Date() : undefined
+          invalidateFuseCache()
+          await api.updateTask(id, {
+            completed: newCompleted,
+            completedAt: newCompleted ? now : undefined
           })
         } catch (error) {
+          // Revert on failure
+          set((state) => ({
+            tasks: state.tasks.map(t =>
+              t.id === id
+                ? { ...t, completed: task.completed, completedAt: task.completedAt }
+                : t
+            ),
+          }))
           handleError('Failed to toggle task completion', error, set)
         }
       },
