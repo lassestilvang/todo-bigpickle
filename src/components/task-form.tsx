@@ -50,14 +50,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   )
   const [newSubtask, setNewSubtask] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const nameInputRef = useRef<HTMLInputElement>(null)
   const subtaskIdCounter = useRef(0)
-
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => nameInputRef.current?.focus(), 100)
-    }
-  }, [isOpen])
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -78,6 +71,12 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   const priorityValue = useWatch({ control: form.control, name: 'priority' })
   const recurringValue = useWatch({ control: form.control, name: 'recurring' })
   const listIdValue = useWatch({ control: form.control, name: 'listId' })
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => form.setFocus('name'), 100)
+    }
+  }, [isOpen, form])
 
   const onSubmit = async (data: TaskFormData) => {
     setSubmitError(null)
@@ -159,7 +158,6 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             <FormLabel htmlFor="name">Task Name *</FormLabel>
             <Input
               id="name"
-              ref={nameInputRef}
               {...form.register('name')}
               placeholder="Enter task name..."
             />

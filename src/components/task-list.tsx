@@ -6,7 +6,7 @@ import { useAppStore } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ListTodo, SortAsc, SearchX, Calendar, CheckCircle2, Sparkles } from 'lucide-react'
+import { Plus, ListTodo, SortAsc, SearchX, CheckCircle2, Sparkles } from 'lucide-react'
 import { format } from 'date-fns'
 
 const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 }
