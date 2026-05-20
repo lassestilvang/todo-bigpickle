@@ -204,6 +204,9 @@ export class DatabaseService {
 
     // Create indexes for better query performance
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_list_id ON tasks(list_id)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_date ON tasks(date)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_deadline ON tasks(deadline)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON subtasks(task_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_history_task_id ON task_history(task_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_labels_task_id ON task_labels(task_id)`)
