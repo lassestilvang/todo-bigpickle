@@ -109,7 +109,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
         <div className="px-2 pb-2 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search tasks..."
+            placeholder="Search tasks...  ⌘/"
             aria-label="Search tasks"
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
@@ -207,6 +207,9 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           <Button onClick={onCreateTask} className="w-full">
             <Plus className="size-4 mr-2" />
             New Task
+            <kbd className="ml-auto hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+              ⌘N
+            </kbd>
           </Button>
         </div>
         <div className="px-2 pb-2">
