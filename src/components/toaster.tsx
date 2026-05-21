@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, CheckCircle2, XCircle, Info, AlertTriangle } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import type { ToastData } from '@/hooks/use-toast'
 import { subscribeToasts, dismissToast } from '@/hooks/use-toast'
 
@@ -38,43 +39,51 @@ export function ToastContainer() {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
-      {toasts.map(t => {
-        const Icon = iconMap[t.type] || iconMap.info
-        return (
-          <div
-            key={t.id}
-            className={`pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur-sm ${colors[t.type] || colors.info}`}
-            style={{
-              animation: 'toast-in 0.3s ease-out',
-            }}
-          >
-            <Icon className={`size-5 mt-0.5 shrink-0 ${iconColors[t.type] || iconColors.info}`} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">{t.title}</p>
-              {t.description && (
-                <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
-              )}
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {t.action && (
+    <div
+      className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none"
+      aria-live="polite"
+      aria-label="Notifications"
+    >
+      <AnimatePresence mode="popLayout">
+        {toasts.map(t => {
+          const Icon = iconMap[t.type] || iconMap.info
+          return (
+            <motion.div
+              key={t.id}
+              layout
+              initial={{ opacity: 0, x: 80, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 80, scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className={`pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur-sm ${colors[t.type] || colors.info}`}
+            >
+              <Icon className={`size-5 mt-0.5 shrink-0 ${iconColors[t.type] || iconColors.info}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{t.title}</p>
+                {t.description && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {t.action && (
+                  <button
+                    onClick={() => { dismissToast(t.id); t.action!.onClick() }}
+                    className="text-xs font-medium text-primary hover:underline transition-colors whitespace-nowrap"
+                  >
+                    {t.action.label}
+                  </button>
+                )}
                 <button
-                  onClick={() => { dismissToast(t.id); t.action!.onClick() }}
-                  className="text-xs font-medium text-primary hover:underline transition-colors whitespace-nowrap"
+                  onClick={() => dismissToast(t.id)}
+                  className="rounded-md p-0.5 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {t.action.label}
+                  <X className="size-4" />
                 </button>
-              )}
-              <button
-                onClick={() => dismissToast(t.id)}
-                className="rounded-md p-0.5 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          </div>
-        )
-      })}
+              </div>
+            </motion.div>
+          )
+        })}
+      </AnimatePresence>
     </div>
   )
 }

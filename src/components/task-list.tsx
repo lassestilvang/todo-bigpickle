@@ -64,43 +64,6 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  // Keyboard navigation between tasks
-  useEffect(() => {
-    const allTasks = Object.values(groupedTasks).flatMap(g => g.tasks)
-    if (allTasks.length === 0) return
-
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null
-      const isInput = target?.matches?.('input, textarea, select, [contenteditable], [contenteditable] *')
-      if (isInput && !e.metaKey && !e.ctrlKey) return
-
-      const tasks = Object.values(groupedTasks).flatMap(g => g.tasks)
-      if (tasks.length === 0) return
-
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault()
-        setFocusedTaskIndex(prev => {
-          const next = e.key === 'ArrowDown'
-            ? Math.min(prev + 1, tasks.length - 1)
-            : Math.max(prev - 1, 0)
-          const cards = document.querySelectorAll<HTMLElement>('[data-task-card]')
-          cards[next]?.focus()
-          cards[next]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-          return next
-        })
-      } else if (e.key === 'Enter' && focusedTaskIndex >= 0 && tasks[focusedTaskIndex]) {
-        const isInCard = target?.closest('[data-task-card]')
-        if (isInCard && !isInput) {
-          e.preventDefault()
-          onEditTask(tasks[focusedTaskIndex])
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [groupedTasks, focusedTaskIndex, onEditTask])
-
   const handleQuickAdd = useCallback(async () => {
     const name = quickAddText.trim()
     if (!name) return
@@ -191,6 +154,43 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
       })
     }
   }, [sortBy, groupedTasks])
+
+  // Keyboard navigation between tasks
+  useEffect(() => {
+    const allTasks = Object.values(groupedTasks).flatMap(g => g.tasks)
+    if (allTasks.length === 0) return
+
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      const isInput = target?.matches?.('input, textarea, select, [contenteditable], [contenteditable] *')
+      if (isInput && !e.metaKey && !e.ctrlKey) return
+
+      const tasks = Object.values(groupedTasks).flatMap(g => g.tasks)
+      if (tasks.length === 0) return
+
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        setFocusedTaskIndex(prev => {
+          const next = e.key === 'ArrowDown'
+            ? Math.min(prev + 1, tasks.length - 1)
+            : Math.max(prev - 1, 0)
+          const cards = document.querySelectorAll<HTMLElement>('[data-task-card]')
+          cards[next]?.focus()
+          cards[next]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+          return next
+        })
+      } else if (e.key === 'Enter' && focusedTaskIndex >= 0 && tasks[focusedTaskIndex]) {
+        const isInCard = target?.closest('[data-task-card]')
+        if (isInCard && !isInput) {
+          e.preventDefault()
+          onEditTask(tasks[focusedTaskIndex])
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [groupedTasks, focusedTaskIndex, onEditTask])
 
   const cycleSort = useCallback(() => {
     setSortBy(prev => prev === 'date' ? 'priority' : prev === 'priority' ? 'name' : prev === 'name' ? 'custom' : 'date')

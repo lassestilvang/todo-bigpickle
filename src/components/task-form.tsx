@@ -17,7 +17,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { CalendarIcon, Plus, X, Trash2, Loader2 } from 'lucide-react'
-import { format, addDays, startOfWeek, addWeeks, addMonths } from 'date-fns'
+import { format, addDays, addWeeks } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const taskSchema = z.object({
