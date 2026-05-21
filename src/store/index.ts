@@ -4,6 +4,7 @@ import { shallow } from 'zustand/shallow'
 import Fuse from 'fuse.js'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
+import { toast } from '@/hooks/use-toast'
 
 export { shallow }
 
@@ -83,44 +84,73 @@ export const useAppStore = create<AppStore>()(
 
       // Task actions
       addTask: async (taskData) => {
+        const tempId = `temp_${Date.now()}`
+        const now = new Date()
+        const optimisticTask: Task = {
+          id: tempId,
+          name: taskData.name,
+          description: taskData.description,
+          date: taskData.date,
+          deadline: taskData.deadline,
+          estimate: taskData.estimate,
+          actualTime: taskData.actualTime,
+          labels: taskData.labels || [],
+          priority: taskData.priority || 'none',
+          subtasks: taskData.subtasks || [],
+          recurring: taskData.recurring,
+          recurringConfig: taskData.recurringConfig,
+          listId: taskData.listId,
+          completed: taskData.completed || false,
+          completedAt: taskData.completedAt,
+          position: 0,
+          createdAt: now,
+          updatedAt: now,
+          history: [],
+        }
+        invalidateFuseCache()
+        set((state) => ({ tasks: [optimisticTask, ...state.tasks], error: null }))
         try {
           const task = await api.createTask(taskData)
-          invalidateFuseCache()
           set((state) => ({
-            tasks: [task, ...state.tasks],
-            error: null
+            tasks: state.tasks.map(t => t.id === tempId ? task : t),
           }))
+          toast({ type: 'success', title: 'Task created', description: taskData.name })
         } catch (error) {
+          set((state) => ({ tasks: state.tasks.filter(t => t.id !== tempId) }))
           handleError('Failed to create task', error, set)
-          throw error
+          toast({ type: 'error', title: 'Failed to create task' })
         }
       },
 
       updateTask: async (id, updates) => {
+        const prev = get().tasks.find(t => t.id === id)
+        if (!prev) return
+        invalidateFuseCache()
+        set((state) => ({
+          tasks: state.tasks.map(t => t.id === id ? { ...t, ...updates, updatedAt: new Date() } : t),
+          error: null,
+        }))
         try {
-          const task = await api.updateTask(id, updates)
-          invalidateFuseCache()
-          set((state) => ({
-            tasks: state.tasks.map(t => t.id === id ? task : t),
-            error: null
-          }))
+          await api.updateTask(id, updates)
         } catch (error) {
+          set((state) => ({ tasks: state.tasks.map(t => t.id === id ? prev : t) }))
           handleError('Failed to update task', error, set)
-          throw error
+          toast({ type: 'error', title: 'Failed to update task' })
         }
       },
 
       deleteTask: async (id) => {
+        const prev = get().tasks.find(t => t.id === id)
+        if (!prev) return
+        invalidateFuseCache()
+        set((state) => ({ tasks: state.tasks.filter(t => t.id !== id), error: null }))
         try {
           await api.deleteTask(id)
-          invalidateFuseCache()
-          set((state) => ({
-            tasks: state.tasks.filter(t => t.id !== id),
-            error: null
-          }))
+          toast({ type: 'success', title: 'Task deleted' })
         } catch (error) {
+          set((state) => ({ tasks: [...state.tasks, prev].sort((a, b) => a.position - b.position) }))
           handleError('Failed to delete task', error, set)
-          throw error
+          toast({ type: 'error', title: 'Failed to delete task' })
         }
       },
 
@@ -131,7 +161,6 @@ export const useAppStore = create<AppStore>()(
         const newCompleted = !task.completed
         const now = new Date()
 
-        // Optimistic update
         set((state) => ({
           tasks: state.tasks.map(t =>
             t.id === id
@@ -140,6 +169,10 @@ export const useAppStore = create<AppStore>()(
           ),
         }))
 
+        if (newCompleted) {
+          toast({ type: 'success', title: 'Task completed!' })
+        }
+
         try {
           invalidateFuseCache()
           await api.updateTask(id, {
@@ -147,7 +180,6 @@ export const useAppStore = create<AppStore>()(
             completedAt: newCompleted ? now : undefined
           })
         } catch (error) {
-          // Revert on failure
           set((state) => ({
             tasks: state.tasks.map(t =>
               t.id === id
@@ -156,24 +188,28 @@ export const useAppStore = create<AppStore>()(
             ),
           }))
           handleError('Failed to toggle task completion', error, set)
+          toast({ type: 'error', title: 'Failed to update task' })
         }
       },
 
       reorderTasks: async (reorder) => {
+        const prevTasks = [...get().tasks]
+        invalidateFuseCache()
+        set((state) => {
+          const updated = [...state.tasks]
+          for (const item of reorder) {
+            const task = updated.find(t => t.id === item.id)
+            if (task) task.position = item.position
+          }
+          updated.sort((a, b) => a.position - b.position)
+          return { tasks: updated, error: null }
+        })
         try {
-          invalidateFuseCache()
           await api.reorderTasks(reorder)
-          set((state) => {
-            const updated = [...state.tasks]
-            for (const item of reorder) {
-              const task = updated.find(t => t.id === item.id)
-              if (task) task.position = item.position
-            }
-            updated.sort((a, b) => a.position - b.position)
-            return { tasks: updated, error: null }
-          })
         } catch (error) {
+          set({ tasks: prevTasks })
           handleError('Failed to reorder tasks', error, set)
+          toast({ type: 'error', title: 'Failed to save order' })
         }
       },
 
