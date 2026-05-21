@@ -1,9 +1,11 @@
 'use client'
 
-import { memo, useState, useRef, useEffect } from 'react'
+import { memo, useState, useRef, useEffect, useCallback } from 'react'
 import { Task } from '@/types'
 import { useNow } from '@/hooks/use-now'
 import { Celebration } from '@/components/celebration'
+import { Input } from '@/components/ui/input'
+import { useAppStore } from '@/store'
 import { format, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -54,6 +56,11 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   const [celebrating, setCelebrating] = useState(false)
   const wasCompleted = useRef(task.completed)
 
+  const [editingName, setEditingName] = useState(false)
+  const [editValue, setEditValue] = useState('')
+  const editInputRef = useRef<HTMLInputElement>(null)
+  const updateTask = useAppStore(s => s.updateTask)
+
   useEffect(() => {
     if (task.completed && !wasCompleted.current) {
       const timer = setTimeout(() => {
@@ -65,6 +72,28 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
     }
     wasCompleted.current = task.completed
   }, [task.completed])
+
+  const startEditing = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditValue(task.name)
+    setEditingName(true)
+    setTimeout(() => {
+      editInputRef.current?.focus()
+      editInputRef.current?.select()
+    }, 10)
+  }, [task.name])
+
+  const saveEdit = useCallback(() => {
+    const trimmed = editValue.trim()
+    if (trimmed && trimmed !== task.name) {
+      updateTask(task.id, { name: trimmed })
+    }
+    setEditingName(false)
+  }, [editValue, task.id, task.name, updateTask])
+
+  const cancelEdit = useCallback(() => {
+    setEditingName(false)
+  }, [])
 
   return (
     <motion.div
@@ -80,14 +109,16 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
         className={`group relative cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 ${
           task.completed ? 'opacity-60' : ''
         } ${isOverdue ? 'border-red-200 dark:border-red-800' : ''}`}
-        onClick={() => onEdit(task)}
+        onClick={() => { if (!editingName) onEdit(task) }}
         role="button"
         tabIndex={0}
         aria-label={`Task: ${task.name}. Priority: ${priorityLabels[task.priority]}. ${task.completed ? 'Completed.' : 'Not completed.'} ${isOverdue ? 'Overdue!' : ''} Click to edit.`}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            onEdit(task)
+            if (!editingName) {
+              e.preventDefault()
+              onEdit(task)
+            }
           }
         }}
       >
@@ -112,13 +143,32 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
             />
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className={`font-medium truncate ${
-                  task.completed ? 'line-through text-muted-foreground' : ''
-                }`}>
-                  {task.name}
-                </h3>
-                {isOverdue && (
+              <div className="flex items-center gap-2 mb-2 min-h-6">
+                {editingName ? (
+                  <Input
+                    ref={editInputRef}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      e.stopPropagation()
+                      if (e.key === 'Enter') saveEdit()
+                      if (e.key === 'Escape') cancelEdit()
+                    }}
+                    onBlur={saveEdit}
+                    className="h-7 py-0 text-sm font-medium"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <h3
+                    className={`font-medium truncate cursor-text hover:text-primary transition-colors ${
+                      task.completed ? 'line-through text-muted-foreground' : ''
+                    }`}
+                    onClick={startEditing}
+                  >
+                    {task.name}
+                  </h3>
+                )}
+                {isOverdue && !editingName && (
                   <AlertTriangle className="size-4 text-red-500 flex-shrink-0" data-testid="alert-triangle" />
                 )}
               </div>
