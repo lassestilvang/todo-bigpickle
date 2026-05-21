@@ -128,6 +128,32 @@ html {
 [data-task-card] {
   content-visibility: auto;
   contain-intrinsic-height: 120px;
+  will-change: transform;
+}
+
+[data-reorder-item] {
+  outline: none;
+}
+
+[data-reorder-item]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* GPU accelerated animations */
+.task-card-motion {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @keyframes toast-in {

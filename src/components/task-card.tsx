@@ -67,6 +67,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   return (
     <motion.div
       data-task-card
+      className="task-card-motion"
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}

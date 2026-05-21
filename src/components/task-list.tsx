@@ -7,7 +7,7 @@ import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
-import { Plus, ListTodo, SortAsc, SearchX, CheckCircle2, Sparkles } from 'lucide-react'
+import { Plus, ListTodo, SortAsc, SearchX, CheckCircle2, Sparkles, CalendarDays, CalendarRange, List, LayoutList } from 'lucide-react'
 import { format } from 'date-fns'
 
 const sortLabels = { date: 'Date', priority: 'Priority', name: 'Name', custom: 'Custom' } as const
@@ -232,12 +232,31 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 </div>
               ) : allTasks.length === 0 ? (
                 <div className="text-muted-foreground">
-                  <div className="relative mx-auto mb-6 size-24">
-                    <ListTodo className="size-24 text-muted-foreground/20" />
-                    <Sparkles className="size-6 text-primary absolute top-1 right-1" />
-                  </div>
-                  <p className="text-xl font-medium mb-1">Your task list is empty</p>
-                  <p className="text-sm mb-6">Create your first task and get things done</p>
+                  {(() => {
+                    const Icon = currentView === 'today' ? CalendarDays
+                      : currentView === 'next7days' ? CalendarRange
+                      : currentView === 'upcoming' ? List
+                      : LayoutList
+                    return <Icon className="size-16 mx-auto mb-4 text-muted-foreground/20" />
+                  })()}
+                  <p className="text-lg font-medium mb-1">
+                    {selectedListId
+                      ? 'This list is empty'
+                      : currentView === 'today'
+                        ? 'No tasks for today'
+                        : currentView === 'next7days'
+                          ? 'Nothing this week'
+                          : currentView === 'upcoming'
+                            ? 'No upcoming tasks'
+                            : 'Your task list is empty'}
+                  </p>
+                  <p className="text-sm mb-6">
+                    {selectedListId
+                      ? 'Add a task to get started'
+                      : currentView === 'today'
+                        ? 'Schedule a task for today'
+                        : 'Create your first task and get things done'}
+                  </p>
                   <Button onClick={onCreateTask} size="lg">
                     <Plus className="size-4 mr-2" />
                     Create Your First Task
@@ -246,8 +265,24 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               ) : (
                 <div className="text-muted-foreground">
                   <CheckCircle2 className="size-16 mx-auto mb-4 text-green-500/40" />
-                  <p className="text-lg font-medium mb-1">All done!</p>
-                  <p className="text-sm">No uncompleted tasks match this view</p>
+                  <p className="text-lg font-medium mb-1">
+                    {currentView === 'today'
+                      ? 'All done for today!'
+                      : currentView === 'next7days'
+                        ? 'All set for the week!'
+                        : currentView === 'upcoming'
+                          ? 'Nothing upcoming'
+                          : 'All done!'}
+                  </p>
+                  <p className="text-sm">
+                    {currentView === 'today'
+                      ? 'Enjoy your free time'
+                      : currentView === 'next7days'
+                        ? 'Enjoy your week'
+                        : currentView === 'upcoming'
+                          ? 'No tasks on the horizon'
+                          : showCompleted ? 'No tasks match your filters' : 'No uncompleted tasks'}
+                  </p>
                 </div>
               )}
             </motion.div>
@@ -286,6 +321,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                       key={task.id}
                       value={task}
                       dragListener={sortBy === 'custom'}
+                      data-reorder-item
                       style={{ listStyle: 'none' }}
                     >
                       <TaskCard
