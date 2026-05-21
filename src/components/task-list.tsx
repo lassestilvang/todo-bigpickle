@@ -2,7 +2,7 @@
 
 import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Task } from '@/types'
-import { useAppStore, shallow } from '@/store'
+import { useAppStore } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,15 +40,12 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const deleteTask = useAppStore(s => s.deleteTask)
   const reorderTasks = useAppStore(s => s.reorderTasks)
   const addTask = useAppStore(s => s.addTask)
-  const { currentView, selectedListId, showCompleted, searchQuery, lists } =
-    useAppStore(s => ({
-      currentView: s.currentView,
-      selectedListId: s.selectedListId,
-      showCompleted: s.showCompleted,
-      searchQuery: s.searchQuery,
-      lists: s.lists,
-    }), shallow)
+  const currentView = useAppStore(s => s.currentView)
+  const selectedListId = useAppStore(s => s.selectedListId)
+  const showCompleted = useAppStore(s => s.showCompleted)
+  const searchQuery = useAppStore(s => s.searchQuery)
   const allTasks = useAppStore(s => s.tasks)
+  const lists = useAppStore(s => s.lists)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name' | 'custom'>('custom')
   const [quickAddText, setQuickAddText] = useState('')
   const quickAddRef = useRef<HTMLInputElement>(null)
@@ -76,6 +73,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
         description: undefined,
         priority: 'none',
         listId: selectedListId || defaultList?.id || '',
+        completed: false,
         labels: [],
         subtasks: [],
       })

@@ -54,7 +54,7 @@ export const api = {
     return handleResponse<Task[]>(response)
   },
 
-  async createTask(taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history'>, signal?: AbortSignal) {
+  async createTask(taskData: Omit<Task, 'id' | 'position' | 'createdAt' | 'updatedAt' | 'history'>, signal?: AbortSignal) {
     const response = await fetchWithTimeout(`${API_BASE}/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
