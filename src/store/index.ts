@@ -18,6 +18,7 @@ interface AppStore extends AppState {
   // UI state
   isLoading: boolean
   error: string | null
+  reorderVersion: number
   
   // Actions
   setCurrentView: (view: ViewType) => void
@@ -69,6 +70,7 @@ export const useAppStore = create<AppStore>()(
       tasks: [],
       lists: [],
       labels: [],
+      reorderVersion: 0,
       currentView: 'today',
       selectedListId: undefined,
       showCompleted: false,
@@ -230,7 +232,7 @@ export const useAppStore = create<AppStore>()(
         try {
           await api.reorderTasks(reorder)
         } catch (error) {
-          set({ tasks: prevTasks })
+          set({ tasks: prevTasks, reorderVersion: get().reorderVersion + 1 })
           handleError('Failed to reorder tasks', error, set)
           toast({ type: 'error', title: 'Failed to save order' })
         }
