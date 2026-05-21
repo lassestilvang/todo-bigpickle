@@ -1,10 +1,11 @@
 'use client'
 
-import { memo, useState, useMemo, useCallback } from 'react'
+import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Task } from '@/types'
 import { useAppStore, shallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, ListTodo, SortAsc, SearchX, CheckCircle2, Sparkles } from 'lucide-react'
 import { format } from 'date-fns'
@@ -36,6 +37,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const getFilteredTasks = useAppStore(s => s.getFilteredTasks)
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
   const deleteTask = useAppStore(s => s.deleteTask)
+  const addTask = useAppStore(s => s.addTask)
   const { currentView, selectedListId, showCompleted, searchQuery, lists } =
     useAppStore(s => ({
       currentView: s.currentView,
@@ -46,6 +48,39 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     }), shallow)
   const allTasks = useAppStore(s => s.tasks)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
+  const [quickAddText, setQuickAddText] = useState('')
+  const quickAddRef = useRef<HTMLInputElement>(null)
+
+  // Focus quick-add on Ctrl+K or Cmd+K
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        quickAddRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  const handleQuickAdd = useCallback(async () => {
+    const name = quickAddText.trim()
+    if (!name) return
+    try {
+      const defaultList = lists.find(l => l.isDefault)
+      await addTask({
+        name,
+        description: undefined,
+        priority: 'none',
+        listId: selectedListId || defaultList?.id || '',
+        labels: [],
+        subtasks: [],
+      })
+      setQuickAddText('')
+    } catch {
+      // Error handled by store
+    }
+  }, [quickAddText, addTask, lists, selectedListId])
 
   const tasks = useMemo(
     () => getFilteredTasks(),
@@ -127,6 +162,24 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               Add Task
             </Button>
           </div>
+        </div>
+
+        {/* Quick Add */}
+        <div className="relative mb-6">
+          <Plus className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+          <Input
+            ref={quickAddRef}
+            value={quickAddText}
+            onChange={(e) => setQuickAddText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleQuickAdd()
+              }
+            }}
+            placeholder={`Add a task to "${getCurrentViewTitle(currentView, selectedListId, lists)}"…`}
+            className="pl-9 h-12 text-base bg-muted/50 border-dashed focus:bg-background transition-colors"
+          />
         </div>
 
         {/* Task Groups */}
