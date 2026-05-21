@@ -1,8 +1,9 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useState, useRef, useEffect } from 'react'
 import { Task } from '@/types'
 import { useNow } from '@/hooks/use-now'
+import { Celebration } from '@/components/celebration'
 import { format, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -50,6 +51,18 @@ function formatRelativeDate(date: Date): string {
 export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit, onDelete }: TaskCardProps) {
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
+  const [celebrating, setCelebrating] = useState(false)
+  const wasCompleted = useRef(task.completed)
+
+  useEffect(() => {
+    if (task.completed && !wasCompleted.current) {
+      setCelebrating(true)
+      const timer = setTimeout(() => setCelebrating(false), 800)
+      wasCompleted.current = true
+      return () => clearTimeout(timer)
+    }
+    wasCompleted.current = task.completed
+  }, [task.completed])
 
   return (
     <motion.div
@@ -86,7 +99,8 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
           >
             <Trash2 className="size-4" />
           </button>
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 relative">
+            <Celebration active={celebrating} />
             <Checkbox
               checked={task.completed}
               onCheckedChange={() => onToggleComplete(task.id)}
