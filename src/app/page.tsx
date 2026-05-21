@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { AppSidebar } from '@/components/app-sidebar'
 import { TaskList } from '@/components/task-list'
-import { TaskForm } from '@/components/task-form'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
@@ -14,6 +13,8 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
 import { motion } from 'framer-motion'
 import { CommandPalette } from '@/components/command-palette'
+
+const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
 
 function LoadingSkeleton() {
   return (
@@ -166,12 +167,14 @@ export default function Home() {
                   <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
                 </SidebarInset>
 
-                <TaskForm
-                  key={formKey}
-                  task={editingTask}
-                  isOpen={isCreatingTask || !!editingTask}
-                  onClose={handleCloseForm}
-                />
+                <Suspense fallback={null}>
+                  <TaskForm
+                    key={formKey}
+                    task={editingTask}
+                    isOpen={isCreatingTask || !!editingTask}
+                    onClose={handleCloseForm}
+                  />
+                </Suspense>
 
                 <CommandPalette
                   open={commandPaletteOpen}
