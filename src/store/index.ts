@@ -4,7 +4,7 @@ import { shallow } from 'zustand/shallow'
 import Fuse from 'fuse.js'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
-import { toast } from '@/hooks/use-toast'
+import { toast, dismissToast } from '@/hooks/use-toast'
 
 export { shallow }
 
@@ -144,13 +144,36 @@ export const useAppStore = create<AppStore>()(
         if (!prev) return
         invalidateFuseCache()
         set((state) => ({ tasks: state.tasks.filter(t => t.id !== id), error: null }))
+
+        const undoId = toast({
+          type: 'success',
+          title: 'Task deleted',
+          description: prev.name,
+          duration: 5000,
+          action: {
+            label: 'Undo',
+            onClick: async () => {
+              const stillGone = !get().tasks.some(t => t.id === id)
+              if (stillGone) {
+                invalidateFuseCache()
+                set((state) => ({ tasks: [...state.tasks, prev].sort((a, b) => a.position - b.position) }))
+                try {
+                  await api.createTask(prev)
+                } catch {
+                  set((state) => ({ tasks: state.tasks.filter(t => t.id !== prev.id) }))
+                  toast({ type: 'error', title: 'Failed to restore task' })
+                }
+              }
+            },
+          },
+        })
+
         try {
           await api.deleteTask(id)
-          toast({ type: 'success', title: 'Task deleted' })
         } catch (error) {
+          dismissToast(undoId)
           set((state) => ({ tasks: [...state.tasks, prev].sort((a, b) => a.position - b.position) }))
           handleError('Failed to delete task', error, set)
-          toast({ type: 'error', title: 'Failed to delete task' })
         }
       },
 

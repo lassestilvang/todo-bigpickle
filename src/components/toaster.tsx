@@ -56,12 +56,22 @@ export function ToastContainer() {
                 <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
               )}
             </div>
-            <button
-              onClick={() => dismissToast(t.id)}
-              className="shrink-0 rounded-md p-0.5 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="size-4" />
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {t.action && (
+                <button
+                  onClick={() => { dismissToast(t.id); t.action!.onClick() }}
+                  className="text-xs font-medium text-primary hover:underline transition-colors whitespace-nowrap"
+                >
+                  {t.action.label}
+                </button>
+              )}
+              <button
+                onClick={() => dismissToast(t.id)}
+                className="rounded-md p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
           </div>
         )
       })}
