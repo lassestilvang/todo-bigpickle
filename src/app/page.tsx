@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
 import { motion } from 'framer-motion'
+import { CommandPalette } from '@/components/command-palette'
 
 function LoadingSkeleton() {
   return (
@@ -59,6 +60,7 @@ export default function Home() {
   const [isCreatingTask, setIsCreatingTask] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>()
   const [formKey, setFormKey] = useState(0)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const loadData = useAppStore(s => s.loadData)
   const isLoading = useAppStore(s => s.isLoading)
   const error = useAppStore(s => s.error)
@@ -80,6 +82,13 @@ export default function Home() {
       },
     },
     {
+      key: 'p',
+      metaKey: true,
+      handler: () => {
+        setCommandPaletteOpen(true)
+      },
+    },
+    {
       key: '/',
       handler: () => {
         const searchInput = document.querySelector('input[placeholder="Search tasks..."]') as HTMLInputElement
@@ -91,6 +100,7 @@ export default function Home() {
     {
       key: 'Escape',
       handler: () => {
+        setCommandPaletteOpen(false)
         if (isCreatingTask || editingTask) {
           setIsCreatingTask(false)
           setEditingTask(undefined)
@@ -161,6 +171,12 @@ export default function Home() {
                   task={editingTask}
                   isOpen={isCreatingTask || !!editingTask}
                   onClose={handleCloseForm}
+                />
+
+                <CommandPalette
+                  open={commandPaletteOpen}
+                  onClose={() => setCommandPaletteOpen(false)}
+                  onCreateTask={handleCreateTask}
                 />
               </motion.div>
             )}
