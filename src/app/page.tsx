@@ -11,7 +11,7 @@ import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { CommandPalette } from '@/components/command-palette'
 
 const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
@@ -65,6 +65,8 @@ export default function Home() {
   const loadData = useAppStore(s => s.loadData)
   const isLoading = useAppStore(s => s.isLoading)
   const error = useAppStore(s => s.error)
+  const currentView = useAppStore(s => s.currentView)
+  const selectedListId = useAppStore(s => s.selectedListId)
 
   // Load data on mount
   useEffect(() => {
@@ -164,7 +166,17 @@ export default function Home() {
                     </div>
                   )}
                   
-                  <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`${currentView}-${selectedListId || 'all'}`}
+                      initial={{ opacity: 0, x: 12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -12 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
+                    >
+                      <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
+                    </motion.div>
+                  </AnimatePresence>
                 </SidebarInset>
 
                 <Suspense fallback={null}>

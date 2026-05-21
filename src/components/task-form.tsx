@@ -17,7 +17,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { CalendarIcon, Plus, X, Trash2, Loader2 } from 'lucide-react'
-import { format } from 'date-fns'
+import { format, addDays, startOfWeek, addWeeks, addMonths } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const taskSchema = z.object({
@@ -194,7 +194,23 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                     {dateValue ? format(dateValue, 'PPP') : 'Pick a date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0" align="start">
+                  <div className="flex gap-1 p-2 border-b">
+                    {[
+                      { label: 'Today', getValue: () => new Date() },
+                      { label: 'Tomorrow', getValue: () => addDays(new Date(), 1) },
+                      { label: 'Next Week', getValue: () => addWeeks(new Date(), 1) },
+                    ].map(preset => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => form.setValue('date', preset.getValue())}
+                        className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
                   <Calendar
                     mode="single"
                     selected={dateValue}
