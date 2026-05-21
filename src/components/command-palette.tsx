@@ -24,7 +24,13 @@ interface Command {
   label: string
   description?: string
   icon: LucideIcon
+  shortcut?: string
   action: () => void
+}
+
+interface CommandGroup {
+  label: string
+  commands: Command[]
 }
 
 interface CommandPaletteProps {
@@ -56,29 +62,50 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
     }
   }, [open])
 
-  const getCommands = useCallback((): Command[] => {
-    const cmds: Command[] = [
-      { id: 'go-today', label: 'Go to Today', icon: CalendarDays, action: () => { setCurrentView('today'); setSelectedListId(undefined) } },
-      { id: 'go-next7', label: 'Go to Next 7 Days', icon: CalendarRange, action: () => { setCurrentView('next7days'); setSelectedListId(undefined) } },
-      { id: 'go-upcoming', label: 'Go to Upcoming', icon: List, action: () => { setCurrentView('upcoming'); setSelectedListId(undefined) } },
-      { id: 'go-all', label: 'Go to All Tasks', icon: LayoutList, action: () => { setCurrentView('all'); setSelectedListId(undefined) } },
-      ...lists.map(list => ({
-        id: `list-${list.id}`,
-        label: `Go to ${list.name}`,
-        description: `${list.icon} ${list.name}`,
-        icon: LayoutList,
-        action: () => { setSelectedListId(list.id); setCurrentView('all') },
-      })),
-      { id: 'create', label: 'Create New Task', icon: Plus, action: onCreateTask },
-      { id: 'toggle-completed', label: showCompleted ? 'Hide completed tasks' : 'Show completed tasks', icon: CheckSquare, action: () => setShowCompleted(!showCompleted) },
-      { id: 'theme-light', label: 'Theme: Light', icon: Sun, action: () => setTheme('light') },
-      { id: 'theme-dark', label: 'Theme: Dark', icon: Moon, action: () => setTheme('dark') },
-      { id: 'theme-system', label: 'Theme: System', icon: Monitor, action: () => setTheme('system') },
+  const groups = useCallback((): CommandGroup[] => {
+    return [
+      {
+        label: 'Views',
+        commands: [
+          { id: 'go-today', label: 'Today', icon: CalendarDays, shortcut: '', action: () => { setCurrentView('today'); setSelectedListId(undefined) } },
+          { id: 'go-next7', label: 'Next 7 Days', icon: CalendarRange, shortcut: '', action: () => { setCurrentView('next7days'); setSelectedListId(undefined) } },
+          { id: 'go-upcoming', label: 'Upcoming', icon: List, shortcut: '', action: () => { setCurrentView('upcoming'); setSelectedListId(undefined) } },
+          { id: 'go-all', label: 'All Tasks', icon: LayoutList, shortcut: '', action: () => { setCurrentView('all'); setSelectedListId(undefined) } },
+        ],
+      },
+      {
+        label: 'Lists',
+        commands: lists.map(list => ({
+          id: `list-${list.id}`,
+          label: list.name,
+          icon: LayoutList,
+          shortcut: '',
+          action: () => { setSelectedListId(list.id); setCurrentView('all') },
+        })),
+      },
+      {
+        label: 'Actions',
+        commands: [
+          { id: 'create', label: 'Create New Task', icon: Plus, shortcut: '⌘N', action: onCreateTask },
+          { id: 'toggle-completed', label: showCompleted ? 'Hide completed tasks' : 'Show completed tasks', icon: CheckSquare, shortcut: '', action: () => setShowCompleted(!showCompleted) },
+        ],
+      },
+      {
+        label: 'Theme',
+        commands: [
+          { id: 'theme-light', label: 'Light', icon: Sun, shortcut: '', action: () => setTheme('light') },
+          { id: 'theme-dark', label: 'Dark', icon: Moon, shortcut: '', action: () => setTheme('dark') },
+          { id: 'theme-system', label: 'System', icon: Monitor, shortcut: '', action: () => setTheme('system') },
+        ],
+      },
     ]
-    return cmds
   }, [setCurrentView, setSelectedListId, lists, onCreateTask, setShowCompleted, showCompleted, setTheme])
 
-  const filtered = getCommands().filter(cmd => {
+  const allCommands = useCallback(() => {
+    return groups().flatMap(g => g.commands)
+  }, [groups])
+
+  const filtered = allCommands().filter(cmd => {
     if (!query) return true
     const q = query.toLowerCase()
     return cmd.label.toLowerCase().includes(q) || (cmd.description?.toLowerCase().includes(q) ?? false)
@@ -99,7 +126,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onClose={onClose}>
       <DialogContent className="max-w-lg top-[15%] -translate-y-0 p-0 gap-0 overflow-hidden">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -116,28 +143,64 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No results found</p>
           ) : (
-            <div className="space-y-0.5">
-              {filtered.map((cmd, idx) => {
-                const Icon = cmd.icon
-                return (
-                  <button
-                    key={cmd.id}
-                    className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
-                      idx === selectedIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
-                    }`}
-                    onClick={() => { cmd.action(); onClose() }}
-                    onMouseEnter={() => setSelectedIndex(idx)}
-                  >
-                    <Icon className="size-4 shrink-0 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      <span>{cmd.label}</span>
-                      {cmd.description && (
-                        <span className="ml-2 text-xs text-muted-foreground">{cmd.description}</span>
-                      )}
+            <div className="space-y-3">
+              {query ? (
+                <div className="space-y-0.5">
+                  {filtered.map((cmd, idx) => {
+                    const Icon = cmd.icon
+                    return (
+                      <button
+                        key={cmd.id}
+                        className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
+                          idx === selectedIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+                        }`}
+                        onClick={() => { cmd.action(); onClose() }}
+                        onMouseEnter={() => setSelectedIndex(idx)}
+                      >
+                        <Icon className="size-4 shrink-0 text-muted-foreground" />
+                        <span className="flex-1">{cmd.label}</span>
+                        {cmd.shortcut && (
+                          <kbd className="hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                            {cmd.shortcut}
+                          </kbd>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                groups().map((group) =>
+                  group.commands.length > 0 && (
+                    <div key={group.label}>
+                      <p className="px-3 py-1 text-xs font-medium text-muted-foreground">{group.label}</p>
+                      <div className="space-y-0.5">
+                        {group.commands.map((cmd, idx) => {
+                          const Icon = cmd.icon
+                          const globalIdx = groups().flatMap(g => g.commands).indexOf(cmd)
+                          return (
+                            <button
+                              key={cmd.id}
+                              className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
+                                globalIdx === selectedIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+                              }`}
+                              onClick={() => { cmd.action(); onClose() }}
+                              onMouseEnter={() => setSelectedIndex(globalIdx)}
+                            >
+                              <Icon className="size-4 shrink-0 text-muted-foreground" />
+                              <span className="flex-1">{cmd.label}</span>
+                              {cmd.shortcut && (
+                                <kbd className="hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                                  {cmd.shortcut}
+                                </kbd>
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </button>
+                  )
                 )
-              })}
+              )}
             </div>
           )}
         </div>
