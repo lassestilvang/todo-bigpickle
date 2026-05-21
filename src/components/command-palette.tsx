@@ -5,7 +5,6 @@ import { useAppStore } from '@/store'
 import { useTheme } from '@/components/theme-provider'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { ViewType } from '@/types'
 import {
   CalendarDays,
   CalendarRange,
@@ -44,13 +43,16 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
   const setShowCompleted = useAppStore(s => s.setShowCompleted)
   const showCompleted = useAppStore(s => s.showCompleted)
   const lists = useAppStore(s => s.lists)
-  const { theme, setTheme } = useTheme()
+  const { setTheme } = useTheme()
 
   useEffect(() => {
     if (open) {
-      setQuery('')
-      setSelectedIndex(0)
-      setTimeout(() => inputRef.current?.focus(), 50)
+      const timer = setTimeout(() => {
+        setQuery('')
+        setSelectedIndex(0)
+        inputRef.current?.focus()
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [open])
 

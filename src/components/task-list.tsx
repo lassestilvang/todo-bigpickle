@@ -7,7 +7,7 @@ import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
-import { Plus, ListTodo, SortAsc, SearchX, CheckCircle2, Sparkles, CalendarDays, CalendarRange, List, LayoutList } from 'lucide-react'
+import { Plus, SortAsc, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList } from 'lucide-react'
 import { format } from 'date-fns'
 
 const sortLabels = { date: 'Date', priority: 'Priority', name: 'Name', custom: 'Custom' } as const

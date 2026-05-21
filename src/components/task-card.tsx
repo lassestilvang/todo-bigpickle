@@ -56,8 +56,10 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
 
   useEffect(() => {
     if (task.completed && !wasCompleted.current) {
-      setCelebrating(true)
-      const timer = setTimeout(() => setCelebrating(false), 800)
+      const timer = setTimeout(() => {
+        setCelebrating(true)
+        setTimeout(() => setCelebrating(false), 800)
+      }, 0)
       wasCompleted.current = true
       return () => clearTimeout(timer)
     }
