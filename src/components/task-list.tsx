@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { memo, useState, useMemo, useCallback } from 'react'
 import { Task } from '@/types'
-import { useAppStore } from '@/store'
+import { useAppStore, shallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -32,16 +32,19 @@ interface TaskListProps {
   onEditTask: (task: Task) => void
 }
 
-export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
+export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
   const getFilteredTasks = useAppStore(s => s.getFilteredTasks)
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
   const deleteTask = useAppStore(s => s.deleteTask)
-  const currentView = useAppStore(s => s.currentView)
-  const selectedListId = useAppStore(s => s.selectedListId)
-  const showCompleted = useAppStore(s => s.showCompleted)
-  const searchQuery = useAppStore(s => s.searchQuery)
+  const { currentView, selectedListId, showCompleted, searchQuery, lists } =
+    useAppStore(s => ({
+      currentView: s.currentView,
+      selectedListId: s.selectedListId,
+      showCompleted: s.showCompleted,
+      searchQuery: s.searchQuery,
+      lists: s.lists,
+    }), shallow)
   const allTasks = useAppStore(s => s.tasks)
-  const lists = useAppStore(s => s.lists)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
 
   const tasks = useMemo(
@@ -199,4 +202,4 @@ export function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
       </div>
     </div>
   )
-}
+})

@@ -1,8 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { shallow } from 'zustand/shallow'
 import Fuse from 'fuse.js'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
+
+export { shallow }
 
 const handleError = (message: string, error: unknown, set: (state: Partial<AppStore>) => void) => {
   const errorMessage = error instanceof Error ? error.message : message
@@ -49,10 +52,12 @@ interface AppStore extends AppState {
 export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => {
+      let fuseVersion = 0
       let cachedFuseKey = ''
       let cachedFuse: Fuse<Task> | null = null
 
       const invalidateFuseCache = () => {
+        fuseVersion++
         cachedFuseKey = ''
         cachedFuse = null
       }
@@ -246,6 +251,7 @@ export const useAppStore = create<AppStore>()(
       // Data loading
       loadData: async () => {
         set({ isLoading: true, error: null })
+        invalidateFuseCache()
         try {
           const [tasks, lists, labels] = await Promise.all([
             api.getTasks(),
@@ -279,7 +285,7 @@ export const useAppStore = create<AppStore>()(
 
         // Apply search (with cached Fuse index)
         if (state.searchQuery) {
-          const fuseKey = tasks.map(t => t.id).join(',')
+          const fuseKey = `${fuseVersion}:${tasks.map(t => t.id).join(',')}`
           if (!cachedFuse || cachedFuseKey !== fuseKey) {
             cachedFuse = new Fuse(tasks, {
               keys: ['name', 'description'],

@@ -1,7 +1,7 @@
 'use client'
 
-import { memo, useMemo, useState, useEffect } from 'react'
-import { useAppStore } from '@/store'
+import { memo, useMemo, useState, useEffect, useCallback } from 'react'
+import { useAppStore, shallow } from '@/store'
 import { useNow } from '@/hooks/use-now'
 import { useDebounce } from '@/hooks/use-debounce'
 import { motion } from 'framer-motion'
@@ -53,16 +53,19 @@ interface AppSidebarProps {
 }
 
 export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarProps) {
-  const lists = useAppStore(s => s.lists)
-  const currentView = useAppStore(s => s.currentView)
-  const selectedListId = useAppStore(s => s.selectedListId)
-  const showCompleted = useAppStore(s => s.showCompleted)
-  const searchQuery = useAppStore(s => s.searchQuery)
+  const { lists, currentView, selectedListId, showCompleted, searchQuery, tasks } =
+    useAppStore(s => ({
+      lists: s.lists,
+      currentView: s.currentView,
+      selectedListId: s.selectedListId,
+      showCompleted: s.showCompleted,
+      searchQuery: s.searchQuery,
+      tasks: s.tasks,
+    }), shallow)
   const setCurrentView = useAppStore(s => s.setCurrentView)
   const setSelectedListId = useAppStore(s => s.setSelectedListId)
   const setShowCompleted = useAppStore(s => s.setShowCompleted)
   const setSearchQuery = useAppStore(s => s.setSearchQuery)
-  const tasks = useAppStore(s => s.tasks)
 
   const now = useNow()
 
@@ -76,6 +79,24 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   useEffect(() => {
     setLocalSearch(searchQuery)
   }, [searchQuery])
+
+  const handleSetSearchQuery = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalSearch(e.target.value)
+  }, [])
+
+  const handleViewClick = useCallback((view: ViewType) => {
+    setCurrentView(view)
+    setSelectedListId(undefined)
+  }, [setCurrentView, setSelectedListId])
+
+  const handleListClick = useCallback((listId: string) => {
+    setSelectedListId(listId)
+    setCurrentView('all')
+  }, [setSelectedListId, setCurrentView])
+
+  const handleShowCompleted = useCallback((checked: boolean) => {
+    setShowCompleted(checked)
+  }, [setShowCompleted])
 
   const { overdueCount, todayCount, next7Count } = useMemo(() => {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -112,7 +133,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
             placeholder="Search tasks...  ⌘/"
             aria-label="Search tasks"
             value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
+            onChange={handleSetSearchQuery}
             className="w-full pl-8"
           />
         </div>
@@ -132,10 +153,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                     <SidebarMenuButton
                       isActive={currentView === view && !selectedListId}
                       aria-current={currentView === view && !selectedListId ? 'page' : undefined}
-                      onClick={() => {
-                        setCurrentView(view as ViewType)
-                        setSelectedListId(undefined)
-                      }}
+                      onClick={() => handleViewClick(view as ViewType)}
                     >
                       <Icon className="size-4" />
                       <span>{label}</span>
@@ -170,10 +188,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                   <SidebarMenuButton
                     isActive={selectedListId === list.id}
                     aria-current={selectedListId === list.id ? 'page' : undefined}
-                    onClick={() => {
-                      setSelectedListId(list.id)
-                      setCurrentView('all')
-                    }}
+                    onClick={() => handleListClick(list.id)}
                   >
                     <div className="size-3 rounded-full" style={{ backgroundColor: list.color }} />
                     <span>{list.name}</span>
@@ -217,7 +232,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
             <Checkbox
               id="show-completed"
               checked={showCompleted}
-              onCheckedChange={(checked) => setShowCompleted(checked === true)}
+              onCheckedChange={(checked) => handleShowCompleted(checked === true)}
             />
             <span>Show completed</span>
           </label>

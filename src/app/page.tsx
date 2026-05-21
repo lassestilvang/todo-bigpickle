@@ -8,7 +8,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { ThemeProvider } from '@/components/theme-provider'
-import { useAppStore } from '@/store'
+import { useAppStore, shallow } from '@/store'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
@@ -59,8 +59,10 @@ export default function Home() {
   const [editingTask, setEditingTask] = useState<Task | undefined>()
   const [formKey, setFormKey] = useState(0)
   const loadData = useAppStore(s => s.loadData)
-  const isLoading = useAppStore(s => s.isLoading)
-  const error = useAppStore(s => s.error)
+  const { isLoading, error } = useAppStore(s => ({
+    isLoading: s.isLoading,
+    error: s.error,
+  }), shallow)
 
   // Load data on mount
   useEffect(() => {
