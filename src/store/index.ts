@@ -25,10 +25,11 @@ interface AppStore extends AppState {
   setSearchQuery: (query: string) => void
   
   // Task actions
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history'>) => void
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history' | 'position'>) => void
   updateTask: (id: string, updates: Partial<Task>) => void
   deleteTask: (id: string) => void
   toggleTaskComplete: (id: string) => void
+  reorderTasks: (reorder: { id: string; position: number }[]) => void
   
   // List actions
   addList: (list: Omit<List, 'id' | 'createdAt' | 'updatedAt'>) => void
@@ -155,6 +156,24 @@ export const useAppStore = create<AppStore>()(
             ),
           }))
           handleError('Failed to toggle task completion', error, set)
+        }
+      },
+
+      reorderTasks: async (reorder) => {
+        try {
+          invalidateFuseCache()
+          await api.reorderTasks(reorder)
+          set((state) => {
+            const updated = [...state.tasks]
+            for (const item of reorder) {
+              const task = updated.find(t => t.id === item.id)
+              if (task) task.position = item.position
+            }
+            updated.sort((a, b) => a.position - b.position)
+            return { tasks: updated, error: null }
+          })
+        } catch (error) {
+          handleError('Failed to reorder tasks', error, set)
         }
       },
 

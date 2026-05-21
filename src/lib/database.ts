@@ -19,6 +19,7 @@ interface TaskInput {
   listId: string
   completed?: boolean
   completedAt?: Date
+  position?: number
   reminders?: Date[]
   attachments?: string[]
 }
@@ -54,6 +55,7 @@ interface TaskRow {
   list_id: string
   completed: number
   completed_at: string | null
+  position: number
   created_at: string
   updated_at: string
 }
@@ -201,6 +203,22 @@ export class DatabaseService {
         FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
       )
     `)
+
+    // Add position column for task ordering (migration for existing DBs)
+    const hasPositionColumn = this.db.prepare(
+      "SELECT COUNT(*) as cnt FROM pragma_table_info('tasks') WHERE name = 'position'"
+    ).get() as { cnt: number }
+    if (!hasPositionColumn.cnt) {
+      this.db.exec(`ALTER TABLE tasks ADD COLUMN position INTEGER NOT NULL DEFAULT 0`)
+      // Set initial positions based on created_at order
+      this.db.exec(`
+        UPDATE tasks SET position = (
+          SELECT COUNT(*) FROM tasks t2
+          WHERE t2.created_at < tasks.created_at
+          OR (t2.created_at = tasks.created_at AND t2.id < tasks.id)
+        )
+      `)
+    }
 
     // Create indexes for better query performance
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_list_id ON tasks(list_id)`)
@@ -438,7 +456,7 @@ export class DatabaseService {
    * @returns {Task[]} Array of tasks with subtasks, labels, reminders, and attachments
    */
   getTasks(): Task[] {
-    const rows = this.db.prepare('SELECT * FROM tasks ORDER BY created_at DESC').all() as TaskRow[]
+    const rows = this.db.prepare('SELECT * FROM tasks ORDER BY position ASC, created_at DESC').all() as TaskRow[]
     const ids = rows.map(r => r.id)
     if (ids.length === 0) return []
 
@@ -477,6 +495,7 @@ export class DatabaseService {
       listId: row.list_id,
       completed: row.completed === 1,
       completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+      position: row.position,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
       history: allHistory?.get(row.id) || this.getTaskHistory(row.id),
@@ -597,12 +616,17 @@ export class DatabaseService {
         }
       }
       
+      const maxPos = this.db.prepare(
+        'SELECT COALESCE(MAX(position), -1) + 1 as next_pos FROM tasks'
+      ).get() as { next_pos: number }
+      const position = task.position ?? maxPos.next_pos
+
       this.db.prepare(`
         INSERT INTO tasks (
           id, name, description, date, deadline, estimate, actual_time,
           priority, recurring, recurring_config, list_id, completed,
-          completed_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          completed_at, position, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         id,
         task.name,
@@ -617,6 +641,7 @@ export class DatabaseService {
         listId,
         task.completed ? 1 : 0,
         task.completedAt ? (typeof task.completedAt === 'string' ? task.completedAt : task.completedAt.toISOString()) : null,
+        position,
         now,
         now
       )
@@ -865,6 +890,21 @@ export class DatabaseService {
       INSERT INTO attachments (id, task_id, file_path, file_name)
       VALUES (?, ?, ?, ?)
     `).run(id, taskId, filePath, fileName)
+  }
+
+  /**
+   * Batch update task positions for reordering
+   * @param {Array<{id: string, position: number}>} positions - Array of task ID and new position pairs
+   */
+  updateTaskPositions(positions: { id: string; position: number }[]): void {
+    const update = this.db.transaction(() => {
+      const stmt = this.db.prepare('UPDATE tasks SET position = ?, updated_at = ? WHERE id = ?')
+      const now = new Date().toISOString()
+      for (const { id, position } of positions) {
+        stmt.run(position, now, id)
+      }
+    })
+    update()
   }
 
   close(): void {

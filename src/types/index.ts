@@ -57,6 +57,7 @@ export interface Task {
     monthOfYear?: number
   }
   listId: string
+  position: number
   completed: boolean
   completedAt?: Date
   createdAt: Date

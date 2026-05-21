@@ -15,6 +15,28 @@ export async function GET() {
   }
 }
 
+const reorderSchema = z.object({
+  reorder: z.array(z.object({
+    id: z.string(),
+    position: z.number(),
+  })),
+})
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const result = await parseJSONBody(request)
+    if (!result.success) return result.response
+    const validated = reorderSchema.parse(result.data)
+    db.updateTaskPositions(validated.reorder)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
+    }
+    return NextResponse.json({ error: 'Failed to reorder tasks', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const result = await parseJSONBody(request)

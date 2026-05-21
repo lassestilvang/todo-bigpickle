@@ -74,6 +74,16 @@ export const api = {
     return handleResponse<Task>(response)
   },
 
+  async reorderTasks(reorder: { id: string; position: number }[], signal?: AbortSignal) {
+    const response = await fetchWithTimeout(`${API_BASE}/tasks`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reorder }),
+      signal,
+    })
+    return handleResponse<{ success: boolean }>(response)
+  },
+
   async deleteTask(id: string, signal?: AbortSignal) {
     const response = await fetchWithTimeout(`${API_BASE}/tasks/${id}`, {
       method: 'DELETE',

@@ -6,10 +6,11 @@ import { useAppStore, shallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { Plus, ListTodo, SortAsc, SearchX, CheckCircle2, Sparkles } from 'lucide-react'
 import { format } from 'date-fns'
 
+const sortLabels = { date: 'Date', priority: 'Priority', name: 'Name', custom: 'Custom' } as const
 const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 }
 
 const viewTitles = {
@@ -37,6 +38,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const getFilteredTasks = useAppStore(s => s.getFilteredTasks)
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
   const deleteTask = useAppStore(s => s.deleteTask)
+  const reorderTasks = useAppStore(s => s.reorderTasks)
   const addTask = useAppStore(s => s.addTask)
   const { currentView, selectedListId, showCompleted, searchQuery, lists } =
     useAppStore(s => ({
@@ -47,9 +49,10 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
       lists: s.lists,
     }), shallow)
   const allTasks = useAppStore(s => s.tasks)
-  const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name'>('date')
+  const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name' | 'custom'>('custom')
   const [quickAddText, setQuickAddText] = useState('')
   const quickAddRef = useRef<HTMLInputElement>(null)
+  const [customOrder, setCustomOrder] = useState<Record<string, Task[]>>({})
 
   // Focus quick-add on Ctrl+K or Cmd+K
   useEffect(() => {
@@ -90,7 +93,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
   
   const sortedTasks = useMemo(() => {
-    const sorted = tasks.toSorted((a, b) => {
+    if (sortBy === 'custom') return tasks
+    return tasks.toSorted((a, b) => {
       switch (sortBy) {
         case 'date':
           if (!a.date && !b.date) return 0
@@ -105,7 +109,6 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           return 0
       }
     })
-    return sorted
   }, [tasks, sortBy])
 
   const groupedTasks = useMemo(() => {
@@ -130,9 +133,40 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     return groups
   }, [sortedTasks, currentView])
 
+  // Sync custom order from grouped tasks when sort mode changes or tasks change
+  // This ensures Reorder has stable references for drag-and-drop animations
+  useEffect(() => {
+    if (sortBy === 'custom') {
+      setCustomOrder(prev => {
+        const next: Record<string, Task[]> = {}
+        for (const [key, group] of Object.entries(groupedTasks)) {
+          const currentIds = new Set(prev[key]?.map(t => t.id) || [])
+          const newIds = new Set(group.tasks.map(t => t.id))
+          const sameIds = currentIds.size === newIds.size &&
+            group.tasks.every(t => currentIds.has(t.id))
+
+          if (sameIds && prev[key]) {
+            next[key] = prev[key]
+          } else {
+            next[key] = group.tasks
+          }
+        }
+        return next
+      })
+    }
+  }, [sortBy, groupedTasks])
+
   const cycleSort = useCallback(() => {
-    setSortBy(prev => prev === 'date' ? 'priority' : prev === 'priority' ? 'name' : 'date')
+    setSortBy(prev => prev === 'date' ? 'priority' : prev === 'priority' ? 'name' : prev === 'name' ? 'custom' : 'date')
   }, [])
+
+  const handleReorder = useCallback((group: typeof sortedTasks) => {
+    const updates = group.map((task, idx) => ({
+      id: task.id,
+      position: idx,
+    }))
+    reorderTasks(updates)
+  }, [reorderTasks])
 
   return (
     <div className="flex-1 p-6">
@@ -154,7 +188,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               onClick={cycleSort}
             >
               <SortAsc className="size-4 mr-2" />
-              Sort: {sortBy === 'date' ? 'Date' : sortBy === 'priority' ? 'Priority' : 'Name'}
+              {sortLabels[sortBy]}
             </Button>
             
             <Button onClick={onCreateTask}>
@@ -237,17 +271,34 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                   </div>
                 )}
                 
-                <div className="space-y-3">
-                  {group.tasks.map((task) => (
-                    <TaskCard
+                <Reorder.Group
+                  axis="y"
+                  values={customOrder[groupKey] || group.tasks}
+                  onReorder={(reordered) => {
+                    if (sortBy !== 'custom') return
+                    const key = groupKey
+                    setCustomOrder(prev => ({ ...prev, [key]: reordered }))
+                    handleReorder(reordered)
+                  }}
+                  className="space-y-3"
+                  layoutScroll
+                >
+                  {(customOrder[groupKey] || group.tasks).map((task) => (
+                    <Reorder.Item
                       key={task.id}
-                      task={task}
-                      onToggleComplete={toggleTaskComplete}
-                      onEdit={onEditTask}
-                      onDelete={deleteTask}
-                    />
+                      value={task}
+                      dragListener={sortBy === 'custom'}
+                      style={{ listStyle: 'none' }}
+                    >
+                      <TaskCard
+                        task={task}
+                        onToggleComplete={toggleTaskComplete}
+                        onEdit={onEditTask}
+                        onDelete={deleteTask}
+                      />
+                    </Reorder.Item>
                   ))}
-                </div>
+                </Reorder.Group>
               </motion.div>
             ))
           )}
