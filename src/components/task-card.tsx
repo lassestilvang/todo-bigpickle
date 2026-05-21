@@ -162,13 +162,33 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                   </div>
                 )}
 
-                {task.subtasks.length > 0 && (
+                  {task.subtasks.length > 0 && (
                   <div className="flex items-center gap-1">
                     <CheckCircle2 className="size-3" />
                     {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
                   </div>
                 )}
               </div>
+
+              {task.subtasks.length > 0 && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-primary rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${(task.subtasks.filter(st => st.completed).length / task.subtasks.length) * 100}%`,
+                        }}
+                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                      />
+                    </div>
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {task.subtasks.length > 0 && (
                 <div className="mt-3 space-y-1">

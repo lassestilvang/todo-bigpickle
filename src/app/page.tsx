@@ -12,6 +12,7 @@ import { useAppStore, shallow } from '@/store'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
+import { motion } from 'framer-motion'
 
 function LoadingSkeleton() {
   return (
@@ -126,7 +127,12 @@ export default function Home() {
             {isLoading ? (
               <LoadingSkeleton />
             ) : (
-              <>
+              <motion.div
+                className="flex flex-1 overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              >
                 <AppSidebar onCreateTask={handleCreateTask} />
                 
                 <SidebarInset className="flex-1">
@@ -158,7 +164,7 @@ export default function Home() {
                   isOpen={isCreatingTask || !!editingTask}
                   onClose={handleCloseForm}
                 />
-              </>
+              </motion.div>
             )}
           </div>
       </SidebarProvider>
