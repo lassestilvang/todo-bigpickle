@@ -13,15 +13,16 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CommandPalette } from '@/components/command-palette'
+import { RefreshCw, AlertCircle } from 'lucide-react'
 
 const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
 
 function LoadingSkeleton() {
   return (
     <div className="flex h-screen overflow-hidden">
-      <div className="flex flex-col w-72 border-r p-4 gap-4">
+      <div className="flex flex-col w-72 border-r p-4 gap-4 bg-background">
         <div className="flex items-center gap-2 mb-4">
-          <Skeleton className="size-6 rounded" />
+          <Skeleton className="size-6 rounded-lg" />
           <Skeleton className="h-5 w-20" />
         </div>
         <Skeleton className="h-9 w-full" />
@@ -68,12 +69,10 @@ export default function Home() {
   const currentView = useAppStore(s => s.currentView)
   const selectedListId = useAppStore(s => s.selectedListId)
 
-  // Load data on mount
   useEffect(() => {
     loadData()
   }, [loadData])
 
-  // Keyboard shortcuts
   useKeyboardShortcuts([
     {
       key: 'n',
@@ -134,38 +133,42 @@ export default function Home() {
       enableSystem
     >
       <SidebarProvider>
-          <div id="main-content" className="flex h-screen overflow-hidden">
-            {isLoading ? (
-              <LoadingSkeleton />
-            ) : (
-              <motion.div
-                className="flex flex-1 overflow-hidden"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-              >
-                <AppSidebar onCreateTask={handleCreateTask} />
-                
-                <SidebarInset className="flex-1">
-                  <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-                    <SidebarTrigger className="-ml-1" />
-                    <div className="flex-1" />
-                    <ThemeToggle />
-                  </header>
-                  
-                  {error && (
-                    <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive text-sm">
-                      <span className="flex-1">{error}</span>
-                      <Button
-                        onClick={() => loadData()}
-                        variant="destructive"
-                        size="sm"
-                      >
-                        Retry
-                      </Button>
-                    </div>
-                  )}
-                  
+        <div id="main-content" className="flex h-screen overflow-hidden">
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : (
+            <motion.div
+              className="flex flex-1 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+              <AppSidebar onCreateTask={handleCreateTask} />
+
+              <SidebarInset className="flex-1 flex flex-col">
+                <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="flex-1" />
+                  <ThemeToggle />
+                </header>
+
+                {error && (
+                  <div className="flex items-center gap-3 px-6 py-3 bg-destructive/5 border-b border-destructive/10 text-destructive text-sm">
+                    <AlertCircle className="size-4 shrink-0" />
+                    <span className="flex-1">{error}</span>
+                    <Button
+                      onClick={() => loadData()}
+                      variant="outline"
+                      size="sm"
+                      className="border-destructive/20 text-destructive hover:bg-destructive/10"
+                    >
+                      <RefreshCw className="size-3.5 mr-1.5" />
+                      Retry
+                    </Button>
+                  </div>
+                )}
+
+                <div className="flex-1 overflow-y-auto">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={`${currentView}-${selectedListId || 'all'}`}
@@ -177,25 +180,26 @@ export default function Home() {
                       <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
                     </motion.div>
                   </AnimatePresence>
-                </SidebarInset>
+                </div>
+              </SidebarInset>
 
-                <Suspense fallback={null}>
-                  <TaskForm
-                    key={formKey}
-                    task={editingTask}
-                    isOpen={isCreatingTask || !!editingTask}
-                    onClose={handleCloseForm}
-                  />
-                </Suspense>
-
-                <CommandPalette
-                  open={commandPaletteOpen}
-                  onClose={() => setCommandPaletteOpen(false)}
-                  onCreateTask={handleCreateTask}
+              <Suspense fallback={null}>
+                <TaskForm
+                  key={formKey}
+                  task={editingTask}
+                  isOpen={isCreatingTask || !!editingTask}
+                  onClose={handleCloseForm}
                 />
-              </motion.div>
-            )}
-          </div>
+              </Suspense>
+
+              <CommandPalette
+                open={commandPaletteOpen}
+                onClose={() => setCommandPaletteOpen(false)}
+                onCreateTask={handleCreateTask}
+              />
+            </motion.div>
+          )}
+        </div>
       </SidebarProvider>
     </ThemeProvider>
   )
