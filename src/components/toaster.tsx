@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { X, CheckCircle2, XCircle, Info, AlertTriangle } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { ToastData } from '@/hooks/use-toast'
@@ -13,18 +13,27 @@ const iconMap: Record<string, typeof CheckCircle2> = {
   warning: AlertTriangle,
 }
 
-const colors: Record<string, string> = {
-  success: 'border-green-500/50 bg-green-500/10',
-  error: 'border-red-500/50 bg-red-500/10',
-  info: 'border-blue-500/50 bg-blue-500/10',
-  warning: 'border-yellow-500/50 bg-yellow-500/10',
-}
-
-const iconColors: Record<string, string> = {
-  success: 'text-green-500',
-  error: 'text-red-500',
-  info: 'text-blue-500',
-  warning: 'text-yellow-500',
+const styles: Record<string, { border: string; bg: string; icon: string }> = {
+  success: {
+    border: 'border-green-500/30',
+    bg: 'bg-green-500/5',
+    icon: 'text-green-500',
+  },
+  error: {
+    border: 'border-red-500/30',
+    bg: 'bg-red-500/5',
+    icon: 'text-red-500',
+  },
+  info: {
+    border: 'border-blue-500/30',
+    bg: 'bg-blue-500/5',
+    icon: 'text-blue-500',
+  },
+  warning: {
+    border: 'border-yellow-500/30',
+    bg: 'bg-yellow-500/5',
+    icon: 'text-yellow-500',
+  },
 }
 
 export function ToastContainer() {
@@ -34,6 +43,16 @@ export function ToastContainer() {
     return subscribeToasts((newToasts) => {
       setToasts([...newToasts])
     })
+  }, [])
+
+  const handleDismiss = useCallback((id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    dismissToast(id)
+  }, [])
+
+  const handleAction = useCallback((toast: ToastData) => {
+    dismissToast(toast.id)
+    toast.action?.onClick()
   }, [])
 
   if (toasts.length === 0) return null
@@ -47,37 +66,40 @@ export function ToastContainer() {
       <AnimatePresence mode="popLayout">
         {toasts.map(t => {
           const Icon = iconMap[t.type] || iconMap.info
+          const style = styles[t.type] || styles.info
           return (
             <motion.div
               key={t.id}
               layout
-              initial={{ opacity: 0, x: 80, scale: 0.95 }}
+              initial={{ opacity: 0, x: 80, scale: 0.9 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 80, scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              className={`pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur-sm ${colors[t.type] || colors.info}`}
+              exit={{ opacity: 0, x: 80, scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30, mass: 0.8 }}
+              className={`pointer-events-auto flex items-start gap-3 rounded-xl border ${style.border} ${style.bg}
+                px-4 py-3 shadow-lg backdrop-blur-md min-w-[320px] max-w-[420px]
+                transition-shadow hover:shadow-xl`}
             >
-              <Icon className={`size-5 mt-0.5 shrink-0 ${iconColors[t.type] || iconColors.info}`} />
+              <Icon className={`size-5 mt-0.5 shrink-0 ${style.icon}`} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{t.title}</p>
                 {t.description && (
                   <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
                 )}
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {t.action && (
                   <button
-                    onClick={() => { dismissToast(t.id); t.action!.onClick() }}
-                    className="text-xs font-medium text-primary hover:underline transition-colors whitespace-nowrap"
+                    onClick={() => handleAction(t)}
+                    className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap px-1.5 py-0.5 rounded-md hover:bg-primary/5"
                   >
                     {t.action.label}
                   </button>
                 )}
                 <button
-                  onClick={() => dismissToast(t.id)}
-                  className="rounded-md p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={(e) => handleDismiss(t.id, e)}
+                  className="rounded-md p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-all duration-150"
                 >
-                  <X className="size-4" />
+                  <X className="size-3.5" />
                 </button>
               </div>
             </motion.div>
