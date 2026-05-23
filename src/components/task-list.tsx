@@ -1,12 +1,13 @@
 'use client'
 
 import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { Task } from '@/types'
-import { useAppStore } from '@/store'
+import { Task, ViewType } from '@/types'
+import { useAppStore, useShallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
+import Fuse from 'fuse.js'
 import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
 
@@ -47,7 +48,6 @@ interface TaskListProps {
 }
 
 export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
-  const getFilteredTasks = useAppStore(s => s.getFilteredTasks)
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
   const deleteTask = useAppStore(s => s.deleteTask)
   const reorderTasks = useAppStore(s => s.reorderTasks)
@@ -57,8 +57,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const selectedListId = useAppStore(s => s.selectedListId)
   const showCompleted = useAppStore(s => s.showCompleted)
   const searchQuery = useAppStore(s => s.searchQuery)
-  const allTasks = useAppStore(s => s.tasks)
-  const lists = useAppStore(s => s.lists)
+  const allTasks = useAppStore(useShallow(s => s.tasks))
+  const lists = useAppStore(useShallow(s => s.lists))
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name' | 'custom'>('custom')
   const [quickAddText, setQuickAddText] = useState('')
   const quickAddRef = useRef<HTMLInputElement>(null)
@@ -97,11 +97,67 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     }
   }, [quickAddText, addTask, lists, selectedListId])
 
-  const tasks = useMemo(
-    () => getFilteredTasks(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [getFilteredTasks, allTasks, currentView, selectedListId, showCompleted, searchQuery]
-  )
+  // Search cache refs
+  const searchCache = useRef<{ query: string; fuse: Fuse<Task> | null }>({ query: '', fuse: null })
+
+  // Inline filtered computation for better perf - avoids store method call
+  const tasks = useMemo(() => {
+    let filtered = allTasks
+
+    if (selectedListId) {
+      filtered = filtered.filter(task => task.listId === selectedListId)
+    } else {
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+
+      switch (currentView) {
+        case 'today':
+          filtered = filtered.filter(task => {
+            if (!task.date) return false
+            const d = new Date(task.date)
+            const dateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+            return dateOnly.getTime() === today.getTime()
+          })
+          break
+        case 'next7days':
+          filtered = filtered.filter(task => {
+            if (!task.date) return false
+            const d = new Date(task.date)
+            const dateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+            return dateOnly >= today && dateOnly <= nextWeek
+          })
+          break
+        case 'upcoming':
+          filtered = filtered.filter(task => {
+            if (!task.date) return false
+            const d = new Date(task.date)
+            const dateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+            return dateOnly >= today
+          })
+          break
+      }
+    }
+
+    if (!showCompleted) {
+      filtered = filtered.filter(task => !task.completed)
+    }
+
+    // Apply Fuse.js search when query is present
+    if (searchQuery) {
+      const cache = searchCache.current
+      if (!cache.fuse || cache.query !== searchQuery) {
+        cache.fuse = new Fuse(filtered, {
+          keys: ['name', 'description'],
+          threshold: 0.3,
+        })
+        cache.query = searchQuery
+      }
+      filtered = cache.fuse.search(searchQuery).map(r => r.item)
+    }
+
+    return filtered
+  }, [allTasks, currentView, selectedListId, showCompleted, searchQuery])
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
 
   const sortedTasks = useMemo(() => {
