@@ -31,7 +31,8 @@ import {
   Plus, 
   Search, 
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Terminal
 } from 'lucide-react'
 
 const viewIcons = {
@@ -121,18 +122,23 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
-          <CheckCircle2 className="size-6 text-primary" />
-          <span className="font-semibold text-lg">Todo</span>
+          <div className="p-1.5 rounded-lg bg-primary/10">
+            <CheckCircle2 className="size-5 text-primary" />
+          </div>
+          <span className="font-bold text-lg tracking-tight">Todo</span>
         </div>
         <div className="px-2 pb-2 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50" />
           <Input
-            placeholder="Search tasks...  ⌘/"
+            placeholder="Search tasks..."
             aria-label="Search tasks"
             value={localSearch}
             onChange={handleSetSearchQuery}
-            className="w-full pl-8"
+            className="w-full pl-8 bg-muted/50 border-muted-foreground/20 focus:bg-background transition-all duration-200"
           />
+          <kbd className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground/50">
+            ⌘/
+          </kbd>
         </div>
       </SidebarHeader>
       
@@ -144,18 +150,23 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
               {Object.entries(viewLabels).map(([view, label]) => {
                 const Icon = viewIcons[view as ViewType]
                 const count = view === 'today' ? todayCount : view === 'next7days' ? next7Count : undefined
+                const isActive = currentView === view && !selectedListId
                 
                 return (
                   <SidebarMenuItem key={view}>
                     <SidebarMenuButton
-                      isActive={currentView === view && !selectedListId}
-                      aria-current={currentView === view && !selectedListId ? 'page' : undefined}
+                      isActive={isActive}
+                      aria-current={isActive ? 'page' : undefined}
                       onClick={() => handleViewClick(view as ViewType)}
+                      className="group"
                     >
                       <Icon className="size-4" />
                       <span>{label}</span>
                       {count !== undefined && count > 0 && (
-                        <Badge variant="secondary" className="ml-auto">
+                        <Badge
+                          variant={isActive ? 'default' : 'secondary'}
+                          className="ml-auto text-[10px] px-1.5 min-w-5 h-5 flex items-center justify-center"
+                        >
                           <motion.span
                             key={count}
                             initial={{ scale: 1.3, y: -2 }}
@@ -180,18 +191,27 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           <SidebarGroupLabel>Lists</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {lists.map((list) => (
-                <SidebarMenuItem key={list.id}>
-                  <SidebarMenuButton
-                    isActive={selectedListId === list.id}
-                    aria-current={selectedListId === list.id ? 'page' : undefined}
-                    onClick={() => handleListClick(list.id)}
-                  >
-                    <div className="size-3 rounded-full" style={{ backgroundColor: list.color }} />
-                    <span>{list.name}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {lists.length === 0 ? (
+                <div className="px-3 py-2 text-xs text-muted-foreground">
+                  No lists yet
+                </div>
+              ) : (
+                lists.map((list) => (
+                  <SidebarMenuItem key={list.id}>
+                    <SidebarMenuButton
+                      isActive={selectedListId === list.id}
+                      aria-current={selectedListId === list.id ? 'page' : undefined}
+                      onClick={() => handleListClick(list.id)}
+                    >
+                      <div
+                        className="size-2 rounded-full ring-2 ring-offset-1 ring-offset-background"
+                        style={{ backgroundColor: list.color, ringColor: list.color }}
+                      />
+                      <span>{list.icon} {list.name}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -201,12 +221,22 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
             <Separator className="my-2" />
             <SidebarGroup>
               <SidebarGroupLabel className="text-destructive">
-                <AlertTriangle className="size-4 mr-1" />
+                <AlertTriangle className="size-3.5 mr-1.5" />
                 Overdue
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <div className="px-2 py-1">
-                  <Badge variant="destructive">{overdueCount} overdue tasks</Badge>
+                  <Badge variant="destructive" className="w-full justify-center gap-1.5">
+                    <AlertTriangle className="size-3" />
+                    <motion.span
+                      key={overdueCount}
+                      initial={{ scale: 1.3 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    >
+                      {overdueCount} overdue {overdueCount === 1 ? 'task' : 'tasks'}
+                    </motion.span>
+                  </Badge>
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -216,22 +246,25 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
 
       <SidebarFooter>
         <div className="p-2">
-          <Button onClick={onCreateTask} className="w-full">
-            <Plus className="size-4 mr-2" />
+          <Button onClick={onCreateTask} className="w-full group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+            <Plus className="size-4 mr-2 transition-transform group-hover:rotate-90 duration-200" />
             New Task
-            <kbd className="ml-auto hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+            <kbd className="ml-auto hidden md:inline-flex h-5 items-center gap-1 rounded border border-primary-foreground/20 bg-primary-foreground/10 px-1.5 font-mono text-[10px] font-medium">
               ⌘N
             </kbd>
           </Button>
         </div>
-        <div className="px-2 pb-2">
-          <label htmlFor="show-completed" className="flex items-center gap-2 text-sm cursor-pointer">
+        <div className="px-3 pb-3">
+          <label htmlFor="show-completed" className="flex items-center gap-2.5 text-sm cursor-pointer group">
             <Checkbox
               id="show-completed"
               checked={showCompleted}
               onCheckedChange={(checked) => handleShowCompleted(checked === true)}
+              className="transition-all duration-200 group-hover:border-primary/50"
             />
-            <span>Show completed</span>
+            <span className="text-muted-foreground group-hover:text-foreground transition-colors duration-200">
+              Show completed
+            </span>
           </label>
         </div>
       </SidebarFooter>
