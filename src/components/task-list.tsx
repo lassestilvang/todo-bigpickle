@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import Fuse from 'fuse.js'
-import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles } from 'lucide-react'
+import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
 
 const sortLabels = { date: 'Date', priority: 'Priority', name: 'Name', custom: 'Custom' } as const
@@ -479,6 +479,27 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
             ))
           )}
         </AnimatePresence>
+
+        {/* Scroll to top */}
+        {tasks.length > 5 && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20
+              flex items-center gap-1.5 px-4 py-2 rounded-full
+              bg-background border shadow-lg text-xs text-muted-foreground
+              hover:text-foreground hover:shadow-xl
+              transition-all duration-200"
+            onClick={() => {
+              const container = document.querySelector('.overflow-y-auto')
+              container?.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            aria-label="Scroll to top"
+          >
+            <ChevronUp className="size-3.5" />
+            Back to top
+          </motion.button>
+        )}
       </div>
     </div>
   )

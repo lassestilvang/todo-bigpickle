@@ -129,11 +129,12 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
         <div className="px-2 pb-2 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50" />
           <Input
+            type="search"
             placeholder="Search tasks..."
             aria-label="Search tasks"
             value={localSearch}
             onChange={handleSetSearchQuery}
-            className="w-full pl-8 bg-muted/50 border-muted-foreground/20 focus:bg-background transition-all duration-200"
+            className="w-full pl-8 bg-muted/50 border-muted-foreground/20 focus:bg-background transition-all duration-200 [&::-webkit-search-cancel-button]:hidden"
           />
           <kbd className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground/50">
             ⌘/
