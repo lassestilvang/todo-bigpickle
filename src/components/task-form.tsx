@@ -25,7 +25,7 @@ const taskSchema = z.object({
   description: z.string().optional(),
   date: z.date().optional(),
   deadline: z.date().optional(),
-  estimate: z.string().regex(/^\d+:[0-5]\d$/, 'Use format HH:MM (e.g. 1:30)').optional(),
+  estimate: z.string().regex(/^\d+:[0-5]\d$/, 'Use format HH:MM (e.g. 1:30)').optional().or(z.literal('')),
   priority: z.enum(['high', 'medium', 'low', 'none']),
   recurring: z.enum(['daily', 'weekly', 'weekdays', 'monthly', 'yearly', 'custom']).optional(),
   listId: z.string(),
@@ -38,6 +38,13 @@ interface TaskFormProps {
   isOpen: boolean
   onClose: () => void
 }
+
+const priorityOptions = [
+  { value: 'none', label: 'None' },
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+] as const
 
 export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   const lists = useAppStore(s => s.lists)
@@ -53,6 +60,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const subtaskIdCounter = useRef(0)
+  const newSubtaskRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -71,8 +79,6 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   const dateValue = useWatch({ control: form.control, name: 'date' })
   const deadlineValue = useWatch({ control: form.control, name: 'deadline' })
   const priorityValue = useWatch({ control: form.control, name: 'priority' })
-  const recurringValue = useWatch({ control: form.control, name: 'recurring' })
-  const listIdValue = useWatch({ control: form.control, name: 'listId' })
 
   useEffect(() => {
     if (isOpen) {
@@ -122,6 +128,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
         completed: false,
       }])
       setNewSubtask('')
+      setTimeout(() => newSubtaskRef.current?.focus(), 10)
     }
   }
 
@@ -136,8 +143,8 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   }
 
   const toggleLabel = (labelId: string) => {
-    setSelectedLabels(prev => 
-      prev.includes(labelId) 
+    setSelectedLabels(prev =>
+      prev.includes(labelId)
         ? prev.filter(id => id !== labelId)
         : [...prev, labelId]
     )
@@ -145,34 +152,38 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{task ? 'Edit Task' : 'Create New Task'}</DialogTitle>
-          <DialogDescription>
-            {task ? 'Edit the details of your existing task.' : 'Fill in the details to create a new task.'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+        <div className="p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle className="text-xl">{task ? 'Edit Task' : 'Create New Task'}</DialogTitle>
+            <DialogDescription>
+              {task ? 'Edit the details of your existing task.' : 'Fill in the details to create a new task.'}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 pt-4 space-y-5">
           {submitError && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950 rounded-md">
+            <div className="p-3 text-sm text-red-500 bg-red-500/5 border border-red-500/20 rounded-lg">
               {submitError}
             </div>
           )}
+
           <div className="space-y-2">
-            <FormLabel htmlFor="name">Task Name *</FormLabel>
+            <FormLabel htmlFor="name" className="text-sm font-medium">Task Name *</FormLabel>
             <Input
               id="name"
               {...form.register('name')}
               placeholder="Enter task name..."
+              className="h-10"
             />
             {form.formState.errors.name && (
-              <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+              <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <FormLabel htmlFor="description">Description</FormLabel>
+            <FormLabel htmlFor="description" className="text-sm font-medium">Description</FormLabel>
             <Textarea
               id="description"
               {...form.register('description')}
@@ -183,15 +194,17 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <FormLabel>Date</FormLabel>
+              <FormLabel className="text-sm font-medium">Date</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w-full justify-start text-left font-normal h-10"
                   >
-                    <CalendarIcon className="mr-2 size-4" />
-                    {dateValue ? format(dateValue, 'PPP') : 'Pick a date'}
+                    <CalendarIcon className="mr-2 size-4 shrink-0" />
+                    <span className="truncate">
+                      {dateValue ? format(dateValue, 'PPP') : 'Pick a date'}
+                    </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -222,19 +235,17 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             </div>
 
             <div className="space-y-2">
-              <FormLabel>Deadline</FormLabel>
+              <FormLabel className="text-sm font-medium">Deadline</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w-full justify-start text-left font-normal h-10"
                   >
-                    <CalendarIcon className="mr-2 size-4" />
-                    {deadlineValue ? (
-                      format(deadlineValue, 'PPP')
-                    ) : (
-                      <span>Pick a deadline</span>
-                    )}
+                    <CalendarIcon className="mr-2 size-4 shrink-0" />
+                    <span className="truncate">
+                      {deadlineValue ? format(deadlineValue, 'PPP') : 'Pick a deadline'}
+                    </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -251,37 +262,40 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <FormLabel htmlFor="estimate">Time Estimate (HH:MM)</FormLabel>
+              <FormLabel htmlFor="estimate" className="text-sm font-medium">Time Estimate</FormLabel>
               <Input
                 id="estimate"
                 {...form.register('estimate')}
-                placeholder="1:30"
+                placeholder="1:30 (HH:MM)"
+                className="h-10"
               />
               {form.formState.errors.estimate && (
-                <p className="text-sm text-red-500">{form.formState.errors.estimate.message}</p>
+                <p className="text-xs text-red-500">{form.formState.errors.estimate.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <FormLabel htmlFor="priority">Priority</FormLabel>
+              <FormLabel htmlFor="priority" className="text-sm font-medium">Priority</FormLabel>
               <Select value={priorityValue} onValueChange={(value) => form.setValue('priority', value as Priority)}>
-                <SelectTrigger>
+                <SelectTrigger id="priority" className="h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  {priorityOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <FormLabel htmlFor="recurring">Repeat</FormLabel>
-            <Select value={recurringValue || ''} onValueChange={(value) => form.setValue('recurring', value === '' ? undefined : value as Task['recurring'])}>
-              <SelectTrigger id="recurring">
+            <FormLabel htmlFor="recurring" className="text-sm font-medium">Repeat</FormLabel>
+            <Select
+              value={form.watch('recurring') || ''}
+              onValueChange={(value) => form.setValue('recurring', value === '' ? undefined : value as Task['recurring'])}
+            >
+              <SelectTrigger id="recurring" className="h-10">
                 <SelectValue placeholder="Does not repeat" />
               </SelectTrigger>
               <SelectContent>
@@ -296,9 +310,9 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
           </div>
 
           <div className="space-y-2">
-            <FormLabel htmlFor="list-select">List</FormLabel>
-              <Select value={listIdValue} onValueChange={(value) => form.setValue('listId', value)}>
-              <SelectTrigger id="list-select">
+            <FormLabel htmlFor="list-select" className="text-sm font-medium">List</FormLabel>
+            <Select value={form.watch('listId')} onValueChange={(value) => form.setValue('listId', value)}>
+              <SelectTrigger id="list-select" className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -312,41 +326,46 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
           </div>
 
           <div className="space-y-2">
-            <FormLabel>Labels</FormLabel>
-            <div className="flex flex-wrap gap-2">
-              {labels.map((label) => (
-                <Badge
-                  key={label.id}
-                  variant={selectedLabels.includes(label.id) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  style={{
-                    backgroundColor: selectedLabels.includes(label.id) ? label.color : undefined,
-                    borderColor: label.color,
-                    color: selectedLabels.includes(label.id) ? 'white' : label.color
-                  }}
-                  onClick={() => toggleLabel(label.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      toggleLabel(label.id)
-                    }
-                  }}
-                >
-                  {label.icon} {label.name}
-                </Badge>
-              ))}
+            <FormLabel className="text-sm font-medium">Labels</FormLabel>
+            <div className="flex flex-wrap gap-1.5">
+              {labels.map((label) => {
+                const isSelected = selectedLabels.includes(label.id)
+                return (
+                  <Badge
+                    key={label.id}
+                    variant={isSelected ? 'default' : 'outline'}
+                    className="cursor-pointer transition-all duration-150 hover:scale-105 active:scale-95"
+                    style={{
+                      backgroundColor: isSelected ? label.color : undefined,
+                      borderColor: label.color,
+                      color: isSelected ? 'white' : label.color,
+                    }}
+                    onClick={() => toggleLabel(label.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        toggleLabel(label.id)
+                      }
+                    }}
+                  >
+                    {label.icon} {label.name}
+                  </Badge>
+                )
+              })}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <FormLabel>Subtasks</FormLabel>
+          <div className="space-y-3">
+            <FormLabel className="text-sm font-medium">Subtasks</FormLabel>
             <div className="flex gap-2">
               <Input
+                ref={newSubtaskRef}
                 value={newSubtask}
                 onChange={(e) => setNewSubtask(e.target.value)}
                 placeholder="Add a subtask..."
+                className="h-9"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
@@ -354,7 +373,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                   }
                 }}
               />
-              <Button type="button" onClick={addSubtask} size="sm">
+              <Button type="button" onClick={addSubtask} size="sm" variant="secondary" className="shrink-0">
                 <Plus className="size-4" />
               </Button>
             </div>
@@ -362,16 +381,18 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
               {subtasks.map((subtask) => (
                 <motion.div
                   key={subtask.id}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="flex items-center gap-2 p-2 bg-muted rounded"
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-2.5 p-2.5 bg-muted/50 rounded-lg border border-border/50"
                 >
                   <Checkbox
                     checked={subtask.completed}
                     onCheckedChange={() => toggleSubtask(subtask.id)}
+                    className="shrink-0"
                   />
-                  <span className={subtask.completed ? 'line-through text-muted-foreground' : ''}>
+                  <span className={`flex-1 text-sm ${subtask.completed ? 'line-through text-muted-foreground' : ''}`}>
                     {subtask.title}
                   </span>
                   <Button
@@ -379,16 +400,16 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                     variant="ghost"
                     size="sm"
                     onClick={() => removeSubtask(subtask.id)}
-                    className="ml-auto"
+                    className="shrink-0 h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                   >
-                    <X className="size-4" />
+                    <X className="size-3.5" />
                   </Button>
                 </motion.div>
               ))}
             </AnimatePresence>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             {task && (
               <Button
                 type="button"
