@@ -188,7 +188,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
                     <div key={group.label}>
                       <p className="px-3 py-1 text-xs font-semibold text-muted-foreground tracking-wider uppercase">{group.label}</p>
                       <div className="space-y-0.5">
-                        {group.commands.map((cmd, idx) => {
+                        {group.commands.map((cmd) => {
                           const Icon = cmd.icon
                           const globalIdx = groups().flatMap(g => g.commands).indexOf(cmd)
                           return (

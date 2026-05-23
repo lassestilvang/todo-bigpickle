@@ -15,7 +15,6 @@ import {
   Calendar, 
   Clock, 
   Flag, 
-  Tag, 
   CheckCircle2, 
   Circle,
   AlertTriangle,

@@ -31,8 +31,7 @@ import {
   Plus, 
   Search, 
   CheckCircle2,
-  AlertTriangle,
-  Terminal
+  AlertTriangle
 } from 'lucide-react'
 
 const viewIcons = {
