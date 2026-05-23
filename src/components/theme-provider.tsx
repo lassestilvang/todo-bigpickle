@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
 
 type Theme = 'dark' | 'light' | 'system'
 
@@ -20,16 +20,27 @@ type ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undefined)
 
+function applyTheme(root: HTMLElement, theme: Theme, attribute: string) {
+  if (attribute === 'class') {
+    root.classList.remove('light', 'dark')
+    root.classList.add(theme)
+  }
+}
+
+function getSystemTheme(): Theme {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = 'system',
   storageKey = 'todo-app-theme',
   attribute = 'class',
   enableSystem = true,
-  disableTransitionOnChange = false,
+  disableTransitionOnChange = true,
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
       try {
         return (localStorage.getItem(storageKey) as Theme) || defaultTheme
@@ -40,64 +51,71 @@ export function ThemeProvider({
     return defaultTheme
   })
 
-  useEffect(() => {
-    const root = window.document.documentElement
+  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window === 'undefined') return 'light'
+    if (document.documentElement.classList.contains('dark')) return 'dark'
+    return 'light'
+  })
 
+  // Sync resolved theme with DOM on mount
+  useEffect(() => {
+    const root = document.documentElement
     if (disableTransitionOnChange) {
       root.style.transition = 'none'
-      // Force reflow
       void root.offsetHeight
-      root.style.transition = ''
     }
 
-    const applyTheme = (preferDark: boolean) => {
-      root.classList.remove('light', 'dark')
-      root.classList.add(preferDark ? 'dark' : 'light')
-    }
+    const resolved = theme === 'system' && enableSystem ? getSystemTheme() : theme
+    setResolvedTheme(resolved)
 
     if (attribute === 'class') {
-      if (theme === 'system' && enableSystem) {
-        const mql = window.matchMedia('(prefers-color-scheme: dark)')
-        applyTheme(mql.matches)
-        return
-      }
-
       root.classList.remove('light', 'dark')
-      root.classList.add(theme)
+      root.classList.add(resolved)
+    }
+
+    if (disableTransitionOnChange) {
+      requestAnimationFrame(() => {
+        root.style.transition = ''
+      })
     }
   }, [theme, attribute, enableSystem, disableTransitionOnChange])
 
-  // Listen for system theme changes when in system mode
+  // Listen for system theme changes
   useEffect(() => {
     if (theme !== 'system' || !enableSystem) return
 
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
     const handler = (e: MediaQueryListEvent) => {
-      const root = window.document.documentElement
+      const newTheme = e.matches ? 'dark' : 'light'
+      setResolvedTheme(newTheme)
+      const root = document.documentElement
       if (disableTransitionOnChange) {
         root.style.transition = 'none'
         void root.offsetHeight
-        root.style.transition = ''
       }
       root.classList.remove('light', 'dark')
-      root.classList.add(e.matches ? 'dark' : 'light')
+      root.classList.add(newTheme)
+      if (disableTransitionOnChange) {
+        requestAnimationFrame(() => {
+          root.style.transition = ''
+        })
+      }
     }
 
     mql.addEventListener('change', handler)
     return () => mql.removeEventListener('change', handler)
   }, [theme, enableSystem, disableTransitionOnChange])
 
-  const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      try {
-        localStorage.setItem(storageKey, theme)
-      } catch {
-        // localStorage unavailable
-      }
-      setTheme(theme)
-    },
-  }
+  const setTheme = useCallback((newTheme: Theme) => {
+    try {
+      localStorage.setItem(storageKey, newTheme)
+    } catch {
+      // localStorage unavailable
+    }
+    setThemeState(newTheme)
+  }, [storageKey])
+
+  const value = { theme, setTheme }
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>
@@ -108,9 +126,7 @@ export function ThemeProvider({
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext)
-
   if (context === undefined)
     throw new Error('useTheme must be used within a ThemeProvider')
-
   return context
 }
