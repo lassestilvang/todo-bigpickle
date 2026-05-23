@@ -7,8 +7,8 @@ import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
-import { Plus, SortAsc, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList } from 'lucide-react'
-import { format } from 'date-fns'
+import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles } from 'lucide-react'
+import { format, isToday, isYesterday } from 'date-fns'
 
 const sortLabels = { date: 'Date', priority: 'Priority', name: 'Name', custom: 'Custom' } as const
 const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 }
@@ -17,16 +17,28 @@ const viewTitles = {
   today: 'Today',
   next7days: 'Next 7 Days',
   upcoming: 'Upcoming',
-  all: 'All Tasks'
+  all: 'All Tasks',
 }
+
+const viewIcons = {
+  today: CalendarDays,
+  next7days: CalendarRange,
+  upcoming: List,
+  all: LayoutList,
+} as const
 
 function getCurrentViewTitle(currentView: string, selectedListId: string | undefined, lists: { id: string; icon: string; name: string }[]) {
   if (selectedListId) {
     const list = lists.find(l => l.id === selectedListId)
     return list ? `${list.icon} ${list.name}` : 'Tasks'
   }
-  
   return viewTitles[currentView as keyof typeof viewTitles] || 'Tasks'
+}
+
+function formatGroupDate(date: Date): string {
+  if (isToday(date)) return 'Today'
+  if (isYesterday(date)) return 'Yesterday'
+  return format(date, 'EEEE, MMMM d')
 }
 
 interface TaskListProps {
@@ -54,7 +66,6 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
   const prevReorderVersion = useRef(reorderVersion)
 
-  // Focus quick-add on Ctrl+K or Cmd+K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -92,7 +103,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     [getFilteredTasks, allTasks, currentView, selectedListId, showCompleted, searchQuery]
   )
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
-  
+
   const sortedTasks = useMemo(() => {
     if (sortBy === 'custom') return tasks
     return tasks.toSorted((a, b) => {
@@ -134,13 +145,9 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     return groups
   }, [sortedTasks, currentView])
 
-  // Sync custom order from grouped tasks when sort mode changes or tasks change
-  // This ensures Reorder has stable references for drag-and-drop animations
   useEffect(() => {
     if (sortBy === 'custom') {
       setCustomOrder(prev => {
-        // On reorder rollback, prev may hold a stale order;
-        // skip preservation so the store's canonical order wins
         const prevMap = new Map(prevReorderVersion.current === reorderVersion
           ? Object.entries(prev) : []
         )
@@ -167,10 +174,9 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     }
   }, [sortBy, groupedTasks, reorderVersion])
 
-  // Keyboard navigation between tasks
   useEffect(() => {
-    const allTasks = Object.values(groupedTasks).flatMap(g => g.tasks)
-    if (allTasks.length === 0) return
+    const allFlattenedTasks = Object.values(groupedTasks).flatMap(g => g.tasks)
+    if (allFlattenedTasks.length === 0) return
 
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null
@@ -216,39 +222,50 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     reorderTasks(updates)
   }, [reorderTasks])
 
+  const ViewIcon = viewIcons[currentView as keyof typeof viewIcons] || LayoutList
+  const isEmpty = Object.entries(groupedTasks).length === 0
+
   return (
     <div className="flex-1 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-semibold">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
-            <p className="text-muted-foreground">
-              {tasks.length} task{tasks.length !== 1 ? 's' : ''}
-              {completedCount > 0 && ` (${completedCount} completed)`}
-            </p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/5">
+                <ViewIcon className="size-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
+                <p className="text-sm text-muted-foreground">
+                  {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+                  {completedCount > 0 && ` (${completedCount} completed)`}
+                </p>
+              </div>
+            </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={cycleSort}
+              className="transition-all duration-200"
             >
-              <SortAsc className="size-4 mr-2" />
+              <ArrowUpDown className="size-3.5 mr-1.5" />
               {sortLabels[sortBy]}
             </Button>
-            
-            <Button onClick={onCreateTask}>
-              <Plus className="size-4 mr-2" />
+
+            <Button onClick={onCreateTask} size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95">
+              <Plus className="size-4 mr-1.5" />
               Add Task
             </Button>
           </div>
         </div>
 
         {/* Quick Add */}
-        <div className="relative mb-6">
-          <Plus className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+        <div className="relative mb-8 group">
+          <Plus className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors duration-200" />
           <Input
             ref={quickAddRef}
             value={quickAddText}
@@ -260,36 +277,47 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               }
             }}
             placeholder={`Add a task to "${getCurrentViewTitle(currentView, selectedListId, lists)}"…`}
-            className="pl-9 h-12 text-base bg-muted/50 border-dashed focus:bg-background transition-colors"
+            className="pl-10 h-12 text-base bg-muted/30 border-dashed border-muted-foreground/25
+              focus:bg-background focus:border-primary/50 focus:shadow-sm
+              transition-all duration-200"
           />
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground/60">
+            ⌘K
+          </kbd>
         </div>
 
         {/* Task Groups */}
         <AnimatePresence mode="wait">
-          {Object.entries(groupedTasks).length === 0 ? (
+          {isEmpty ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-center py-16"
+              className="text-center py-20"
             >
               {searchQuery ? (
                 <div className="text-muted-foreground">
-                  <SearchX className="size-16 mx-auto mb-4 text-muted-foreground/30" />
+                  <SearchX className="size-16 mx-auto mb-4 text-muted-foreground/20" />
                   <p className="text-lg font-medium mb-1">No results found</p>
-                  <p className="text-sm">No tasks match &ldquo;{searchQuery}&rdquo;</p>
+                  <p className="text-sm text-muted-foreground/70">
+                    No tasks match &ldquo;{searchQuery}&rdquo;
+                  </p>
                 </div>
               ) : allTasks.length === 0 ? (
-                <div className="text-muted-foreground">
-                  {(() => {
-                    const Icon = currentView === 'today' ? CalendarDays
-                      : currentView === 'next7days' ? CalendarRange
-                      : currentView === 'upcoming' ? List
-                      : LayoutList
-                    return <Icon className="size-16 mx-auto mb-4 text-muted-foreground/20" />
-                  })()}
-                  <p className="text-lg font-medium mb-1">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-muted-foreground"
+                >
+                  <div className="relative mx-auto mb-6 w-24 h-24">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 animate-pulse" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Sparkles className="size-10 text-primary/40" />
+                    </div>
+                  </div>
+                  <p className="text-xl font-medium mb-2">
                     {selectedListId
                       ? 'This list is empty'
                       : currentView === 'today'
@@ -300,21 +328,27 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                             ? 'No upcoming tasks'
                             : 'Your task list is empty'}
                   </p>
-                  <p className="text-sm mb-6">
+                  <p className="text-sm text-muted-foreground/70 mb-8">
                     {selectedListId
                       ? 'Add a task to get started'
                       : currentView === 'today'
                         ? 'Schedule a task for today'
                         : 'Create your first task and get things done'}
                   </p>
-                  <Button onClick={onCreateTask} size="lg">
+                  <Button onClick={onCreateTask} size="lg" className="transition-all duration-200 hover:scale-105 active:scale-95">
                     <Plus className="size-4 mr-2" />
                     Create Your First Task
                   </Button>
-                </div>
+                </motion.div>
               ) : (
                 <div className="text-muted-foreground">
-                  <CheckCircle2 className="size-16 mx-auto mb-4 text-green-500/40" />
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
+                  >
+                    <CheckCircle2 className="size-20 mx-auto mb-4 text-green-500/30" />
+                  </motion.div>
                   <p className="text-lg font-medium mb-1">
                     {currentView === 'today'
                       ? 'All done for today!'
@@ -324,7 +358,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                           ? 'Nothing upcoming'
                           : 'All done!'}
                   </p>
-                  <p className="text-sm">
+                  <p className="text-sm text-muted-foreground/70">
                     {currentView === 'today'
                       ? 'Enjoy your free time'
                       : currentView === 'next7days'
@@ -347,13 +381,15 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 className="mb-8"
               >
                 {group.date && (
-                  <div className="mb-4">
-                    <h2 className="text-lg font-semibold text-muted-foreground">
-                      {format(group.date, 'EEEE, MMMM d')}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-px flex-1 bg-border/50" />
+                    <h2 className="text-sm font-medium text-muted-foreground px-1">
+                      {formatGroupDate(group.date)}
                     </h2>
+                    <div className="h-px flex-1 bg-border/50" />
                   </div>
                 )}
-                
+
                 <Reorder.Group
                   axis="y"
                   values={customOrder[groupKey] || group.tasks}
@@ -363,7 +399,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                     setCustomOrder(prev => ({ ...prev, [key]: reordered }))
                     handleReorder(reordered)
                   }}
-                  className="space-y-3"
+                  className="space-y-2"
                   layoutScroll
                 >
                   {(customOrder[groupKey] || group.tasks).map((task) => (
