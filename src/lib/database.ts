@@ -487,12 +487,12 @@ export class DatabaseService {
       description: row.description || undefined,
       date: row.date ? new Date(row.date) : undefined,
       deadline: row.deadline ? new Date(row.deadline) : undefined,
-      reminders: allReminders?.get(row.id) || this.getRemindersForTask(row.id),
+      reminders: allReminders ? (allReminders.get(row.id) ?? this.getRemindersForTask(row.id)) : this.getRemindersForTask(row.id),
       estimate: row.estimate ?? undefined,
       actualTime: row.actual_time ?? undefined,
-      labels: allLabels?.get(row.id) || this.getLabelsForTask(row.id),
+      labels: allLabels ? (allLabels.get(row.id) ?? this.getLabelsForTask(row.id)) : this.getLabelsForTask(row.id),
       priority: row.priority as Priority,
-      subtasks: allSubtasks?.get(row.id) || this.getSubtasksForTask(row.id),
+      subtasks: allSubtasks ? (allSubtasks.get(row.id) ?? this.getSubtasksForTask(row.id)) : this.getSubtasksForTask(row.id),
       recurring: row.recurring as RecurringType || undefined,
       recurringConfig: row.recurring_config ? JSON.parse(row.recurring_config) : undefined,
       listId: row.list_id,
@@ -501,22 +501,23 @@ export class DatabaseService {
       position: row.position,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
-      history: allHistory?.get(row.id) || this.getTaskHistory(row.id),
-      attachments: allAttachments?.get(row.id) || this.getAttachmentsForTask(row.id)
+      history: allHistory ? (allHistory.get(row.id) ?? this.getTaskHistory(row.id)) : this.getTaskHistory(row.id),
+      attachments: allAttachments ? (allAttachments.get(row.id) ?? this.getAttachmentsForTask(row.id)) : this.getAttachmentsForTask(row.id)
     }
   }
 
   private batchGetLabelsForTasks(taskIds: string[]): Map<string, Label[]> {
-    const placeholders = taskIds.map(() => '?').join(',')
+    const map = new Map<string, Label[]>()
+    for (const id of taskIds) map.set(id, [])
+
+    if (taskIds.length === 0) return map
     const rows = this.db.prepare(`
       SELECT tl.task_id, l.* FROM labels l
       JOIN task_labels tl ON l.id = tl.label_id
-      WHERE tl.task_id IN (${placeholders})
+      WHERE tl.task_id IN (${taskIds.map(() => '?').join(',')})
     `).all(...taskIds) as (LabelRow & { task_id: string })[]
 
-    const map = new Map<string, Label[]>()
     for (const row of rows) {
-      if (!map.has(row.task_id)) map.set(row.task_id, [])
       map.get(row.task_id)!.push({
         id: row.id,
         name: row.name,
@@ -530,14 +531,15 @@ export class DatabaseService {
   }
 
   private batchGetSubtasksForTasks(taskIds: string[]): Map<string, Subtask[]> {
-    const placeholders = taskIds.map(() => '?').join(',')
-    const rows = this.db.prepare(
-      `SELECT * FROM subtasks WHERE task_id IN (${placeholders}) ORDER BY created_at`
-    ).all(...taskIds) as (SubtaskRow)[]
-
     const map = new Map<string, Subtask[]>()
+    for (const id of taskIds) map.set(id, [])
+
+    if (taskIds.length === 0) return map
+    const rows = this.db.prepare(
+      `SELECT * FROM subtasks WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY created_at`
+    ).all(...taskIds) as SubtaskRow[]
+
     for (const row of rows) {
-      if (!map.has(row.task_id)) map.set(row.task_id, [])
       map.get(row.task_id)!.push({
         id: row.id,
         title: row.title,
@@ -550,14 +552,15 @@ export class DatabaseService {
   }
 
   private batchGetHistoryForTasks(taskIds: string[]): Map<string, TaskHistory[]> {
-    const placeholders = taskIds.map(() => '?').join(',')
-    const rows = this.db.prepare(
-      `SELECT * FROM task_history WHERE task_id IN (${placeholders}) ORDER BY changed_at DESC`
-    ).all(...taskIds) as (TaskHistoryRow)[]
-
     const map = new Map<string, TaskHistory[]>()
+    for (const id of taskIds) map.set(id, [])
+
+    if (taskIds.length === 0) return map
+    const rows = this.db.prepare(
+      `SELECT * FROM task_history WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY changed_at DESC`
+    ).all(...taskIds) as TaskHistoryRow[]
+
     for (const row of rows) {
-      if (!map.has(row.task_id)) map.set(row.task_id, [])
       map.get(row.task_id)!.push({
         id: row.id,
         taskId: row.task_id,
@@ -571,28 +574,30 @@ export class DatabaseService {
   }
 
   private batchGetRemindersForTasks(taskIds: string[]): Map<string, Date[]> {
-    const placeholders = taskIds.map(() => '?').join(',')
+    const map = new Map<string, Date[]>()
+    for (const id of taskIds) map.set(id, [])
+
+    if (taskIds.length === 0) return map
     const rows = this.db.prepare(
-      `SELECT task_id, reminder_time FROM reminders WHERE task_id IN (${placeholders}) ORDER BY reminder_time`
+      `SELECT task_id, reminder_time FROM reminders WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY reminder_time`
     ).all(...taskIds) as { task_id: string; reminder_time: string }[]
 
-    const map = new Map<string, Date[]>()
     for (const row of rows) {
-      if (!map.has(row.task_id)) map.set(row.task_id, [])
       map.get(row.task_id)!.push(new Date(row.reminder_time))
     }
     return map
   }
 
   private batchGetAttachmentsForTasks(taskIds: string[]): Map<string, string[]> {
-    const placeholders = taskIds.map(() => '?').join(',')
+    const map = new Map<string, string[]>()
+    for (const id of taskIds) map.set(id, [])
+
+    if (taskIds.length === 0) return map
     const rows = this.db.prepare(
-      `SELECT task_id, file_path FROM attachments WHERE task_id IN (${placeholders}) ORDER BY created_at`
+      `SELECT task_id, file_path FROM attachments WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY created_at`
     ).all(...taskIds) as { task_id: string; file_path: string }[]
 
-    const map = new Map<string, string[]>()
     for (const row of rows) {
-      if (!map.has(row.task_id)) map.set(row.task_id, [])
       map.get(row.task_id)!.push(row.file_path)
     }
     return map
