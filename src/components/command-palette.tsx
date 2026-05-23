@@ -43,6 +43,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   const setCurrentView = useAppStore(s => s.setCurrentView)
   const setSelectedListId = useAppStore(s => s.setSelectedListId)
@@ -78,6 +79,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
         commands: lists.map(list => ({
           id: `list-${list.id}`,
           label: list.name,
+          description: 'Filter by list',
           icon: LayoutList,
           shortcut: '',
           action: () => { setSelectedListId(list.id); setCurrentView('all') },
@@ -111,6 +113,12 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
     return cmd.label.toLowerCase().includes(q) || (cmd.description?.toLowerCase().includes(q) ?? false)
   })
 
+  useEffect(() => {
+    if (!listRef.current || filtered.length === 0) return
+    const selected = listRef.current.querySelector<HTMLElement>(`[data-index="${selectedIndex}"]`)
+    selected?.scrollIntoView({ block: 'nearest' })
+  }, [selectedIndex, filtered.length])
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -127,19 +135,22 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogContent className="max-w-lg top-[15%] -translate-y-0 p-0 gap-0 overflow-hidden">
+      <DialogContent
+        className="max-w-lg top-[15%] -translate-y-0 p-0 gap-0 overflow-hidden shadow-2xl"
+        aria-describedby={undefined}
+      >
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50" />
           <Input
             ref={inputRef}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0) }}
             onKeyDown={handleKeyDown}
             placeholder="Search commands…"
-            className="border-0 rounded-none h-14 pl-11 text-base shadow-none focus-visible:ring-0"
+            className="border-0 rounded-none h-14 pl-11 pr-4 text-base shadow-none focus-visible:ring-0"
           />
         </div>
-        <div className="max-h-80 overflow-y-auto border-t p-2">
+        <div className="max-h-80 overflow-y-auto border-t p-2" ref={listRef}>
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No results found</p>
           ) : (
@@ -151,8 +162,11 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
                     return (
                       <button
                         key={cmd.id}
-                        className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
-                          idx === selectedIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+                        data-index={idx}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                          idx === selectedIndex
+                            ? 'bg-accent text-accent-foreground shadow-sm'
+                            : 'hover:bg-accent/50'
                         }`}
                         onClick={() => { cmd.action(); onClose() }}
                         onMouseEnter={() => setSelectedIndex(idx)}
@@ -172,7 +186,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
                 groups().map((group) =>
                   group.commands.length > 0 && (
                     <div key={group.label}>
-                      <p className="px-3 py-1 text-xs font-medium text-muted-foreground">{group.label}</p>
+                      <p className="px-3 py-1 text-xs font-semibold text-muted-foreground tracking-wider uppercase">{group.label}</p>
                       <div className="space-y-0.5">
                         {group.commands.map((cmd, idx) => {
                           const Icon = cmd.icon
@@ -180,8 +194,11 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
                           return (
                             <button
                               key={cmd.id}
-                              className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
-                                globalIdx === selectedIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+                              data-index={globalIdx}
+                              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                                globalIdx === selectedIndex
+                                  ? 'bg-accent text-accent-foreground shadow-sm'
+                                  : 'hover:bg-accent/50'
                               }`}
                               onClick={() => { cmd.action(); onClose() }}
                               onMouseEnter={() => setSelectedIndex(globalIdx)}
@@ -203,6 +220,21 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
               )}
             </div>
           )}
+        </div>
+        <div className="border-t px-4 py-2 flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <kbd className="inline-flex h-5 w-5 items-center justify-center rounded border bg-muted font-mono text-[10px] font-medium">↑</kbd>
+            <kbd className="inline-flex h-5 w-5 items-center justify-center rounded border bg-muted font-mono text-[10px] font-medium">↓</kbd>
+            <span>navigate</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <kbd className="inline-flex h-5 items-center justify-center rounded border bg-muted px-1.5 font-mono text-[10px] font-medium">↵</kbd>
+            <span>select</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <kbd className="inline-flex h-5 items-center justify-center rounded border bg-muted px-1.5 font-mono text-[10px] font-medium">esc</kbd>
+            <span>close</span>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
