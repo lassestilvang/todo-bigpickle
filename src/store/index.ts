@@ -46,6 +46,7 @@ interface AppStore extends AppState {
   
   // Data loading
   loadData: () => void
+  clearError: () => void
   
   // Computed values
   getFilteredTasks: () => Task[]
@@ -80,8 +81,8 @@ export const useAppStore = create<AppStore>()(
       error: null,
 
       // View actions
-      setCurrentView: (view) => set({ currentView: view }),
-      setSelectedListId: (listId) => set({ selectedListId: listId }),
+      setCurrentView: (view) => set({ currentView: view, error: null }),
+      setSelectedListId: (listId) => set({ selectedListId: listId, error: null }),
       setShowCompleted: (show) => set({ showCompleted: show }),
       setSearchQuery: (query) => set({ searchQuery: query }),
 
@@ -346,6 +347,8 @@ export const useAppStore = create<AppStore>()(
           set({ isLoading: false })
         }
       },
+
+      clearError: () => set({ error: null }),
 
       // Computed values
       getFilteredTasks: () => {
