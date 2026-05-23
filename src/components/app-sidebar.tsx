@@ -202,10 +202,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                       aria-current={selectedListId === list.id ? 'page' : undefined}
                       onClick={() => handleListClick(list.id)}
                     >
-                      <div
-                        className="size-2 rounded-full ring-2 ring-offset-1 ring-offset-background"
-                        style={{ backgroundColor: list.color, ringColor: list.color }}
-                      />
+                      <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: list.color }} />
                       <span>{list.icon} {list.name}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

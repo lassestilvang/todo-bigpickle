@@ -134,7 +134,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
   }
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent
         className="max-w-lg top-[15%] -translate-y-0 p-0 gap-0 overflow-hidden shadow-2xl"
         aria-describedby={undefined}
