@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { Task, ViewType } from '@/types'
+import { Task } from '@/types'
 import { useAppStore, useShallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
@@ -97,11 +97,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     }
   }, [quickAddText, addTask, lists, selectedListId])
 
-  // Search cache refs
-  const searchCache = useRef<{ query: string; fuse: Fuse<Task> | null }>({ query: '', fuse: null })
-
-  // Inline filtered computation for better perf - avoids store method call
-  const tasks = useMemo(() => {
+  // Step 1: filter by view/status/completed (no search)
+  const baseTasks = useMemo(() => {
     let filtered = allTasks
 
     if (selectedListId) {
@@ -143,21 +140,19 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
       filtered = filtered.filter(task => !task.completed)
     }
 
-    // Apply Fuse.js search when query is present
-    if (searchQuery) {
-      const cache = searchCache.current
-      if (!cache.fuse || cache.query !== searchQuery) {
-        cache.fuse = new Fuse(filtered, {
-          keys: ['name', 'description'],
-          threshold: 0.3,
-        })
-        cache.query = searchQuery
-      }
-      filtered = cache.fuse.search(searchQuery).map(r => r.item)
-    }
-
     return filtered
-  }, [allTasks, currentView, selectedListId, showCompleted, searchQuery])
+  }, [allTasks, currentView, selectedListId, showCompleted])
+
+  // Step 2: apply Fuse.js search on top of baseTasks
+  const tasks = useMemo(() => {
+    if (!searchQuery) return baseTasks
+
+    const fuse = new Fuse(baseTasks, {
+      keys: ['name', 'description'],
+      threshold: 0.3,
+    })
+    return fuse.search(searchQuery).map(r => r.item)
+  }, [baseTasks, searchQuery])
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
 
   const sortedTasks = useMemo(() => {

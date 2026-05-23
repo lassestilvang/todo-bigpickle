@@ -20,15 +20,26 @@ type ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undefined)
 
-function applyTheme(root: HTMLElement, theme: Theme, attribute: string) {
-  if (attribute === 'class') {
-    root.classList.remove('light', 'dark')
-    root.classList.add(theme)
-  }
+function getSystemTheme(): 'dark' | 'light' {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-function getSystemTheme(): Theme {
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+function updateDOM(theme: Theme, attribute: string, disableTransition: boolean) {
+  const root = document.documentElement
+  if (disableTransition) {
+    root.style.transition = 'none'
+    void root.offsetHeight
+  }
+
+  const resolved = theme === 'system' ? getSystemTheme() : theme
+  root.classList.remove('light', 'dark')
+  root.classList.add(resolved)
+
+  if (disableTransition) {
+    requestAnimationFrame(() => {
+      root.style.transition = ''
+    })
+  }
 }
 
 export function ThemeProvider({
@@ -51,60 +62,23 @@ export function ThemeProvider({
     return defaultTheme
   })
 
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>(() => {
-    if (typeof window === 'undefined') return 'light'
-    if (document.documentElement.classList.contains('dark')) return 'dark'
-    return 'light'
-  })
-
-  // Sync resolved theme with DOM on mount
+  // Sync DOM with theme on mount and on change
   useEffect(() => {
-    const root = document.documentElement
-    if (disableTransitionOnChange) {
-      root.style.transition = 'none'
-      void root.offsetHeight
-    }
+    updateDOM(theme, attribute, disableTransitionOnChange)
+  }, [theme, attribute, disableTransitionOnChange])
 
-    const resolved = theme === 'system' && enableSystem ? getSystemTheme() : theme
-    setResolvedTheme(resolved)
-
-    if (attribute === 'class') {
-      root.classList.remove('light', 'dark')
-      root.classList.add(resolved)
-    }
-
-    if (disableTransitionOnChange) {
-      requestAnimationFrame(() => {
-        root.style.transition = ''
-      })
-    }
-  }, [theme, attribute, enableSystem, disableTransitionOnChange])
-
-  // Listen for system theme changes
+  // Listen for system preference changes
   useEffect(() => {
     if (theme !== 'system' || !enableSystem) return
 
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = (e: MediaQueryListEvent) => {
-      const newTheme = e.matches ? 'dark' : 'light'
-      setResolvedTheme(newTheme)
-      const root = document.documentElement
-      if (disableTransitionOnChange) {
-        root.style.transition = 'none'
-        void root.offsetHeight
-      }
-      root.classList.remove('light', 'dark')
-      root.classList.add(newTheme)
-      if (disableTransitionOnChange) {
-        requestAnimationFrame(() => {
-          root.style.transition = ''
-        })
-      }
+    const handler = () => {
+      updateDOM('system', attribute, disableTransitionOnChange)
     }
 
     mql.addEventListener('change', handler)
     return () => mql.removeEventListener('change', handler)
-  }, [theme, enableSystem, disableTransitionOnChange])
+  }, [theme, attribute, enableSystem, disableTransitionOnChange])
 
   const setTheme = useCallback((newTheme: Theme) => {
     try {
