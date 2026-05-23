@@ -129,7 +129,10 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
             <Celebration active={celebrating} />
 
             <div className="flex flex-col items-center gap-1 pt-0.5">
-              <GripVertical className="size-3.5 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors cursor-grab active:cursor-grabbing" />
+              <GripVertical
+                className="size-3.5 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors cursor-grab active:cursor-grabbing"
+                aria-label="Drag to reorder"
+              />
               <Checkbox
                 checked={task.completed}
                 onCheckedChange={() => onToggleComplete(task.id)}
@@ -281,10 +284,11 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                 e.stopPropagation()
                 onDelete(task.id)
               }}
-              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200
+              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-all duration-200
                 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10
-                hover:scale-110 active:scale-95"
+                hover:scale-110 active:scale-95 focus-visible:scale-110 focus-visible:text-destructive focus-visible:bg-destructive/10"
               aria-label={`Delete "${task.name}"`}
+              tabIndex={0}
             >
               <Trash2 className="size-4" />
             </button>
