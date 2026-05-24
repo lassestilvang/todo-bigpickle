@@ -4,9 +4,12 @@
 - `bun run dev` - Start development server
 - `bun run build` - Build for production  
 - `bun run lint` - Run ESLint
-- `bun run test` - Run all tests
+- `bun run test` - Run all tests (uses `bun test`)
 - `bun run test:watch` - Run tests in watch mode
-- **Single test**: `bun test -- src/components/__tests__/task-card.test.tsx` or `bun test -- --testNamePattern="TaskCard"`
+- `bun run test:coverage` - Run tests with coverage
+- **Single test**: `bun test --test-name-pattern="TaskCard"` or `bun test src/components/__tests__/task-card.test.tsx`
+- **React component tests**: add `// @bun-test-environment jsdom` comment at top of test file
+- **DOM matchers**: use `@testing-library/jest-dom` (custom matchers via `test/setup.ts`)
 
 ## Code Style Guidelines
 
@@ -31,7 +34,8 @@ import { Task } from '@/types'
 - Try-catch for async operations, console.error for debugging
 
 ### Testing
-- Jest + React Testing Library
+- Bun test runner + React Testing Library
+- `mock.module()` for module mocking, `mock.fn()` for function mocks
 - Test files in `__tests__/` or `.test.tsx`
 - Use semantic queries (`getByRole`), mock external deps
 - Test user interactions with `fireEvent`
