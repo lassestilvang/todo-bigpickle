@@ -47,6 +47,68 @@ interface TaskListProps {
   onEditTask: (task: Task) => void
 }
 
+interface TaskGroupProps {
+  groupKey: string
+  tasks: Task[]
+  hasDate: boolean
+  date: Date | null
+  customOrderTasks: Task[] | undefined
+  sortBy: string
+  onReorder: (tasks: Task[]) => void
+  onToggleComplete: (id: string) => void
+  onEditTask: (task: Task) => void
+  onDeleteTask: (id: string) => void
+}
+
+const TaskGroup = memo(function TaskGroup({
+  groupKey, tasks, hasDate, date, customOrderTasks,
+  sortBy, onReorder, onToggleComplete, onEditTask, onDeleteTask,
+}: TaskGroupProps) {
+  return (
+    <div className="mb-8">
+      {hasDate && date && (
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-px flex-1 bg-border/50" />
+          <h2 className="text-sm font-medium text-muted-foreground px-1">
+            {formatGroupDate(date)}
+          </h2>
+          <div className="h-px flex-1 bg-border/50" />
+        </div>
+      )}
+
+      <Reorder.Group
+        axis="y"
+        values={customOrderTasks || tasks}
+        onReorder={onReorder}
+        className="space-y-2"
+        layoutScroll
+      >
+        {(customOrderTasks || tasks).map((task) => (
+          <Reorder.Item
+            key={task.id}
+            value={task}
+            dragListener={sortBy === 'custom'}
+            data-reorder-item
+            style={{ listStyle: 'none' }}
+          >
+            <TaskCard
+              task={task}
+              onToggleComplete={onToggleComplete}
+              onEdit={onEditTask}
+              onDelete={onDeleteTask}
+            />
+          </Reorder.Item>
+        ))}
+      </Reorder.Group>
+    </div>
+  )
+}, (prev, next) => {
+  if (prev.groupKey !== next.groupKey) return false
+  if (prev.sortBy !== next.sortBy) return false
+  if (prev.tasks.length !== next.tasks.length) return false
+  return prev.tasks.every((t, i) => t === next.tasks[i])
+})
+
 export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
   const deleteTask = useAppStore(s => s.deleteTask)
@@ -438,55 +500,24 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               )}
             </motion.div>
           ) : (
-            Object.entries(groupedTasks).map(([groupKey, group], idx) => (
-              <motion.div
+            Object.entries(groupedTasks).map(([groupKey, group]) => (
+              <TaskGroup
                 key={groupKey}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: idx * 0.03, duration: 0.25 }}
-                className="mb-8"
-              >
-                {group.date && (
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-px flex-1 bg-border/50" />
-                    <h2 className="text-sm font-medium text-muted-foreground px-1">
-                      {formatGroupDate(group.date)}
-                    </h2>
-                    <div className="h-px flex-1 bg-border/50" />
-                  </div>
-                )}
-
-                <Reorder.Group
-                  axis="y"
-                  values={customOrder[groupKey] || group.tasks}
-                  onReorder={(reordered) => {
-                    if (sortBy !== 'custom') return
-                    const key = groupKey
-                    setCustomOrder(prev => ({ ...prev, [key]: reordered }))
-                    handleReorder(reordered)
-                  }}
-                  className="space-y-2"
-                  layoutScroll
-                >
-                  {(customOrder[groupKey] || group.tasks).map((task) => (
-                    <Reorder.Item
-                      key={task.id}
-                      value={task}
-                      dragListener={sortBy === 'custom'}
-                      data-reorder-item
-                      style={{ listStyle: 'none' }}
-                    >
-                      <TaskCard
-                        task={task}
-                        onToggleComplete={toggleTaskComplete}
-                        onEdit={onEditTask}
-                        onDelete={deleteTask}
-                      />
-                    </Reorder.Item>
-                  ))}
-                </Reorder.Group>
-              </motion.div>
+                groupKey={groupKey}
+                tasks={group.tasks}
+                hasDate={!!group.date}
+                date={group.date}
+                customOrderTasks={customOrder[groupKey]}
+                sortBy={sortBy}
+                onReorder={(reordered) => {
+                  if (sortBy !== 'custom') return
+                  setCustomOrder(prev => ({ ...prev, [groupKey]: reordered }))
+                  handleReorder(reordered)
+                }}
+                onToggleComplete={toggleTaskComplete}
+                onEditTask={onEditTask}
+                onDeleteTask={deleteTask}
+              />
             ))
           )}
         </AnimatePresence>
