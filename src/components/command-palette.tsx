@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
+import { useState, useEffect, useRef, useMemo, memo } from 'react'
 import { useAppStore } from '@/store'
 import { useTheme } from '@/components/theme-provider'
 import { Dialog, DialogContent } from '@/components/ui/dialog'

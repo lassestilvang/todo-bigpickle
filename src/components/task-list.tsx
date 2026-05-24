@@ -66,6 +66,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
   const prevReorderVersion = useRef(reorderVersion)
   const flatTasksRef = useRef<Task[]>([])
+  const groupedTasksRef = useRef<Record<string, { date: Date | null; tasks: Task[] }>>(undefined as unknown as Record<string, { date: Date | null; tasks: Task[] }>)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -204,12 +205,14 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     ).join('|')
   }, [groupedTasks])
 
-  // Keep ref updated for keyboard handler
+  // Keep refs updated
   useEffect(() => {
     flatTasksRef.current = Object.values(groupedTasks).flatMap(g => g.tasks)
+    groupedTasksRef.current = groupedTasks
   })
 
   useEffect(() => {
+    const currentGrouped = groupedTasksRef.current
     if (sortBy === 'custom') {
       setCustomOrder(prev => {
         const prevMap = new Map(prevReorderVersion.current === reorderVersion
@@ -218,7 +221,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
         prevReorderVersion.current = reorderVersion
 
         const next: Record<string, Task[]> = {}
-        for (const [key, group] of Object.entries(groupedTasks)) {
+        for (const [key, group] of Object.entries(currentGrouped)) {
           const prevGroup = prevMap.get(key)
           const currentIds = new Set(prevGroup?.map(t => t.id) || [])
           const newIds = new Set(group.tasks.map(t => t.id))

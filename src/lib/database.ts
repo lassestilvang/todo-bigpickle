@@ -89,7 +89,7 @@ interface LabelRow {
 
 export class DatabaseService {
   private db: Database.Database
-  private stmts: {
+  private stmts!: {
     getTaskById: Database.Statement
     deleteTask: Database.Statement
     getSubtasks: Database.Statement
@@ -105,7 +105,7 @@ export class DatabaseService {
     insertReminder: Database.Statement
     insertAttachment: Database.Statement
     updateTaskPos: Database.Statement
-  } | {} = {}
+  }
 
   constructor(dbPath?: string) {
     const path = dbPath || process.env.DATABASE_PATH || './todo.db'
