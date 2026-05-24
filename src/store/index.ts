@@ -199,7 +199,7 @@ export const useAppStore = create<AppStore>()(
       },
 
       reorderTasks: async (reorder) => {
-        const prevTasks = [...get().tasks]
+        const prevTasks = get().tasks.map(t => ({ ...t }))
         set((state) => {
           const updated = [...state.tasks]
           for (const item of reorder) {
