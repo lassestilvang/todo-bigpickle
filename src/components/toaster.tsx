@@ -13,26 +13,30 @@ const iconMap: Record<string, typeof CheckCircle2> = {
   warning: AlertTriangle,
 }
 
-const styles: Record<string, { border: string; bg: string; icon: string }> = {
+const styles: Record<string, { border: string; glow: string; icon: string; bg: string }> = {
   success: {
-    border: 'border-green-500/30',
-    bg: 'bg-green-500/5',
+    border: 'border-green-500/20 dark:border-green-500/25',
+    glow: 'shadow-green-500/10 dark:shadow-green-500/20',
     icon: 'text-green-500',
+    bg: 'bg-green-500/[0.04] dark:bg-green-500/[0.07]',
   },
   error: {
-    border: 'border-red-500/30',
-    bg: 'bg-red-500/5',
+    border: 'border-red-500/20 dark:border-red-500/25',
+    glow: 'shadow-red-500/10 dark:shadow-red-500/20',
     icon: 'text-red-500',
+    bg: 'bg-red-500/[0.04] dark:bg-red-500/[0.07]',
   },
   info: {
-    border: 'border-blue-500/30',
-    bg: 'bg-blue-500/5',
+    border: 'border-blue-500/20 dark:border-blue-500/25',
+    glow: 'shadow-blue-500/10 dark:shadow-blue-500/20',
     icon: 'text-blue-500',
+    bg: 'bg-blue-500/[0.04] dark:bg-blue-500/[0.07]',
   },
   warning: {
-    border: 'border-yellow-500/30',
-    bg: 'bg-yellow-500/5',
+    border: 'border-yellow-500/20 dark:border-yellow-500/25',
+    glow: 'shadow-yellow-500/10 dark:shadow-yellow-500/20',
     icon: 'text-yellow-500',
+    bg: 'bg-yellow-500/[0.04] dark:bg-yellow-500/[0.07]',
   },
 }
 
@@ -59,45 +63,50 @@ export function ToastContainer() {
 
   return (
     <div
-      className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none"
+      className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2.5 pointer-events-none"
       aria-live="polite"
       aria-label="Notifications"
     >
       <AnimatePresence mode="popLayout">
         {toasts.map(t => {
           const Icon = iconMap[t.type] || iconMap.info
-          const style = styles[t.type] || styles.info
+          const s = styles[t.type] || styles.info
           return (
             <motion.div
               key={t.id}
               layout
-              initial={{ opacity: 0, x: 60, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+              initial={{ opacity: 0, x: 80, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 60, scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 25, mass: 0.7 }}
-              className={`pointer-events-auto flex items-start gap-3 rounded-xl border ${style.border} ${style.bg}
-                px-4 py-3 shadow-lg backdrop-blur-md min-w-[320px] max-w-[420px]
-                transition-shadow hover:shadow-xl hover:-translate-y-0.5`}
+              transition={{ type: 'spring', stiffness: 400, damping: 28, mass: 0.8 }}
+              className={`pointer-events-auto relative flex items-start gap-3 rounded-2xl border ${s.border} ${s.bg}
+                bg-background/80 backdrop-blur-xl
+                px-5 py-3.5 shadow-2xl ${s.glow}
+                min-w-[340px] max-w-[440px]
+                transition-all duration-200 hover:shadow-2xl hover:scale-[1.02]`}
             >
-              <Icon className={`size-5 mt-0.5 shrink-0 ${style.icon}`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{t.title}</p>
+              <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${s.icon} bg-current/10`}>
+                <Icon className="size-4" />
+              </span>
+              <div className="flex-1 min-w-0 pt-0.5">
+                <p className="text-sm font-semibold text-foreground">{t.title}</p>
                 {t.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{t.description}</p>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-1 shrink-0 pt-0.5">
                 {t.action && (
                   <button
                     onClick={() => handleAction(t)}
-                    className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap px-1.5 py-0.5 rounded-md hover:bg-primary/5"
+                    className="text-xs font-bold text-foreground hover:text-primary transition-colors whitespace-nowrap px-2 py-1 rounded-lg hover:bg-accent"
                   >
                     {t.action.label}
                   </button>
                 )}
                 <button
                   onClick={(e) => handleDismiss(t.id, e)}
-                  className="rounded-md p-0.5 text-muted-foreground/50 hover:text-foreground hover:bg-muted/50 transition-all duration-150"
+                  className="rounded-lg p-1 text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-all duration-150"
+                  aria-label="Dismiss"
                 >
                   <X className="size-3.5" />
                 </button>

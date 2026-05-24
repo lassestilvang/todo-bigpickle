@@ -125,20 +125,34 @@
     color: var(--primary-foreground);
   }
 
-  /* Subtle custom scrollbar for webkit */
+  /* Refined custom scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: oklch(0.5 0 0 / 0.15);
-    border-radius: 3px;
+    background: oklch(0.5 0 0 / 0.12);
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background-clip: content-box;
   }
   ::-webkit-scrollbar-thumb:hover {
     background: oklch(0.5 0 0 / 0.25);
+    background-clip: content-box;
+  }
+
+  /* Subtle focus ring for cards */
+  [data-task-card]:focus-within {
+    outline: none;
+  }
+
+  [data-task-card]:focus-within > .card-focus-target {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius);
   }
 }
 

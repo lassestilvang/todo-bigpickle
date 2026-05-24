@@ -98,11 +98,12 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
     >
       <Card
         className={`group/card relative cursor-pointer transition-all duration-200 ease-out
-          hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0
-          dark:hover:shadow-primary/10 dark:hover:shadow-sm
-          bg-background hover:bg-card/80
-          ${task.completed ? 'opacity-60 saturate-50' : ''}
-          ${isOverdue ? 'border-l-red-500' : priority.border}
+          hover:shadow-xl hover:-translate-y-1 active:translate-y-0
+          dark:hover:shadow-primary/5
+          bg-background hover:bg-accent/30
+          border-border/60 hover:border-border
+          ${task.completed ? 'opacity-60 saturate-50' : 'shadow-sm'}
+          ${isOverdue ? 'border-l-[3px] border-l-red-500' : priority.border + ' border-l-[3px]'}
           overflow-hidden
         `}
         onClick={() => { if (!editingName) onEdit(task) }}
@@ -126,9 +127,9 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
             <Celebration active={celebrating} />
 
             <div className="flex flex-col items-center gap-1.5 pt-0.5">
-              <div className="opacity-0 group-hover/card:opacity-40 group-focus-within/card:opacity-40 transition-all duration-200 hover:opacity-100 hover:scale-110">
+              <div className="opacity-0 group-hover/card:opacity-50 group-focus-within/card:opacity-50 transition-all duration-200 hover:opacity-100">
                 <GripVertical
-                  className="size-3.5 text-muted-foreground cursor-grab active:cursor-grabbing"
+                  className="size-3.5 text-muted-foreground/60 cursor-grab active:cursor-grabbing hover:text-muted-foreground transition-colors"
                   aria-label="Drag to reorder"
                 />
               </div>
@@ -137,9 +138,9 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                 onCheckedChange={() => onToggleComplete(task.id)}
                 onClick={(e) => e.stopPropagation()}
                 aria-label={`Mark "${task.name}" as ${task.completed ? 'incomplete' : 'complete'}`}
-                className={`transition-all duration-200 hover:scale-110
+                className={`transition-all duration-200 hover:scale-110 active:scale-95
                   ${task.completed
-                    ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:shadow-sm data-[state=checked]:shadow-emerald-500/30'
+                    ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:shadow-md data-[state=checked]:shadow-emerald-500/30'
                     : 'hover:border-emerald-400'
                   }`}
               />
