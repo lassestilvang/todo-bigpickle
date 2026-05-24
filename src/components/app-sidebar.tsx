@@ -121,9 +121,13 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
-          <div className="p-1.5 rounded-lg bg-primary/10">
+          <motion.div
+            className="p-1.5 rounded-lg bg-primary/10"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
             <CheckCircle2 className="size-5 text-primary" />
-          </div>
+          </motion.div>
           <span className="font-bold text-lg tracking-tight">Todo</span>
         </div>
         <div className="px-2 pb-2 relative">
@@ -134,7 +138,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
             aria-label="Search tasks"
             value={localSearch}
             onChange={handleSetSearchQuery}
-            className="w-full pl-8 bg-muted/50 border-muted-foreground/20 focus:bg-background transition-all duration-200 [&::-webkit-search-cancel-button]:hidden"
+            className="w-full pl-8 bg-muted/50 border-muted-foreground/20 focus:bg-background focus:border-primary/40 transition-all duration-200 [&::-webkit-search-cancel-button]:hidden"
           />
           <kbd className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground/50">
             ⌘/
@@ -158,7 +162,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                       isActive={isActive}
                       aria-current={isActive ? 'page' : undefined}
                       onClick={() => handleViewClick(view as ViewType)}
-                      className="group"
+                      className="group relative"
                     >
                       <Icon className="size-4" />
                       <span>{label}</span>
@@ -192,21 +196,37 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           <SidebarGroupContent>
             <SidebarMenu>
               {lists.length === 0 ? (
-                <div className="px-3 py-2 text-xs text-muted-foreground">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="px-3 py-2 text-xs text-muted-foreground"
+                >
                   No lists yet
-                </div>
+                </motion.div>
               ) : (
-                lists.map((list) => (
-                  <SidebarMenuItem key={list.id}>
-                    <SidebarMenuButton
-                      isActive={selectedListId === list.id}
-                      aria-current={selectedListId === list.id ? 'page' : undefined}
-                      onClick={() => handleListClick(list.id)}
-                    >
-                      <div className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: list.color }} />
-                      <span>{list.icon} {list.name}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                lists.map((list, i) => (
+                  <motion.div
+                    key={list.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.02 }}
+                  >
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={selectedListId === list.id}
+                        aria-current={selectedListId === list.id ? 'page' : undefined}
+                        onClick={() => handleListClick(list.id)}
+                      >
+                        <motion.div
+                          className="size-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: list.color }}
+                          whileHover={{ scale: 1.3 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                        />
+                        <span>{list.icon} {list.name}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </motion.div>
                 ))
               )}
             </SidebarMenu>
@@ -243,13 +263,18 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
 
       <SidebarFooter>
         <div className="p-2">
-          <Button onClick={onCreateTask} className="w-full group transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
-            <Plus className="size-4 mr-2 transition-transform group-hover:rotate-90 duration-200" />
-            New Task
-            <kbd className="ml-auto hidden md:inline-flex h-5 items-center gap-1 rounded border border-primary-foreground/20 bg-primary-foreground/10 px-1.5 font-mono text-[10px] font-medium">
-              ⌘N
-            </kbd>
-          </Button>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Button onClick={onCreateTask} className="w-full group transition-all duration-200">
+              <Plus className="size-4 mr-2 transition-transform group-hover:rotate-90 duration-200" />
+              New Task
+              <kbd className="ml-auto hidden md:inline-flex h-5 items-center gap-1 rounded border border-primary-foreground/20 bg-primary-foreground/10 px-1.5 font-mono text-[10px] font-medium">
+                ⌘N
+              </kbd>
+            </Button>
+          </motion.div>
         </div>
         <div className="px-3 pb-3">
           <label htmlFor="show-completed" className="flex items-center gap-2.5 text-sm cursor-pointer group">
@@ -257,7 +282,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
               id="show-completed"
               checked={showCompleted}
               onCheckedChange={(checked) => handleShowCompleted(checked === true)}
-              className="transition-all duration-200 group-hover:border-primary/50"
+              className="transition-all duration-200 group-hover:border-primary/50 data-[state=checked]:bg-primary"
             />
             <span className="text-muted-foreground group-hover:text-foreground transition-colors duration-200">
               Show completed

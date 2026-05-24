@@ -71,13 +71,13 @@ export function ToastContainer() {
             <motion.div
               key={t.id}
               layout
-              initial={{ opacity: 0, x: 80, scale: 0.9 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 80, scale: 0.9 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30, mass: 0.8 }}
+              initial={{ opacity: 0, x: 60, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 60, scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 25, mass: 0.7 }}
               className={`pointer-events-auto flex items-start gap-3 rounded-xl border ${style.border} ${style.bg}
                 px-4 py-3 shadow-lg backdrop-blur-md min-w-[320px] max-w-[420px]
-                transition-shadow hover:shadow-xl`}
+                transition-shadow hover:shadow-xl hover:-translate-y-0.5`}
             >
               <Icon className={`size-5 mt-0.5 shrink-0 ${style.icon}`} />
               <div className="flex-1 min-w-0">
