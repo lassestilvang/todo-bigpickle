@@ -19,6 +19,8 @@ export interface Toast {
 
 type Listener = (toasts: Toast[]) => void
 
+const MAX_TOASTS = 5
+
 let toasts: Toast[] = []
 const listeners: Set<Listener> = new Set()
 let counter = 0
@@ -32,9 +34,14 @@ function notify() {
 function addToast(t: Omit<Toast, 'id'>) {
   const id = String(++counter)
   toasts = [...toasts, { ...t, id }]
+
+  if (toasts.length > MAX_TOASTS) {
+    toasts = toasts.slice(toasts.length - MAX_TOASTS)
+  }
+
   notify()
 
-  const duration = t.duration ?? 4000
+  const duration = Number.isFinite(t.duration) ? (t.duration ?? 4000) : 4000
   if (duration > 0) {
     setTimeout(() => {
       dismissToast(id)

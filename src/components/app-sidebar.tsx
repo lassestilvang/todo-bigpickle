@@ -70,12 +70,16 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   const debouncedSearch = useDebounce(localSearch, 150)
 
   useEffect(() => {
-    setSearchQuery(debouncedSearch)
-  }, [debouncedSearch, setSearchQuery])
+    if (debouncedSearch !== searchQuery) {
+      setSearchQuery(debouncedSearch)
+    }
+  }, [debouncedSearch, searchQuery, setSearchQuery])
 
   useEffect(() => {
-    setLocalSearch(searchQuery)
-  }, [searchQuery])
+    if (searchQuery !== localSearch) {
+      setLocalSearch(searchQuery)
+    }
+  }, [searchQuery, localSearch])
 
   const handleSetSearchQuery = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearch(e.target.value)

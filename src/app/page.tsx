@@ -94,7 +94,7 @@ export default function Home() {
     {
       key: '/',
       handler: () => {
-        const searchInput = document.querySelector('input[placeholder="Search tasks..."]') as HTMLInputElement
+        const searchInput = document.querySelector<HTMLInputElement>('input[aria-label="Search tasks"]')
         if (searchInput) {
           searchInput.focus()
         }
