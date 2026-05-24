@@ -1,30 +1,32 @@
-import { useAppStore } from '@/store'
+import { mock, describe, expect, it, beforeEach } from 'bun:test'
 import { Task } from '@/types'
 
-// Mock the API module
-jest.mock('@/lib/api', () => ({
-  api: {
-    getTasks: jest.fn(),
-    createTask: jest.fn(),
-    updateTask: jest.fn(),
-    deleteTask: jest.fn(),
-    getLists: jest.fn(),
-    createList: jest.fn(),
-    updateList: jest.fn(),
-    deleteList: jest.fn(),
-    getLabels: jest.fn(),
-    createLabel: jest.fn(),
-  }
+const mockApi = {
+  getTasks: mock(() => {}),
+  createTask: mock(() => {}),
+  updateTask: mock(() => {}),
+  deleteTask: mock(() => {}),
+  getLists: mock(() => {}),
+  createList: mock(() => {}),
+  updateList: mock(() => {}),
+  deleteList: mock(() => {}),
+  getLabels: mock(() => {}),
+  createLabel: mock(() => {}),
+  reorderTasks: mock(() => {}),
+}
+
+mock.module('@/lib/api', () => ({
+  api: mockApi,
 }))
+
+const { useAppStore } = await import('@/store')
 
 describe('AppStore', () => {
   beforeEach(() => {
-    // Reset store state before each test
     useAppStore.getState().setCurrentView('today')
     useAppStore.getState().setSelectedListId(undefined)
     useAppStore.getState().setShowCompleted(false)
     useAppStore.getState().setSearchQuery('')
-    // Clear tasks, lists, labels
     useAppStore.setState({ tasks: [], lists: [], labels: [] })
   })
 
