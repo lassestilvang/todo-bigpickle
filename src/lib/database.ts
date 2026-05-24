@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3'
+import { Database, Statement } from 'bun:sqlite'
 import { Task, List, Label, Subtask, TaskHistory, Priority, RecurringType } from '@/types'
 import { randomUUID } from 'crypto'
 
@@ -30,7 +30,6 @@ const TRACKED_TASK_FIELDS = new Set<keyof Task>([
   'completed', 'listId', 'estimate', 'actualTime', 'recurring'
 ])
 
-// Database row types
 interface ListRow {
   id: string
   name: string
@@ -88,37 +87,36 @@ interface LabelRow {
 }
 
 export class DatabaseService {
-  private db: Database.Database
+  private db: Database
   private stmts!: {
-    getTaskById: Database.Statement
-    deleteTask: Database.Statement
-    getSubtasks: Database.Statement
-    getLabelsForTask: Database.Statement
-    getTaskHistory: Database.Statement
-    getReminders: Database.Statement
-    getAttachments: Database.Statement
-    deleteTaskLabels: Database.Statement
-    deleteSubtasks: Database.Statement
-    insertTaskLabel: Database.Statement
-    insertTaskHistory: Database.Statement
-    insertSubtask: Database.Statement
-    insertReminder: Database.Statement
-    insertAttachment: Database.Statement
-    updateTaskPos: Database.Statement
+    getTaskById: Statement
+    deleteTask: Statement
+    getSubtasks: Statement
+    getLabelsForTask: Statement
+    getTaskHistory: Statement
+    getReminders: Statement
+    getAttachments: Statement
+    deleteTaskLabels: Statement
+    deleteSubtasks: Statement
+    insertTaskLabel: Statement
+    insertTaskHistory: Statement
+    insertSubtask: Statement
+    insertReminder: Statement
+    insertAttachment: Statement
+    updateTaskPos: Statement
   }
 
   constructor(dbPath?: string) {
     const path = dbPath || process.env.DATABASE_PATH || './todo.db'
     this.db = new Database(path)
 
-    // Performance optimizations
-    this.db.pragma('journal_mode = WAL')
-    this.db.pragma('synchronous = NORMAL')
-    this.db.pragma('cache_size = -80000')
-    this.db.pragma('temp_store = MEMORY')
-    this.db.pragma('mmap_size = 536870912')
-    this.db.pragma('busy_timeout = 5000')
-    this.db.pragma('wal_autocheckpoint = 2000')
+    this.db.run('PRAGMA journal_mode = WAL')
+    this.db.run('PRAGMA synchronous = NORMAL')
+    this.db.run('PRAGMA cache_size = -80000')
+    this.db.run('PRAGMA temp_store = MEMORY')
+    this.db.run('PRAGMA mmap_size = 536870912')
+    this.db.run('PRAGMA busy_timeout = 5000')
+    this.db.run('PRAGMA wal_autocheckpoint = 2000')
 
     this.initializeTables()
   }
@@ -224,20 +222,19 @@ export class DatabaseService {
       )
     `)
 
-    // Composite indexes for query performance
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_list_id ON tasks(list_id)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_date ON tasks(date)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_deadline ON tasks(deadline)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_completed_date ON tasks(completed, date)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_list_position ON tasks(list_id, position)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON subtasks(task_id)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_history_task_id ON task_history(task_id)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_labels_task_id ON task_labels(task_id)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_labels_label_id ON task_labels(label_id)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_reminders_task_id ON reminders(task_id)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_attachments_task_id ON attachments(task_id)`)
-    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_position_created ON tasks(position, created_at)`)
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_list_id ON tasks(list_id)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_date ON tasks(date)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_deadline ON tasks(deadline)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_completed_date ON tasks(completed, date)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_list_position ON tasks(list_id, position)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON subtasks(task_id)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_task_history_task_id ON task_history(task_id)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_task_labels_task_id ON task_labels(task_id)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_task_labels_label_id ON task_labels(label_id)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_reminders_task_id ON reminders(task_id)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_attachments_task_id ON attachments(task_id)')
+    this.db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_position_created ON tasks(position, created_at)')
 
     this.createDefaultInbox()
     this.cacheStatements()
@@ -245,52 +242,47 @@ export class DatabaseService {
 
   private cacheStatements() {
     this.stmts = {
-      getTaskById: this.db.prepare('SELECT * FROM tasks WHERE id = ?'),
-      deleteTask: this.db.prepare('DELETE FROM tasks WHERE id = ?'),
-      getSubtasks: this.db.prepare('SELECT * FROM subtasks WHERE task_id = ? ORDER BY created_at'),
-      getLabelsForTask: this.db.prepare(`
+      getTaskById: this.db.query('SELECT * FROM tasks WHERE id = ?'),
+      deleteTask: this.db.query('DELETE FROM tasks WHERE id = ?'),
+      getSubtasks: this.db.query('SELECT * FROM subtasks WHERE task_id = ? ORDER BY created_at'),
+      getLabelsForTask: this.db.query(`
         SELECT l.* FROM labels l JOIN task_labels tl ON l.id = tl.label_id WHERE tl.task_id = ?
       `),
-      getTaskHistory: this.db.prepare('SELECT * FROM task_history WHERE task_id = ? ORDER BY changed_at DESC'),
-      getReminders: this.db.prepare('SELECT reminder_time FROM reminders WHERE task_id = ? ORDER BY reminder_time'),
-      getAttachments: this.db.prepare('SELECT file_path FROM attachments WHERE task_id = ? ORDER BY created_at'),
-      deleteTaskLabels: this.db.prepare('DELETE FROM task_labels WHERE task_id = ?'),
-      deleteSubtasks: this.db.prepare('DELETE FROM subtasks WHERE task_id = ?'),
-      insertTaskLabel: this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)'),
-      insertTaskHistory: this.db.prepare(`
+      getTaskHistory: this.db.query('SELECT * FROM task_history WHERE task_id = ? ORDER BY changed_at DESC'),
+      getReminders: this.db.query('SELECT reminder_time FROM reminders WHERE task_id = ? ORDER BY reminder_time'),
+      getAttachments: this.db.query('SELECT file_path FROM attachments WHERE task_id = ? ORDER BY created_at'),
+      deleteTaskLabels: this.db.query('DELETE FROM task_labels WHERE task_id = ?'),
+      deleteSubtasks: this.db.query('DELETE FROM subtasks WHERE task_id = ?'),
+      insertTaskLabel: this.db.query('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)'),
+      insertTaskHistory: this.db.query(`
         INSERT INTO task_history (id, task_id, field, old_value, new_value) VALUES (?, ?, ?, ?, ?)
       `),
-      insertSubtask: this.db.prepare(`
+      insertSubtask: this.db.query(`
         INSERT INTO subtasks (id, task_id, title, completed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)
       `),
-      insertReminder: this.db.prepare(`
+      insertReminder: this.db.query(`
         INSERT INTO reminders (id, task_id, reminder_time) VALUES (?, ?, ?)
       `),
-      insertAttachment: this.db.prepare(`
+      insertAttachment: this.db.query(`
         INSERT INTO attachments (id, task_id, file_path, file_name) VALUES (?, ?, ?, ?)
       `),
-      updateTaskPos: this.db.prepare('UPDATE tasks SET position = ?, updated_at = ? WHERE id = ?'),
+      updateTaskPos: this.db.query('UPDATE tasks SET position = ?, updated_at = ? WHERE id = ?'),
     }
   }
 
   private createDefaultInbox() {
-    const existingInbox = this.db.prepare('SELECT id FROM lists WHERE is_default = TRUE').get()
+    const existingInbox = this.db.query('SELECT id FROM lists WHERE is_default = TRUE').get() as { id: string } | undefined
     if (!existingInbox) {
       const inboxId = randomUUID()
-      this.db.prepare(`
+      this.db.run(`
         INSERT INTO lists (id, name, color, icon, is_default)
         VALUES (?, ?, ?, ?, ?)
-      `).run(inboxId, 'Inbox', '#3b82f6', '📥', 1)
+      `, inboxId, 'Inbox', '#3b82f6', '📥', 1)
     }
   }
 
-  // Lists
-  /**
-   * Get all lists from the database
-   * @returns {List[]} Array of lists ordered by creation date
-   */
   getLists(): List[] {
-    const rows = this.db.prepare('SELECT * FROM lists ORDER BY created_at').all() as ListRow[]
+    const rows = this.db.query('SELECT * FROM lists ORDER BY created_at').all() as ListRow[]
     return rows.map(row => ({
       id: row.id,
       name: row.name,
@@ -302,19 +294,14 @@ export class DatabaseService {
     }))
   }
 
-  /**
-   * Create a new list in the database
-   * @param {Omit<List, 'id' | 'createdAt' | 'updatedAt'>} list - The list data without id and timestamps
-   * @returns {List} The created list with generated id and timestamps
-   */
   createList(list: Omit<List, 'id' | 'createdAt' | 'updatedAt'>): List {
     const id = randomUUID()
     const now = new Date().toISOString()
-    
-    this.db.prepare(`
+
+    this.db.run(`
       INSERT INTO lists (id, name, color, icon, is_default, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(id, list.name, list.color, list.icon, list.isDefault ? 1 : 0, now, now)
+    `, id, list.name, list.color, list.icon, list.isDefault ? 1 : 0, now, now)
 
     return {
       id,
@@ -324,15 +311,10 @@ export class DatabaseService {
     }
   }
 
-  /**
-   * Get a single list by its ID
-   * @param {string} id - The list ID
-   * @returns {List | undefined} The list if found, undefined otherwise
-   */
   getListById(id: string): List | undefined {
-    const row = this.db.prepare('SELECT * FROM lists WHERE id = ?').get(id) as ListRow | undefined
+    const row = this.db.query('SELECT * FROM lists WHERE id = ?').get(id) as ListRow | undefined
     if (!row) return undefined
-    
+
     return {
       id: row.id,
       name: row.name,
@@ -344,13 +326,6 @@ export class DatabaseService {
     }
   }
 
-  /**
-   * Update an existing list
-   * @param {string} id - The list ID
-   * @param {Partial<Omit<List, 'id' | 'createdAt' | 'updatedAt'>>} updates - The fields to update
-   * @returns {List} The updated list
-   * @throws {Error} If the list is not found
-   */
   updateList(id: string, updates: Partial<Omit<List, 'id' | 'createdAt' | 'updatedAt'>>): List {
     const existing = this.getListById(id)
     if (!existing) throw new Error('List not found')
@@ -380,30 +355,22 @@ export class DatabaseService {
 
     values.push(id)
 
-    this.db.prepare(`UPDATE lists SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+    this.db.run(`UPDATE lists SET ${fields.join(', ')} WHERE id = ?`, ...values)
 
     return this.getListById(id)!
   }
 
-  /**
-   * Delete a list and all its associated tasks
-   * @param {string} id - The list ID
-   * @throws {Error} If the list is not found or is the default list
-   */
   deleteList(id: string): void {
     const existing = this.getListById(id)
     if (!existing) throw new Error('List not found')
     if (existing.isDefault) throw new Error('Cannot delete default list')
 
-    // Delete associated tasks first
-    this.db.prepare('DELETE FROM tasks WHERE list_id = ?').run(id)
-    
-    this.db.prepare('DELETE FROM lists WHERE id = ?').run(id)
+    this.db.run('DELETE FROM tasks WHERE list_id = ?', id)
+    this.db.run('DELETE FROM lists WHERE id = ?', id)
   }
 
-  // Labels
   getLabels(): Label[] {
-    const rows = this.db.prepare('SELECT * FROM labels ORDER BY created_at').all() as LabelRow[]
+    const rows = this.db.query('SELECT * FROM labels ORDER BY created_at').all() as LabelRow[]
     return rows.map(row => ({
       id: row.id,
       name: row.name,
@@ -415,7 +382,7 @@ export class DatabaseService {
   }
 
   getLabelById(id: string): Label | undefined {
-    const row = this.db.prepare('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow | undefined
+    const row = this.db.query('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow | undefined
     if (!row) return undefined
 
     return {
@@ -431,11 +398,11 @@ export class DatabaseService {
   createLabel(label: Omit<Label, 'id' | 'createdAt' | 'updatedAt'>): Label {
     const id = randomUUID()
     const now = new Date().toISOString()
-    
-    this.db.prepare(`
+
+    this.db.run(`
       INSERT INTO labels (id, name, color, icon, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(id, label.name, label.color, label.icon, now, now)
+    `, id, label.name, label.color, label.icon, now, now)
 
     return {
       id,
@@ -446,7 +413,7 @@ export class DatabaseService {
   }
 
   updateLabel(id: string, updates: Partial<Omit<Label, 'id' | 'createdAt' | 'updatedAt'>>): Label {
-    const existing = this.db.prepare('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow | undefined
+    const existing = this.db.query('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow | undefined
     if (!existing) throw new Error('Label not found')
 
     const fields: string[] = []
@@ -469,9 +436,9 @@ export class DatabaseService {
     values.push(new Date().toISOString())
     values.push(id)
 
-    this.db.prepare(`UPDATE labels SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+    this.db.run(`UPDATE labels SET ${fields.join(', ')} WHERE id = ?`, ...values)
 
-    const updated = this.db.prepare('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow
+    const updated = this.db.query('SELECT * FROM labels WHERE id = ?').get(id) as LabelRow
     return {
       id: updated.id,
       name: updated.name,
@@ -483,21 +450,14 @@ export class DatabaseService {
   }
 
   deleteLabel(id: string): void {
-    this.db.prepare('DELETE FROM labels WHERE id = ?').run(id)
+    this.db.run('DELETE FROM labels WHERE id = ?', id)
   }
 
-  // Tasks
-  /**
-   * Get all tasks from the database with all related data
-   * Uses batched queries to avoid N+1 problem
-   * @returns {Task[]} Array of tasks with subtasks, labels, reminders, and attachments
-   */
   getTasks(): Task[] {
-    const rows = this.db.prepare('SELECT * FROM tasks ORDER BY position ASC, created_at DESC').all() as TaskRow[]
+    const rows = this.db.query('SELECT * FROM tasks ORDER BY position ASC, created_at DESC').all() as TaskRow[]
     const ids = rows.map(r => r.id)
     if (ids.length === 0) return []
 
-    // Batch fetch all related data in 5 queries instead of 5 per task
     const allLabels = this.batchGetLabelsForTasks(ids)
     const allSubtasks = this.batchGetSubtasksForTasks(ids)
     const allHistory = this.batchGetHistoryForTasks(ids)
@@ -545,7 +505,7 @@ export class DatabaseService {
     for (const id of taskIds) map.set(id, [])
 
     if (taskIds.length === 0) return map
-    const rows = this.db.prepare(`
+    const rows = this.db.query(`
       SELECT tl.task_id, l.* FROM labels l
       JOIN task_labels tl ON l.id = tl.label_id
       WHERE tl.task_id IN (${taskIds.map(() => '?').join(',')})
@@ -569,7 +529,7 @@ export class DatabaseService {
     for (const id of taskIds) map.set(id, [])
 
     if (taskIds.length === 0) return map
-    const rows = this.db.prepare(
+    const rows = this.db.query(
       `SELECT * FROM subtasks WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY created_at`
     ).all(...taskIds) as SubtaskRow[]
 
@@ -590,7 +550,7 @@ export class DatabaseService {
     for (const id of taskIds) map.set(id, [])
 
     if (taskIds.length === 0) return map
-    const rows = this.db.prepare(
+    const rows = this.db.query(
       `SELECT * FROM task_history WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY changed_at DESC`
     ).all(...taskIds) as TaskHistoryRow[]
 
@@ -612,7 +572,7 @@ export class DatabaseService {
     for (const id of taskIds) map.set(id, [])
 
     if (taskIds.length === 0) return map
-    const rows = this.db.prepare(
+    const rows = this.db.query(
       `SELECT task_id, reminder_time FROM reminders WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY reminder_time`
     ).all(...taskIds) as { task_id: string; reminder_time: string }[]
 
@@ -627,7 +587,7 @@ export class DatabaseService {
     for (const id of taskIds) map.set(id, [])
 
     if (taskIds.length === 0) return map
-    const rows = this.db.prepare(
+    const rows = this.db.query(
       `SELECT task_id, file_path FROM attachments WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY created_at`
     ).all(...taskIds) as { task_id: string; file_path: string }[]
 
@@ -637,39 +597,32 @@ export class DatabaseService {
     return map
   }
 
-  /**
-   * Create a new task in the database
-   * @param {Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history'>} task - The task data without id and timestamps
-   * @returns {Task} The created task with generated id and timestamps
-   * @throws {Error} If no default list found and no listId provided
-   */
   createTask(task: TaskInput): Task {
     const insert = this.db.transaction(() => {
       const id = randomUUID()
       const now = new Date().toISOString()
-      
-      // Get default inbox list if no listId provided
+
       let listId = task.listId
       if (!listId) {
-        const defaultList = this.db.prepare('SELECT id FROM lists WHERE is_default = TRUE').get() as { id: string } | undefined
+        const defaultList = this.db.query('SELECT id FROM lists WHERE is_default = TRUE').get() as { id: string } | undefined
         listId = defaultList?.id || ''
         if (!listId) {
           throw new Error('No default list found and no listId provided')
         }
       }
-      
-      const maxPos = this.db.prepare(
+
+      const maxPos = this.db.query(
         'SELECT COALESCE(MAX(position), -1) + 1 as next_pos FROM tasks'
       ).get() as { next_pos: number }
       const position = task.position ?? maxPos.next_pos
 
-      this.db.prepare(`
+      this.db.run(`
         INSERT INTO tasks (
           id, name, description, date, deadline, estimate, actual_time,
           priority, recurring, recurring_config, list_id, completed,
           completed_at, position, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
+      `,
         id,
         task.name,
         task.description,
@@ -685,31 +638,27 @@ export class DatabaseService {
         task.completedAt ? (typeof task.completedAt === 'string' ? task.completedAt : task.completedAt.toISOString()) : null,
         position,
         now,
-        now
+        now,
       )
 
-      // Add labels
       if (task.labels) {
         for (const label of task.labels) {
           this.stmts.insertTaskLabel.run(id, label.id)
         }
       }
 
-      // Add subtasks
       if (task.subtasks) {
         for (const subtask of task.subtasks) {
           this.createSubtask(id, subtask)
         }
       }
 
-      // Add reminders
       if (task.reminders) {
         for (const reminder of task.reminders) {
           this.addReminder(id, reminder)
         }
       }
 
-      // Add attachments
       if (task.attachments) {
         for (const attachment of task.attachments) {
           this.addAttachment(id, attachment)
@@ -728,7 +677,6 @@ export class DatabaseService {
     if (!existingTask) throw new Error('Task not found')
 
     const update = this.db.transaction(() => {
-      // Track changes
       for (const [field, newValue] of Object.entries(updates)) {
         if (!TRACKED_TASK_FIELDS.has(field as keyof Task)) continue
 
@@ -738,7 +686,6 @@ export class DatabaseService {
         }
       }
 
-      // Update main task fields
       const updateFields: string[] = []
       const updateValues: (string | number | null)[] = []
 
@@ -794,12 +741,11 @@ export class DatabaseService {
         updateValues.push(new Date().toISOString())
         updateValues.push(id)
 
-        this.db.prepare(`
+        this.db.run(`
           UPDATE tasks SET ${updateFields.join(', ')} WHERE id = ?
-        `).run(...updateValues)
+        `, ...updateValues)
       }
 
-      // Update labels
       if (updates.labels !== undefined) {
         this.stmts.deleteTaskLabels.run(id)
         for (const label of updates.labels) {
@@ -807,7 +753,6 @@ export class DatabaseService {
         }
       }
 
-      // Update subtasks
       if (updates.subtasks !== undefined) {
         this.stmts.deleteSubtasks.run(id)
         for (const subtask of updates.subtasks) {
@@ -901,10 +846,6 @@ export class DatabaseService {
     this.stmts.insertAttachment.run(id, taskId, filePath, fileName)
   }
 
-  /**
-   * Batch update task positions for reordering
-   * @param {Array<{id: string, position: number}>} positions - Array of task ID and new position pairs
-   */
   updateTaskPositions(positions: { id: string; position: number }[]): void {
     const update = this.db.transaction(() => {
       const now = new Date().toISOString()
