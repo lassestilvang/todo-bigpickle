@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useMemo, useState, useEffect, useCallback } from 'react'
-import { useAppStore } from '@/store'
+import { useAppStore, useShallow } from '@/store'
 import { useNow } from '@/hooks/use-now'
 import { useDebounce } from '@/hooks/use-debounce'
 import { motion } from 'framer-motion'
@@ -53,12 +53,16 @@ interface AppSidebarProps {
 }
 
 export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarProps) {
-  const lists = useAppStore(s => s.lists)
-  const currentView = useAppStore(s => s.currentView)
-  const selectedListId = useAppStore(s => s.selectedListId)
-  const showCompleted = useAppStore(s => s.showCompleted)
+  const { lists, currentView, selectedListId, showCompleted, tasks } = useAppStore(
+    useShallow(s => ({
+      lists: s.lists,
+      currentView: s.currentView,
+      selectedListId: s.selectedListId,
+      showCompleted: s.showCompleted,
+      tasks: s.tasks,
+    }))
+  )
   const searchQuery = useAppStore(s => s.searchQuery)
-  const tasks = useAppStore(s => s.tasks)
   const setCurrentView = useAppStore(s => s.setCurrentView)
   const setSelectedListId = useAppStore(s => s.setSelectedListId)
   const setShowCompleted = useAppStore(s => s.setShowCompleted)
