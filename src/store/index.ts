@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { shallow } from 'zustand/shallow'
 import { useShallow } from 'zustand/react/shallow'
-import Fuse from 'fuse.js'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
 import { toast, dismissToast } from '@/hooks/use-toast'
@@ -47,26 +46,11 @@ interface AppStore extends AppState {
   // Data loading
   loadData: () => void
   clearError: () => void
-  
-  // Computed values
-  getFilteredTasks: () => Task[]
-  getOverdueTaskCount: () => number
-  getTasksByView: (view: ViewType) => Task[]
 }
 
 export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => {
-      let fuseVersion = 0
-      let cachedFuseKey = ''
-      let cachedFuse: Fuse<Task> | null = null
-
-      const invalidateFuseCache = () => {
-        fuseVersion++
-        cachedFuseKey = ''
-        cachedFuse = null
-      }
-
       return {
       // Initial state
       tasks: [],
@@ -111,7 +95,6 @@ export const useAppStore = create<AppStore>()(
           updatedAt: now,
           history: [],
         }
-        invalidateFuseCache()
         set((state) => ({ tasks: [optimisticTask, ...state.tasks], error: null }))
         try {
           const task = await api.createTask(taskData)
@@ -129,7 +112,6 @@ export const useAppStore = create<AppStore>()(
       updateTask: async (id, updates) => {
         const prev = get().tasks.find(t => t.id === id)
         if (!prev) return
-        invalidateFuseCache()
         set((state) => ({
           tasks: state.tasks.map(t => t.id === id ? { ...t, ...updates, updatedAt: new Date() } : t),
           error: null,
@@ -146,7 +128,6 @@ export const useAppStore = create<AppStore>()(
       deleteTask: async (id) => {
         const prev = get().tasks.find(t => t.id === id)
         if (!prev) return
-        invalidateFuseCache()
         set((state) => ({ tasks: state.tasks.filter(t => t.id !== id), error: null }))
 
         const undoId = toast({
@@ -159,7 +140,6 @@ export const useAppStore = create<AppStore>()(
             onClick: async () => {
               const stillGone = !get().tasks.some(t => t.id === id)
               if (stillGone) {
-                invalidateFuseCache()
                 set((state) => ({ tasks: [...state.tasks, prev].sort((a, b) => a.position - b.position) }))
                 try {
                   await api.createTask(prev)
@@ -201,7 +181,6 @@ export const useAppStore = create<AppStore>()(
         }
 
         try {
-          invalidateFuseCache()
           await api.updateTask(id, {
             completed: newCompleted,
             completedAt: newCompleted ? now : undefined
@@ -221,7 +200,6 @@ export const useAppStore = create<AppStore>()(
 
       reorderTasks: async (reorder) => {
         const prevTasks = [...get().tasks]
-        invalidateFuseCache()
         set((state) => {
           const updated = [...state.tasks]
           for (const item of reorder) {
@@ -333,7 +311,6 @@ export const useAppStore = create<AppStore>()(
       // Data loading
       loadData: async () => {
         set({ isLoading: true, error: null })
-        invalidateFuseCache()
         try {
           const [tasks, lists, labels] = await Promise.all([
             api.getTasks(),
@@ -349,87 +326,6 @@ export const useAppStore = create<AppStore>()(
       },
 
       clearError: () => set({ error: null }),
-
-      // Computed values
-      getFilteredTasks: () => {
-        const state = get()
-        let tasks = state.tasks
-
-        // Filter by view
-        if (state.selectedListId) {
-          tasks = tasks.filter(task => task.listId === state.selectedListId)
-        } else {
-          tasks = state.getTasksByView(state.currentView)
-        }
-
-        // Filter completed tasks
-        if (!state.showCompleted) {
-          tasks = tasks.filter(task => !task.completed)
-        }
-
-        // Apply search (with cached Fuse index)
-        if (state.searchQuery) {
-          const fuseKey = `${fuseVersion}:${tasks.map(t => t.id).join(',')}`
-          if (!cachedFuse || cachedFuseKey !== fuseKey) {
-            cachedFuse = new Fuse(tasks, {
-              keys: ['name', 'description'],
-              threshold: 0.3,
-              includeScore: false
-            })
-            cachedFuseKey = fuseKey
-          }
-          const results = cachedFuse.search(state.searchQuery)
-          tasks = results.map(result => result.item)
-        }
-
-        return tasks
-      },
-
-      getOverdueTaskCount: () => {
-        const now = new Date()
-        return get().tasks.filter(task => 
-          !task.completed && 
-          task.deadline && 
-          task.deadline < now
-        ).length
-      },
-
-      getTasksByView: (view) => {
-        const tasks = get().tasks
-        const now = new Date()
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-
-        switch (view) {
-          case 'today':
-            return tasks.filter(task => {
-              if (!task.date) return false
-              const taskDate = new Date(task.date)
-              const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
-              return taskDateOnly.getTime() === today.getTime()
-            })
-
-          case 'next7days':
-            return tasks.filter(task => {
-              if (!task.date) return false
-              const taskDate = new Date(task.date)
-              const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
-              return taskDateOnly >= today && taskDateOnly <= nextWeek
-            })
-
-          case 'upcoming':
-            return tasks.filter(task => {
-              if (!task.date) return false
-              const taskDate = new Date(task.date)
-              const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
-              return taskDateOnly >= today
-            })
-
-          case 'all':
-          default:
-            return tasks
-        }
-      }
     }
     },
     {
