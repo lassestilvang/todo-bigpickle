@@ -61,7 +61,7 @@ interface TaskGroupProps {
 }
 
 const TaskGroup = memo(function TaskGroup({
-  groupKey, tasks, hasDate, date, customOrderTasks,
+  tasks, hasDate, date, customOrderTasks,
   sortBy, onReorder, onToggleComplete, onEditTask, onDeleteTask,
 }: TaskGroupProps) {
   return (
