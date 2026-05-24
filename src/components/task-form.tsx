@@ -76,9 +76,10 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
     },
   })
 
-  const dateValue = useWatch({ control: form.control, name: 'date' })
-  const deadlineValue = useWatch({ control: form.control, name: 'deadline' })
-  const priorityValue = useWatch({ control: form.control, name: 'priority' })
+  const [dateValue, deadlineValue, priorityValue, recurringValue, listIdValue] = useWatch({
+    control: form.control,
+    name: ['date', 'deadline', 'priority', 'recurring', 'listId'],
+  })
 
   useEffect(() => {
     if (isOpen) {
@@ -292,7 +293,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
           <div className="space-y-2">
             <FormLabel htmlFor="recurring" className="text-sm font-medium">Repeat</FormLabel>
             <Select
-              value={form.watch('recurring') || ''}
+              value={recurringValue || ''}
               onValueChange={(value) => form.setValue('recurring', value === '' ? undefined : value as Task['recurring'])}
             >
               <SelectTrigger id="recurring" className="h-10">
@@ -311,7 +312,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
           <div className="space-y-2">
             <FormLabel htmlFor="list-select" className="text-sm font-medium">List</FormLabel>
-            <Select value={form.watch('listId')} onValueChange={(value) => form.setValue('listId', value)}>
+            <Select value={listIdValue} onValueChange={(value) => form.setValue('listId', value)}>
               <SelectTrigger id="list-select" className="h-10">
                 <SelectValue />
               </SelectTrigger>

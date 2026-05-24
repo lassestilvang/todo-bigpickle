@@ -153,33 +153,35 @@ export default function Home() {
                   <ThemeToggle />
                 </header>
 
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="flex items-center gap-3 px-6 py-3 bg-destructive/5 border-b border-destructive/10 text-destructive text-sm"
-                  >
-                    <AlertCircle className="size-4 shrink-0" />
-                    <span className="flex-1">{error}</span>
-                    <Button
-                      onClick={() => loadData()}
-                      variant="outline"
-                      size="sm"
-                      className="border-destructive/20 text-destructive hover:bg-destructive/10 shrink-0"
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex items-center gap-3 px-6 py-3 bg-destructive/5 border-b border-destructive/10 text-destructive text-sm"
                     >
-                      <RefreshCw className="size-3.5 mr-1.5" />
-                      Retry
-                    </Button>
-                    <button
-                      onClick={() => clearError()}
-                      className="rounded-md p-1 text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                      aria-label="Dismiss error"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  </motion.div>
-                )}
+                      <AlertCircle className="size-4 shrink-0" />
+                      <span className="flex-1">{error}</span>
+                      <Button
+                        onClick={() => loadData()}
+                        variant="outline"
+                        size="sm"
+                        className="border-destructive/20 text-destructive hover:bg-destructive/10 shrink-0"
+                      >
+                        <RefreshCw className="size-3.5 mr-1.5" />
+                        Retry
+                      </Button>
+                      <button
+                        onClick={() => clearError()}
+                        className="rounded-md p-1 text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        aria-label="Dismiss error"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <div className="flex-1 overflow-y-auto">
                   <AnimatePresence mode="wait">

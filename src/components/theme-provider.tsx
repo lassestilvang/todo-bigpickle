@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from 'react'
 
 type Theme = 'dark' | 'light' | 'system'
 
@@ -89,7 +89,7 @@ export function ThemeProvider({
     setThemeState(newTheme)
   }, [storageKey])
 
-  const value = { theme, setTheme }
+  const value = useMemo(() => ({ theme, setTheme }), [theme, setTheme])
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>
