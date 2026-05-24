@@ -65,6 +65,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const [customOrder, setCustomOrder] = useState<Record<string, Task[]>>({})
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
   const prevReorderVersion = useRef(reorderVersion)
+  const flatTasksRef = useRef<Task[]>([])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -196,6 +197,18 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     return groups
   }, [sortedTasks, currentView])
 
+  // Stable content-based key to prevent unnecessary effect re-runs
+  const groupedTasksKey = useMemo(() => {
+    return Object.entries(groupedTasks).map(([key, group]) =>
+      `${key}:${group.tasks.map(t => t.id).join(',')}`
+    ).join('|')
+  }, [groupedTasks])
+
+  // Keep ref updated for keyboard handler
+  useEffect(() => {
+    flatTasksRef.current = Object.values(groupedTasks).flatMap(g => g.tasks)
+  })
+
   useEffect(() => {
     if (sortBy === 'custom') {
       setCustomOrder(prev => {
@@ -223,43 +236,43 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     } else {
       setCustomOrder({})
     }
-  }, [sortBy, groupedTasks, reorderVersion])
+  }, [sortBy, groupedTasksKey, reorderVersion])
 
   useEffect(() => {
-    const allFlattenedTasks = Object.values(groupedTasks).flatMap(g => g.tasks)
-    if (allFlattenedTasks.length === 0) return
+    const tasks = flatTasksRef.current
+    if (tasks.length === 0) return
 
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null
       const isInput = target?.matches?.('input, textarea, select, [contenteditable], [contenteditable] *')
       if (isInput && !e.metaKey && !e.ctrlKey) return
 
-      const tasks = Object.values(groupedTasks).flatMap(g => g.tasks)
-      if (tasks.length === 0) return
+      const currentTasks = flatTasksRef.current
+      if (currentTasks.length === 0) return
 
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault()
         setFocusedTaskIndex(prev => {
           const next = e.key === 'ArrowDown'
-            ? Math.min(prev + 1, tasks.length - 1)
+            ? Math.min(prev + 1, currentTasks.length - 1)
             : Math.max(prev - 1, 0)
           const cards = document.querySelectorAll<HTMLElement>('[data-task-card]')
           cards[next]?.focus()
           cards[next]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
           return next
         })
-      } else if (e.key === 'Enter' && focusedTaskIndex >= 0 && tasks[focusedTaskIndex]) {
+      } else if (e.key === 'Enter' && focusedTaskIndex >= 0 && currentTasks[focusedTaskIndex]) {
         const isInCard = target?.closest('[data-task-card]')
         if (isInCard && !isInput) {
           e.preventDefault()
-          onEditTask(tasks[focusedTaskIndex])
+          onEditTask(currentTasks[focusedTaskIndex])
         }
       }
     }
 
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [groupedTasks, focusedTaskIndex, onEditTask])
+  }, [focusedTaskIndex, onEditTask])
 
   const cycleSort = useCallback(() => {
     setSortBy(prev => prev === 'date' ? 'priority' : prev === 'priority' ? 'name' : prev === 'name' ? 'custom' : 'date')

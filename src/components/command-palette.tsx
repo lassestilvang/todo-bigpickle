@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, memo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { useAppStore } from '@/store'
 import { useTheme } from '@/components/theme-provider'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
@@ -63,7 +63,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
     }
   }, [open])
 
-  const groups = useCallback((): CommandGroup[] => {
+  const groups = useMemo((): CommandGroup[] => {
     return [
       {
         label: 'Views',
@@ -103,15 +103,19 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
     ]
   }, [setCurrentView, setSelectedListId, lists, onCreateTask, setShowCompleted, showCompleted, setTheme])
 
-  const allCommands = useCallback(() => {
-    return groups().flatMap(g => g.commands)
-  }, [groups])
-
-  const filtered = allCommands().filter(cmd => {
-    if (!query) return true
+  const filtered = useMemo(() => {
+    const allCmds = groups.flatMap(g => g.commands)
+    if (!query) return allCmds
     const q = query.toLowerCase()
-    return cmd.label.toLowerCase().includes(q) || (cmd.description?.toLowerCase().includes(q) ?? false)
-  })
+    return allCmds.filter(cmd =>
+      cmd.label.toLowerCase().includes(q) || (cmd.description?.toLowerCase().includes(q) ?? false)
+    )
+  }, [groups, query])
+
+  const flatIndexLookup = useMemo(() => {
+    if (query) return null
+    return groups.flatMap(g => g.commands)
+  }, [groups, query])
 
   useEffect(() => {
     if (!listRef.current || filtered.length === 0) return
@@ -183,14 +187,14 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
                   })}
                 </div>
               ) : (
-                groups().map((group) =>
+                groups.map((group) =>
                   group.commands.length > 0 && (
                     <div key={group.label}>
                       <p className="px-3 py-1 text-xs font-semibold text-muted-foreground tracking-wider uppercase">{group.label}</p>
                       <div className="space-y-0.5">
                         {group.commands.map((cmd) => {
                           const Icon = cmd.icon
-                          const globalIdx = groups().flatMap(g => g.commands).indexOf(cmd)
+                          const globalIdx = flatIndexLookup!.indexOf(cmd)
                           return (
                             <button
                               key={cmd.id}
