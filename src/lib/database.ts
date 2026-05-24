@@ -89,75 +89,97 @@ interface LabelRow {
 
 export class DatabaseService {
   private db: Database.Database
+  private stmts: {
+    getTaskById: Database.Statement
+    deleteTask: Database.Statement
+    getSubtasks: Database.Statement
+    getLabelsForTask: Database.Statement
+    getTaskHistory: Database.Statement
+    getReminders: Database.Statement
+    getAttachments: Database.Statement
+    deleteTaskLabels: Database.Statement
+    deleteSubtasks: Database.Statement
+    insertTaskLabel: Database.Statement
+    insertTaskHistory: Database.Statement
+    insertSubtask: Database.Statement
+    insertReminder: Database.Statement
+    insertAttachment: Database.Statement
+    updateTaskPos: Database.Statement
+  } | {} = {}
 
   constructor(dbPath?: string) {
     const path = dbPath || process.env.DATABASE_PATH || './todo.db'
     this.db = new Database(path)
+
+    // Performance optimizations
+    this.db.pragma('journal_mode = WAL')
+    this.db.pragma('synchronous = NORMAL')
+    this.db.pragma('cache_size = -64000')
+    this.db.pragma('temp_store = MEMORY')
+    this.db.pragma('mmap_size = 268435456')
+    this.db.pragma('busy_timeout = 5000')
+
     this.initializeTables()
   }
 
   private initializeTables() {
-    // Lists table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS lists (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         color TEXT NOT NULL,
         icon TEXT NOT NULL,
-        is_default BOOLEAN DEFAULT FALSE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        is_default INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
       )
     `)
 
-    // Labels table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS labels (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         color TEXT NOT NULL,
         icon TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
       )
     `)
 
-    // Tasks table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT,
-        date DATETIME,
-        deadline DATETIME,
+        date TEXT,
+        deadline TEXT,
         estimate INTEGER,
         actual_time INTEGER,
         priority TEXT NOT NULL DEFAULT 'none',
         recurring TEXT,
         recurring_config TEXT,
         list_id TEXT NOT NULL,
-        completed BOOLEAN DEFAULT FALSE,
-        completed_at DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        completed INTEGER DEFAULT 0,
+        completed_at TEXT,
+        position INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (list_id) REFERENCES lists (id)
       )
     `)
 
-    // Subtasks table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS subtasks (
         id TEXT PRIMARY KEY,
         task_id TEXT NOT NULL,
         title TEXT NOT NULL,
-        completed BOOLEAN DEFAULT FALSE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        completed INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
       )
     `)
 
-    // Task history table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS task_history (
         id TEXT PRIMARY KEY,
@@ -165,12 +187,11 @@ export class DatabaseService {
         field TEXT NOT NULL,
         old_value TEXT,
         new_value TEXT,
-        changed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        changed_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
       )
     `)
 
-    // Task labels junction table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS task_labels (
         task_id TEXT NOT NULL,
@@ -181,62 +202,73 @@ export class DatabaseService {
       )
     `)
 
-    // Reminders table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS reminders (
         id TEXT PRIMARY KEY,
         task_id TEXT NOT NULL,
-        reminder_time DATETIME NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        reminder_time TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
       )
     `)
 
-    // Attachments table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS attachments (
         id TEXT PRIMARY KEY,
         task_id TEXT NOT NULL,
         file_path TEXT NOT NULL,
         file_name TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
       )
     `)
 
-    // Add position column for task ordering (migration for existing DBs)
-    try {
-      const info = this.db.prepare("PRAGMA table_info('tasks')").all() as { name: string }[]
-      const hasPosition = info.some(col => col.name === 'position')
-      if (!hasPosition) {
-        this.db.exec(`ALTER TABLE tasks ADD COLUMN position INTEGER NOT NULL DEFAULT 0`)
-        // Set initial positions based on created_at order
-        this.db.exec(`
-          UPDATE tasks SET position = (
-            SELECT COUNT(*) FROM tasks t2
-            WHERE t2.created_at < tasks.created_at
-            OR (t2.created_at = tasks.created_at AND t2.id < tasks.id)
-          )
-        `)
-      }
-    } catch {
-      // Migration already applied or table not yet created
-    }
-
-    // Create indexes for better query performance
+    // Composite indexes for query performance
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_list_id ON tasks(list_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_date ON tasks(date)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_deadline ON tasks(deadline)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_completed_date ON tasks(completed, date)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_list_position ON tasks(list_id, position)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON subtasks(task_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_history_task_id ON task_history(task_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_labels_task_id ON task_labels(task_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_labels_label_id ON task_labels(label_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_reminders_task_id ON reminders(task_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_attachments_task_id ON attachments(task_id)`)
-  
-    // Create default inbox list if it doesn't exist
+
     this.createDefaultInbox()
+    this.cacheStatements()
+  }
+
+  private cacheStatements() {
+    this.stmts = {
+      getTaskById: this.db.prepare('SELECT * FROM tasks WHERE id = ?'),
+      deleteTask: this.db.prepare('DELETE FROM tasks WHERE id = ?'),
+      getSubtasks: this.db.prepare('SELECT * FROM subtasks WHERE task_id = ? ORDER BY created_at'),
+      getLabelsForTask: this.db.prepare(`
+        SELECT l.* FROM labels l JOIN task_labels tl ON l.id = tl.label_id WHERE tl.task_id = ?
+      `),
+      getTaskHistory: this.db.prepare('SELECT * FROM task_history WHERE task_id = ? ORDER BY changed_at DESC'),
+      getReminders: this.db.prepare('SELECT reminder_time FROM reminders WHERE task_id = ? ORDER BY reminder_time'),
+      getAttachments: this.db.prepare('SELECT file_path FROM attachments WHERE task_id = ? ORDER BY created_at'),
+      deleteTaskLabels: this.db.prepare('DELETE FROM task_labels WHERE task_id = ?'),
+      deleteSubtasks: this.db.prepare('DELETE FROM subtasks WHERE task_id = ?'),
+      insertTaskLabel: this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)'),
+      insertTaskHistory: this.db.prepare(`
+        INSERT INTO task_history (id, task_id, field, old_value, new_value) VALUES (?, ?, ?, ?, ?)
+      `),
+      insertSubtask: this.db.prepare(`
+        INSERT INTO subtasks (id, task_id, title, completed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)
+      `),
+      insertReminder: this.db.prepare(`
+        INSERT INTO reminders (id, task_id, reminder_time) VALUES (?, ?, ?)
+      `),
+      insertAttachment: this.db.prepare(`
+        INSERT INTO attachments (id, task_id, file_path, file_name) VALUES (?, ?, ?, ?)
+      `),
+      updateTaskPos: this.db.prepare('UPDATE tasks SET position = ?, updated_at = ? WHERE id = ?'),
+    }
   }
 
   private createDefaultInbox() {
@@ -657,8 +689,7 @@ export class DatabaseService {
       // Add labels
       if (task.labels) {
         for (const label of task.labels) {
-          this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)')
-            .run(id, label.id)
+          this.stmts.insertTaskLabel.run(id, label.id)
         }
       }
 
@@ -768,16 +799,15 @@ export class DatabaseService {
 
       // Update labels
       if (updates.labels !== undefined) {
-        this.db.prepare('DELETE FROM task_labels WHERE task_id = ?').run(id)
+        this.stmts.deleteTaskLabels.run(id)
         for (const label of updates.labels) {
-          this.db.prepare('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)')
-            .run(id, label.id)
+          this.stmts.insertTaskLabel.run(id, label.id)
         }
       }
 
       // Update subtasks
       if (updates.subtasks !== undefined) {
-        this.db.prepare('DELETE FROM subtasks WHERE task_id = ?').run(id)
+        this.stmts.deleteSubtasks.run(id)
         for (const subtask of updates.subtasks) {
           this.createSubtask(id, subtask)
         }
@@ -789,19 +819,17 @@ export class DatabaseService {
   }
 
   deleteTask(id: string): void {
-    this.db.prepare('DELETE FROM tasks WHERE id = ?').run(id)
+    this.stmts.deleteTask.run(id)
   }
 
   getTaskById(id: string): Task | undefined {
-    const row = this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as TaskRow | undefined
+    const row = this.stmts.getTaskById.get(id) as TaskRow | undefined
     if (!row) return undefined
     return this.mapRowToTask(row)
   }
 
   private getSubtasksForTask(taskId: string): Subtask[] {
-    const rows = this.db.prepare('SELECT * FROM subtasks WHERE task_id = ? ORDER BY created_at')
-      .all(taskId) as SubtaskRow[]
-    
+    const rows = this.stmts.getSubtasks.all(taskId) as SubtaskRow[]
     return rows.map(row => ({
       id: row.id,
       title: row.title,
@@ -814,17 +842,11 @@ export class DatabaseService {
   private createSubtask(taskId: string, subtask: SubtaskInput): void {
     const id = randomUUID()
     const now = new Date().toISOString()
-    
-      this.db.prepare(`
-        INSERT INTO subtasks (id, task_id, title, completed, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(id, taskId, subtask.title, subtask.completed ? 1 : 0, now, now)
+    this.stmts.insertSubtask.run(id, taskId, subtask.title, subtask.completed ? 1 : 0, now, now)
   }
 
   private getTaskHistory(taskId: string): TaskHistory[] {
-    const rows = this.db.prepare('SELECT * FROM task_history WHERE task_id = ? ORDER BY changed_at DESC')
-      .all(taskId) as TaskHistoryRow[]
-    
+    const rows = this.stmts.getTaskHistory.all(taskId) as TaskHistoryRow[]
     return rows.map(row => ({
       id: row.id,
       taskId: row.task_id,
@@ -837,26 +859,15 @@ export class DatabaseService {
 
   private recordTaskHistory(taskId: string, field: string, oldValue: unknown, newValue: unknown): void {
     const id = randomUUID()
-    
-    this.db.prepare(`
-      INSERT INTO task_history (id, task_id, field, old_value, new_value)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(
-      id,
-      taskId,
-      field,
+    this.stmts.insertTaskHistory.run(
+      id, taskId, field,
       oldValue ? JSON.stringify(oldValue) : null,
       newValue ? JSON.stringify(newValue) : null
     )
   }
 
   private getLabelsForTask(taskId: string): Label[] {
-    const rows = this.db.prepare(`
-      SELECT l.* FROM labels l
-      JOIN task_labels tl ON l.id = tl.label_id
-      WHERE tl.task_id = ?
-    `).all(taskId) as LabelRow[]
-
+    const rows = this.stmts.getLabelsForTask.all(taskId) as LabelRow[]
     return rows.map(row => ({
       id: row.id,
       name: row.name,
@@ -868,36 +879,24 @@ export class DatabaseService {
   }
 
   private getRemindersForTask(taskId: string): Date[] {
-    const rows = this.db.prepare('SELECT reminder_time FROM reminders WHERE task_id = ? ORDER BY reminder_time')
-      .all(taskId) as { reminder_time: string }[]
-    
+    const rows = this.stmts.getReminders.all(taskId) as { reminder_time: string }[]
     return rows.map(row => new Date(row.reminder_time))
   }
 
   private addReminder(taskId: string, reminderTime: Date): void {
     const id = randomUUID()
-    
-    this.db.prepare(`
-      INSERT INTO reminders (id, task_id, reminder_time)
-      VALUES (?, ?, ?)
-    `).run(id, taskId, reminderTime.toISOString())
+    this.stmts.insertReminder.run(id, taskId, reminderTime.toISOString())
   }
 
   private getAttachmentsForTask(taskId: string): string[] {
-    const rows = this.db.prepare('SELECT file_path FROM attachments WHERE task_id = ? ORDER BY created_at')
-      .all(taskId) as { file_path: string }[]
-    
+    const rows = this.stmts.getAttachments.all(taskId) as { file_path: string }[]
     return rows.map(row => row.file_path)
   }
 
   private addAttachment(taskId: string, filePath: string): void {
     const id = randomUUID()
     const fileName = filePath.split('/').pop() || ''
-    
-    this.db.prepare(`
-      INSERT INTO attachments (id, task_id, file_path, file_name)
-      VALUES (?, ?, ?, ?)
-    `).run(id, taskId, filePath, fileName)
+    this.stmts.insertAttachment.run(id, taskId, filePath, fileName)
   }
 
   /**
@@ -906,10 +905,9 @@ export class DatabaseService {
    */
   updateTaskPositions(positions: { id: string; position: number }[]): void {
     const update = this.db.transaction(() => {
-      const stmt = this.db.prepare('UPDATE tasks SET position = ?, updated_at = ? WHERE id = ?')
       const now = new Date().toISOString()
       for (const { id, position } of positions) {
-        stmt.run(position, now, id)
+        this.stmts.updateTaskPos.run(position, now, id)
       }
     })
     update()
