@@ -6,7 +6,8 @@ export async function parseJSONBody(request: NextRequest): Promise<
   try {
     const data = await request.json()
     return { success: true, data }
-  } catch {
+  } catch (error) {
+    console.error('Failed to parse request body:', error)
     return {
       success: false,
       response: NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })

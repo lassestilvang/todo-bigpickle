@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const createTaskSchema = z.object({
-  name: z.string().min(1, 'Task name is required'),
+  name: z.string().min(1, 'Task name is required').max(200, 'Task name is too long'),
   description: z.string().optional(),
   date: z.string().datetime().transform(s => new Date(s)).optional(),
   deadline: z.string().datetime().transform(s => new Date(s)).optional(),
@@ -22,14 +22,14 @@ export const createTaskSchema = z.object({
 export const updateTaskSchema = createTaskSchema.partial()
 
 export const createListSchema = z.object({
-  name: z.string().min(1, 'List name is required'),
+  name: z.string().min(1, 'List name is required').max(100),
   color: z.string().min(1, 'Color is required'),
   icon: z.string().default(''),
   isDefault: z.boolean().default(false),
 })
 
 export const createLabelSchema = z.object({
-  name: z.string().min(1, 'Label name is required'),
+  name: z.string().min(1, 'Label name is required').max(50),
   color: z.string().min(1, 'Color is required'),
   icon: z.string().default(''),
 })
