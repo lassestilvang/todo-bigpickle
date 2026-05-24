@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { TaskCard } from '@/components/task-card'
 import { Task } from '@/types'
@@ -11,25 +12,25 @@ const mockTask: Task = {
   estimate: 120,
   actualTime: 90,
   labels: [
-    { id: '1', name: 'Work', color: '#3b82f6', icon: '💼', createdAt: new Date(), updatedAt: new Date() }
+    { id: '1', name: 'Work', color: '#3b82f6', icon: '💼', createdAt: new Date(), updatedAt: new Date() },
   ],
   priority: 'high',
   subtasks: [
     { id: '1', title: 'Subtask 1', completed: true, createdAt: new Date(), updatedAt: new Date() },
-    { id: '2', title: 'Subtask 2', completed: false, createdAt: new Date(), updatedAt: new Date() }
+    { id: '2', title: 'Subtask 2', completed: false, createdAt: new Date(), updatedAt: new Date() },
   ],
   listId: '1',
   completed: false,
   createdAt: new Date(),
   updatedAt: new Date(),
-  history: []
+  history: [],
 }
 
 describe('TaskCard', () => {
   it('renders task information correctly', () => {
-    const onToggleComplete = jest.fn()
-    const onEdit = jest.fn()
-    const onDelete = jest.fn()
+    const onToggleComplete = () => {}
+    const onEdit = () => {}
+    const onDelete = () => {}
 
     render(
       <TaskCard
@@ -37,7 +38,7 @@ describe('TaskCard', () => {
         onToggleComplete={onToggleComplete}
         onEdit={onEdit}
         onDelete={onDelete}
-      />
+      />,
     )
 
     expect(screen.getByText('Test Task')).toBeInTheDocument()
@@ -47,78 +48,66 @@ describe('TaskCard', () => {
   })
 
   it('calls onToggleComplete when checkbox is clicked', () => {
-    const onToggleComplete = jest.fn()
-    const onEdit = jest.fn()
-    const onDelete = jest.fn()
+    let called = false
+    const onToggleComplete = (id: string) => { called = true; expect(id).toBe('1') }
 
     render(
       <TaskCard
         task={mockTask}
         onToggleComplete={onToggleComplete}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />,
     )
 
-    const checkbox = screen.getByRole('checkbox')
-    fireEvent.click(checkbox)
-
-    expect(onToggleComplete).toHaveBeenCalledWith('1')
+    fireEvent.click(screen.getByRole('checkbox'))
+    expect(called).toBe(true)
   })
 
   it('calls onEdit when card is clicked', () => {
-    const onToggleComplete = jest.fn()
-    const onEdit = jest.fn()
-    const onDelete = jest.fn()
+    let called = false
+    const onEdit = (task: Task) => { called = true; expect(task).toBe(mockTask) }
 
     render(
       <TaskCard
         task={mockTask}
-        onToggleComplete={onToggleComplete}
+        onToggleComplete={() => {}}
         onEdit={onEdit}
-        onDelete={onDelete}
-      />
+        onDelete={() => {}}
+      />,
     )
 
-    const card = screen.getByRole('button', { name: /click to edit/i })
-    fireEvent.click(card)
-
-    expect(onEdit).toHaveBeenCalledWith(mockTask)
+    fireEvent.click(screen.getByRole('button', { name: /click to edit/i }))
+    expect(called).toBe(true)
   })
 
   it('calls onDelete when delete button is clicked', () => {
-    const onToggleComplete = jest.fn()
-    const onEdit = jest.fn()
-    const onDelete = jest.fn()
+    let called = false
+    const onDelete = (id: string) => { called = true; expect(id).toBe('1') }
 
     render(
       <TaskCard
         task={mockTask}
-        onToggleComplete={onToggleComplete}
-        onEdit={onEdit}
+        onToggleComplete={() => {}}
+        onEdit={() => {}}
         onDelete={onDelete}
-      />
+      />,
     )
 
-    const deleteBtn = screen.getByRole('button', { name: /delete/i })
-    fireEvent.click(deleteBtn)
-
-    expect(onDelete).toHaveBeenCalledWith('1')
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }))
+    expect(called).toBe(true)
   })
 
   it('displays completed state correctly', () => {
     const completedTask = { ...mockTask, completed: true }
-    const onToggleComplete = jest.fn()
-    const onEdit = jest.fn()
-    const onDelete = jest.fn()
 
     render(
       <TaskCard
         task={completedTask}
-        onToggleComplete={onToggleComplete}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
+        onToggleComplete={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />,
     )
 
     expect(screen.getByRole('checkbox')).toBeChecked()
@@ -128,19 +117,16 @@ describe('TaskCard', () => {
   it('shows overdue indicator for overdue tasks', () => {
     const overdueTask = {
       ...mockTask,
-      deadline: new Date(Date.now() - 86400000) // Yesterday
+      deadline: new Date(Date.now() - 86400000),
     }
-    const onToggleComplete = jest.fn()
-    const onEdit = jest.fn()
-    const onDelete = jest.fn()
 
     render(
       <TaskCard
         task={overdueTask}
-        onToggleComplete={onToggleComplete}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
+        onToggleComplete={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />,
     )
 
     expect(screen.getByTestId('alert-triangle')).toBeInTheDocument()
