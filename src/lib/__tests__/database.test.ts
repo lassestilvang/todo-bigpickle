@@ -1,3 +1,4 @@
+import { describe, expect, it, beforeEach, afterEach } from 'bun:test'
 import { DatabaseService } from '@/lib/database'
 import { List, Label } from '@/types'
 
@@ -5,7 +6,6 @@ describe('DatabaseService', () => {
   let db: DatabaseService
 
   beforeEach(() => {
-    // Use in-memory database for testing
     db = new DatabaseService(':memory:')
   })
 
@@ -26,7 +26,7 @@ describe('DatabaseService', () => {
         name: 'Work',
         color: '#3b82f6',
         icon: '💼',
-        isDefault: false
+        isDefault: false,
       })
 
       expect(newList.id).toBeDefined()
@@ -41,11 +41,11 @@ describe('DatabaseService', () => {
         name: 'Personal',
         color: '#10b981',
         icon: '🏠',
-        isDefault: false
+        isDefault: false,
       })
 
       const lists = db.getLists()
-      expect(lists).toHaveLength(2) // Default inbox + new list
+      expect(lists).toHaveLength(2)
     })
   })
 
@@ -54,7 +54,7 @@ describe('DatabaseService', () => {
       const newLabel = db.createLabel({
         name: 'Urgent',
         color: '#ef4444',
-        icon: '🔥'
+        icon: '🔥',
       })
 
       expect(newLabel.id).toBeDefined()
@@ -67,7 +67,7 @@ describe('DatabaseService', () => {
       const newLabel = db.createLabel({
         name: 'Urgent',
         color: '#ef4444',
-        icon: '🔥'
+        icon: '🔥',
       })
 
       const found = db.getLabelById(newLabel.id)
@@ -82,13 +82,13 @@ describe('DatabaseService', () => {
       db.createLabel({
         name: 'Work',
         color: '#3b82f6',
-        icon: '💼'
+        icon: '💼',
       })
 
       db.createLabel({
         name: 'Personal',
         color: '#10b981',
-        icon: '🏠'
+        icon: '🏠',
       })
 
       const labels = db.getLabels()
@@ -105,13 +105,13 @@ describe('DatabaseService', () => {
         name: 'Test List',
         color: '#3b82f6',
         icon: '📝',
-        isDefault: false
+        isDefault: false,
       })
 
       testLabel = db.createLabel({
         name: 'Test Label',
         color: '#10b981',
-        icon: '🏷️'
+        icon: '🏷️',
       })
     })
 
@@ -123,7 +123,7 @@ describe('DatabaseService', () => {
         labels: [testLabel],
         subtasks: [],
         listId: testList.id,
-        completed: false
+        completed: false,
       })
 
       expect(newTask.id).toBeDefined()
@@ -141,7 +141,7 @@ describe('DatabaseService', () => {
         labels: [],
         subtasks: [],
         listId: testList.id,
-        completed: false
+        completed: false,
       })
 
       db.createTask({
@@ -150,7 +150,7 @@ describe('DatabaseService', () => {
         labels: [],
         subtasks: [],
         listId: testList.id,
-        completed: false
+        completed: false,
       })
 
       const tasks = db.getTasks()
@@ -164,12 +164,12 @@ describe('DatabaseService', () => {
         labels: [],
         subtasks: [],
         listId: testList.id,
-        completed: false
+        completed: false,
       })
 
       const updatedTask = db.updateTask(task.id, {
         name: 'Updated Task',
-        priority: 'high'
+        priority: 'high',
       })
 
       expect(updatedTask.name).toBe('Updated Task')
@@ -183,7 +183,7 @@ describe('DatabaseService', () => {
         labels: [],
         subtasks: [],
         listId: testList.id,
-        completed: false
+        completed: false,
       })
 
       let tasks = db.getTasks()
@@ -202,11 +202,11 @@ describe('DatabaseService', () => {
         labels: [],
         subtasks: [],
         listId: testList.id,
-        completed: false
+        completed: false,
       })
 
       db.updateTask(task.id, {
-        name: 'Updated Task'
+        name: 'Updated Task',
       })
 
       const updatedTask = db.getTaskById(task.id)
@@ -225,7 +225,7 @@ describe('DatabaseService', () => {
         name: 'Test List',
         color: '#3b82f6',
         icon: '📝',
-        isDefault: false
+        isDefault: false,
       })
 
       db.createTask({
@@ -234,7 +234,7 @@ describe('DatabaseService', () => {
         labels: [],
         subtasks: [],
         listId: testList.id,
-        completed: false
+        completed: false,
       })
     })
 
@@ -245,10 +245,10 @@ describe('DatabaseService', () => {
         labels: [],
         subtasks: [
           { title: 'Subtask 1', completed: false },
-          { title: 'Subtask 2', completed: true }
+          { title: 'Subtask 2', completed: true },
         ],
         listId: testList.id,
-        completed: false
+        completed: false,
       })
 
       expect(taskWithSubtasks.subtasks).toHaveLength(2)
