@@ -10,7 +10,6 @@ import { format, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
-import { motion } from 'framer-motion'
 import {
   Calendar,
   Clock,
@@ -93,21 +92,16 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   }, [])
 
   return (
-    <motion.div
+    <div
       data-task-card
-      className="task-card-motion"
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-      transition={{ duration: 0.2, layout: { duration: 0.3, ease: 'easeOut' } }}
+      className="task-card-motion task-card-enter"
     >
       <Card
-        className={`group/card relative cursor-pointer transition-all duration-300
+        className={`group/card relative cursor-pointer transition-all duration-200 ease-out
           hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0
-          dark:hover:shadow-primary/10
+          dark:hover:shadow-primary/10 dark:hover:shadow-sm
           bg-background hover:bg-card/80
-          ${task.completed ? 'opacity-60' : ''}
+          ${task.completed ? 'opacity-60 saturate-50' : ''}
           ${isOverdue ? 'border-l-red-500' : priority.border}
           overflow-hidden
         `}
@@ -179,14 +173,10 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                   </h3>
                 )}
                 {isOverdue && !editingName && (
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[10px] font-semibold whitespace-nowrap border border-red-500/20 shrink-0"
-                  >
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[10px] font-semibold whitespace-nowrap border border-red-500/20 shrink-0 animate-in">
                     <AlertTriangle className="size-3" data-testid="alert-triangle" />
                     Overdue
-                  </motion.div>
+                  </span>
                 )}
               </div>
 
@@ -264,22 +254,17 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
               {totalSubtasks > 0 && (
                 <div className="mt-3 pl-0.5">
                   <div className="h-1.5 bg-muted/70 rounded-full overflow-hidden">
-                    <motion.div
-                      className={`h-full rounded-full transition-colors duration-300 ${
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ease-out ${
                         progress >= 1 ? 'bg-emerald-500' : 'bg-primary/70'
                       }`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progress * 100}%` }}
-                      transition={{ duration: 0.5, ease: 'easeOut' }}
+                      style={{ width: `${progress * 100}%` }}
                     />
                   </div>
                   <div className="mt-2 space-y-1">
-                    {task.subtasks.slice(0, 3).map((subtask, i) => (
-                      <motion.div
+                    {task.subtasks.slice(0, 3).map((subtask) => (
+                      <div
                         key={subtask.id}
-                        initial={{ opacity: 0, x: -4 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.03 }}
                         className="flex items-center gap-2 text-xs"
                       >
                         {subtask.completed ? (
@@ -290,7 +275,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                         <span className={`truncate ${subtask.completed ? 'line-through text-muted-foreground/60' : ''}`}>
                           {subtask.title}
                         </span>
-                      </motion.div>
+                      </div>
                     ))}
                     {task.subtasks.length > 3 && (
                       <div className="text-xs text-muted-foreground/70 font-medium">
@@ -303,23 +288,21 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
             </div>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={(e) => {
               e.stopPropagation()
               onDelete(task.id)
             }}
             className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 group-focus-within/card:opacity-100 focus-visible:opacity-100 transition-all duration-200
-              p-1.5 rounded-md text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/10
+              p-1.5 rounded-md text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/10 hover:scale-110 active:scale-90
               focus-visible:text-red-500 focus-visible:bg-red-500/10"
             aria-label={`Delete "${task.name}"`}
             tabIndex={0}
           >
             <Trash2 className="size-4" />
-          </motion.button>
+          </button>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   )
 })
