@@ -94,7 +94,6 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   return (
     <div
       data-task-card
-      className="task-card-motion"
     >
       <Card
         className={`group/card relative cursor-pointer transition-all duration-300 ease-out

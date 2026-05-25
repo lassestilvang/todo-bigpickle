@@ -310,6 +310,8 @@ export const useAppStore = create<AppStore>()(
 
       // Data loading
       loadData: async () => {
+        const currentState = get()
+        if (currentState.isLoading) return
         set({ isLoading: true, error: null })
         try {
           const [tasks, lists, labels] = await Promise.all([
