@@ -61,9 +61,9 @@ interface TaskGroupProps {
 }
 
 const TaskGroup = memo(function TaskGroup({
-  tasks, hasDate, date, customOrderTasks,
+  tasks, hasDate, date, customOrderTasks, groupKey,
   sortBy, onReorder, onToggleComplete, onEditTask, onDeleteTask,
-}: TaskGroupProps) {
+}: TaskGroupProps & { groupKey: string }) {
   return (
     <div data-task-group className="mb-8">
       {hasDate && date && (

@@ -70,7 +70,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   const now = useNow()
 
   const [localSearch, setLocalSearch] = useState(searchQuery)
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     const timer = searchTimerRef.current
