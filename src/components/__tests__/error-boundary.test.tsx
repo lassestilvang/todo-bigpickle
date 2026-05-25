@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'bun:test'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, expect, it, afterEach } from 'bun:test'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { ErrorBoundary } from '@/components/error-boundary'
+
+afterEach(() => cleanup())
 
 function ThrowError({ message }) {
   throw new Error(message)

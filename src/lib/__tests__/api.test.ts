@@ -1,14 +1,14 @@
 import { describe, expect, it, mock, beforeEach } from 'bun:test'
 
 const mockJson = mock(() => ({}))
-const mockFetch = mock((url: string, options?: RequestInit) =>
+const mockFetch = mock(() =>
   Promise.resolve({
     ok: true,
     json: mockJson,
-  } as Response)
+  })
 )
 
-globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch
+globalThis.fetch = mockFetch
 
 const { api } = await import('@/lib/api')
 
@@ -33,7 +33,7 @@ describe('api.createTask', () => {
     const taskData = { name: 'New Task', priority: 'high' as const, listId: '1', completed: false, labels: [], subtasks: [] }
     const created = { id: 'new-id', ...taskData }
     mockJson.mockResolvedValue(created)
-    const result = await api.createTask(taskData as any)
+    const result = await api.createTask(taskData)
     expect(mockFetch).toHaveBeenCalledWith('/api/tasks', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -81,7 +81,7 @@ describe('api.getLists', () => {
 describe('api.createList', () => {
   it('should POST list data to /api/lists', async () => {
     mockJson.mockResolvedValue({ id: 'l1', name: 'Work', color: '#3b82f6', icon: '💼', isDefault: false })
-    const result = await api.createList({ name: 'Work', color: '#3b82f6', icon: '💼', isDefault: false } as any)
+    const result = await api.createList({ name: 'Work', color: '#3b82f6', icon: '💼', isDefault: false })
     expect(mockFetch).toHaveBeenCalledWith('/api/lists', expect.objectContaining({ method: 'POST' }))
     expect(result.name).toBe('Work')
   })

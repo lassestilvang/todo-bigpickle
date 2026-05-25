@@ -123,16 +123,18 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
 
   return (
     <Sidebar>
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
           <motion.div
-            className="p-1.5 rounded-lg bg-primary/10"
+            className="p-1.5 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10"
             whileHover={{ scale: 1.05 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           >
             <CheckCircle2 className="size-5 text-primary" />
           </motion.div>
-          <span className="font-bold text-lg tracking-tight">Todo</span>
+          <span className="font-bold text-lg tracking-tight bg-gradient-to-br from-foreground to-foreground/80 bg-clip-text">Todo</span>
         </div>
         <div className="px-2 pb-2 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50" />

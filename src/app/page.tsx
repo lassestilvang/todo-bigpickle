@@ -134,7 +134,7 @@ export default function Home() {
       enableSystem
     >
       <SidebarProvider>
-        <div id="main-content" className="flex h-screen overflow-hidden">
+        <div id="main-content" className="flex h-screen overflow-hidden bg-noise">
           {isLoading ? (
             <LoadingSkeleton />
           ) : (
@@ -146,7 +146,7 @@ export default function Home() {
             >
               <AppSidebar onCreateTask={handleCreateTask} />
 
-              <SidebarInset className="flex-1 flex flex-col">
+              <SidebarInset className="flex-1 flex flex-col bg-grid-pattern">
                 <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
                   <SidebarTrigger className="-ml-1" />
                   <div className="flex-1" />
