@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useRef, useEffect, useCallback } from 'react'
+import { memo, useState, useRef, useEffect, useCallback, useReducer } from 'react'
 import { Task } from '@/types'
 import { useNow } from '@/hooks/use-now'
 import { Celebration } from '@/components/celebration'
@@ -47,6 +47,12 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   const isOverdue = task.deadline && task.deadline < now && !task.completed
   const [celebrating, setCelebrating] = useState(false)
   const wasCompleted = useRef(task.completed)
+  const [celebrationTick, dispatchCelebration] = useReducer((state: number, action: 'start' | 'end') => {
+    switch (action) {
+      case 'start': return state + 1
+      case 'end': return 0
+    }
+  }, 0)
 
   const [editingName, setEditingName] = useState(false)
   const [editValue, setEditValue] = useState('')
@@ -59,15 +65,17 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
 
   useEffect(() => {
     if (task.completed && !wasCompleted.current) {
-      const timer = setTimeout(() => {
-        setCelebrating(true)
-        setTimeout(() => setCelebrating(false), 800)
-      }, 0)
       wasCompleted.current = true
-      return () => clearTimeout(timer)
+      dispatchCelebration('start')
+      const endTimer = setTimeout(() => dispatchCelebration('end'), 800)
+      return () => clearTimeout(endTimer)
     }
     wasCompleted.current = task.completed
   }, [task.completed])
+
+  useEffect(() => {
+    setCelebrating(celebrationTick > 0)
+  }, [celebrationTick])
 
   const startEditing = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()

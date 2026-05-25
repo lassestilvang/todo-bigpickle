@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -212,11 +212,11 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <div className="flex gap-1 p-2 border-b">
-                    {[
+                    {useMemo(() => [
                       { label: 'Today', getValue: () => new Date() },
                       { label: 'Tomorrow', getValue: () => addDays(new Date(), 1) },
                       { label: 'Next Week', getValue: () => addWeeks(new Date(), 1) },
-                    ].map(preset => (
+                    ], []).map(preset => (
                       <button
                         key={preset.label}
                         type="button"

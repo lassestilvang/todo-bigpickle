@@ -74,10 +74,8 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   const debouncedSearch = useDebounce(localSearch, 150)
 
   useEffect(() => {
-    if (debouncedSearch !== searchQuery) {
-      setSearchQuery(debouncedSearch)
-    }
-  }, [debouncedSearch, searchQuery, setSearchQuery])
+    setSearchQuery(debouncedSearch)
+  }, [debouncedSearch, setSearchQuery])
 
 
 

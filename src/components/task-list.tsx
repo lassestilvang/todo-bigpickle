@@ -278,20 +278,18 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   useEffect(() => {
     const currentGrouped = groupedTasksRef.current
     if (sortBy === 'custom') {
-      setCustomOrder(prev => {
-        const prevMap = new Map(prevReorderVersion.current === reorderVersion
-          ? Object.entries(prev) : []
-        )
+      const shouldReset = prevReorderVersion.current !== reorderVersion
+      if (shouldReset) {
         prevReorderVersion.current = reorderVersion
-
+      }
+      setCustomOrder(prev => {
+        const prevMap = new Map(shouldReset ? [] : Object.entries(prev))
         const next: Record<string, Task[]> = {}
         for (const [key, group] of Object.entries(currentGrouped)) {
           const prevGroup = prevMap.get(key)
           const currentIds = new Set(prevGroup?.map(t => t.id) || [])
-          const newIds = new Set(group.tasks.map(t => t.id))
-          const sameIds = currentIds.size === newIds.size &&
+          const sameIds = currentIds.size === group.tasks.length &&
             group.tasks.every(t => currentIds.has(t.id))
-
           if (sameIds && prevGroup) {
             next[key] = prevGroup
           } else {

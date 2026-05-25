@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, memo } from 'react'
+import { useState, useEffect, useRef, useMemo, useReducer, memo } from 'react'
 import { useAppStore } from '@/store'
 import { useTheme } from '@/components/theme-provider'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
@@ -39,9 +39,21 @@ interface CommandPaletteProps {
   onCreateTask: () => void
 }
 
+type PaletteAction = { type: 'reset' } | { type: 'setQuery'; query: string } | { type: 'setIndex'; index: number }
+
+function paletteReducer(state: { query: string; selectedIndex: number }, action: PaletteAction) {
+  switch (action.type) {
+    case 'reset':
+      return { query: '', selectedIndex: 0 }
+    case 'setQuery':
+      return { ...state, query: action.query }
+    case 'setIndex':
+      return { ...state, selectedIndex: action.index }
+  }
+}
+
 export const CommandPalette = memo(function CommandPalette({ open, onClose, onCreateTask }: CommandPaletteProps) {
-  const [query, setQuery] = useState('')
-  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [state, dispatch] = useReducer(paletteReducer, { query: '', selectedIndex: 0 })
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -52,11 +64,13 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
   const lists = useAppStore(s => s.lists)
   const { setTheme } = useTheme()
 
+  const query = state.query
+  const selectedIndex = state.selectedIndex
+
   useEffect(() => {
     if (open) {
       const timer = setTimeout(() => {
-        setQuery('')
-        setSelectedIndex(0)
+        dispatch({ type: 'reset' })
         inputRef.current?.focus()
       }, 0)
       return () => clearTimeout(timer)
@@ -126,10 +140,10 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIndex(i => Math.min(i + 1, filtered.length - 1))
+      dispatch({ type: 'setIndex', index: Math.min(selectedIndex + 1, filtered.length - 1) })
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      setSelectedIndex(i => Math.max(i - 1, 0))
+      dispatch({ type: 'setIndex', index: Math.max(selectedIndex - 1, 0) })
     } else if (e.key === 'Enter' && filtered[selectedIndex]) {
       e.preventDefault()
       filtered[selectedIndex].action()
@@ -148,7 +162,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
           <Input
             ref={inputRef}
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0) }}
+            onChange={(e) => { dispatch({ type: 'setQuery', query: e.target.value }); dispatch({ type: 'setIndex', index: 0 }) }}
             onKeyDown={handleKeyDown}
             placeholder="Search commands…"
             className="border-0 rounded-none h-14 pl-11 pr-4 text-base shadow-none focus-visible:ring-0"
@@ -174,7 +188,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
                             : 'hover:bg-accent/50'
                         }`}
                         onClick={() => { cmd.action(); onClose() }}
-                        onMouseEnter={() => setSelectedIndex(idx)}
+                        onMouseEnter={() => dispatch({ type: 'setIndex', index: idx })}
                       >
                         <Icon className="size-4 shrink-0 text-muted-foreground" />
                         <span className="flex-1">{cmd.label}</span>
@@ -207,7 +221,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
                                   : 'hover:bg-accent/50'
                               }`}
                               onClick={() => { cmd.action(); onClose() }}
-                              onMouseEnter={() => setSelectedIndex(globalIdx)}
+                              onMouseEnter={() => dispatch({ type: 'setIndex', index: globalIdx })}
                             >
                               <Icon className="size-4 shrink-0 text-muted-foreground" />
                               <span className="flex-1">{cmd.label}</span>
