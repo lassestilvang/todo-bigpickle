@@ -2,7 +2,8 @@
 
 ## Build/Lint/Test Commands
 - `bun run dev` - Start development server
-- `bun run build` - Build for production  
+- `bun run lint` - Run ESLint  
+- `bun run build` - Build for production (note: `bun:sqlite` import causes TS error in Next.js build; use `bun run dev` for development)
 - `bun run lint` - Run ESLint
 - `bun run test` - Run all tests (uses `bun test`)
 - `bun run test:watch` - Run tests in watch mode
