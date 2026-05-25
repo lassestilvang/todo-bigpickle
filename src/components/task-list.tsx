@@ -6,7 +6,7 @@ import { useAppStore, useShallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Reorder } from 'framer-motion'
+import { Reorder, motion } from 'framer-motion'
 import Fuse from 'fuse.js'
 import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
@@ -418,12 +418,13 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
             }}
             placeholder={`Add a task to "${getCurrentViewTitle(currentView, selectedListId, lists)}"…`}
             className="pl-10 h-12 text-base bg-muted/30 border-dashed border-muted-foreground/25
-              focus:bg-background focus:border-primary/50 focus:shadow-sm
+              focus:bg-background focus:border-primary/50 focus:shadow-sm focus:shadow-primary/10
               transition-all duration-200"
           />
           <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground/60">
             ⌘K
           </kbd>
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/0 via-primary/[0.02] to-primary/0 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 pointer-events-none" />
         </div>
 
         {/* Task Groups */}
@@ -431,7 +432,12 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           <div className="text-center py-20 animate-fade-in">
             {searchQuery ? (
               <div className="text-muted-foreground animate-fade-in">
-                <SearchX className="size-16 mx-auto mb-4 text-muted-foreground/20" />
+                <div className="relative mx-auto mb-6 w-20 h-20">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-muted-foreground/10 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <SearchX className="size-10 text-muted-foreground/30" />
+                  </div>
+                </div>
                 <p className="text-lg font-medium mb-1">No results found</p>
                 <p className="text-sm text-muted-foreground/70">
                   No tasks match &ldquo;{searchQuery}&rdquo;
@@ -439,10 +445,11 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               </div>
             ) : allTasks.length === 0 ? (
               <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
-                <div className="relative mx-auto mb-6 w-24 h-24">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 animate-pulse" />
+                <div className="relative mx-auto mb-8 w-32 h-32">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent animate-pulse" style={{ animationDuration: '3s' }} />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/5 to-transparent animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s', transform: 'scale(0.85)' }} />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Sparkles className="size-10 text-primary/40" />
+                    <Sparkles className="size-12 text-primary/40" />
                   </div>
                 </div>
                 <p className="text-xl font-medium mb-2">
@@ -463,14 +470,27 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                       ? 'Schedule a task for today'
                       : 'Create your first task and get things done'}
                 </p>
-                <Button onClick={onCreateTask} size="lg" className="transition-all duration-200 hover:scale-105 active:scale-95">
+                <Button onClick={onCreateTask} size="lg" className="transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl">
                   <Plus className="size-4 mr-2" />
                   Create Your First Task
                 </Button>
               </div>
             ) : (
               <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
-                <CheckCircle2 className="size-20 mx-auto mb-4 text-green-500/30" />
+                <div className="relative mx-auto mb-6 w-24 h-24">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <CheckCircle2 className="size-12 text-emerald-500/40" />
+                  </div>
+                  <motion.div
+                    className="absolute -top-1 -right-1"
+                    initial={{ scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.2 }}
+                  >
+                    <span className="text-lg">✨</span>
+                  </motion.div>
+                </div>
                 <p className="text-lg font-medium mb-1">
                   {currentView === 'today'
                     ? 'All done for today!'
@@ -516,11 +536,13 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
 
         {/* Scroll to top */}
         {tasks.length > 5 && (
-          <button
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 animate-fade-in
-              flex items-center gap-1.5 px-4 py-2 rounded-full
-              bg-background border shadow-lg text-xs text-muted-foreground
-              hover:text-foreground hover:shadow-xl hover:-translate-y-0.5
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20
+              flex items-center gap-1.5 px-5 py-2.5 rounded-full
+              bg-background/80 backdrop-blur-lg border shadow-lg text-xs text-muted-foreground
+              hover:text-foreground hover:shadow-xl hover:-translate-y-1
               transition-all duration-200"
             onClick={() => {
               const container = document.querySelector('.overflow-y-auto')
@@ -530,7 +552,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           >
             <ChevronUp className="size-3.5" />
             Back to top
-          </button>
+          </motion.button>
         )}
       </div>
     </div>
