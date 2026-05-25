@@ -237,6 +237,7 @@ export class DatabaseService {
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_task_labels_label_id ON task_labels(label_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_reminders_task_id ON reminders(task_id)`)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_attachments_task_id ON attachments(task_id)`)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_tasks_position_created ON tasks(position, created_at)`)
 
     this.createDefaultInbox()
     this.cacheStatements()
