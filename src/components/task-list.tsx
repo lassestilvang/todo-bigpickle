@@ -6,7 +6,7 @@ import { useAppStore, useShallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { motion, AnimatePresence, Reorder } from 'framer-motion'
+import { Reorder } from 'framer-motion'
 import Fuse from 'fuse.js'
 import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
@@ -65,7 +65,7 @@ const TaskGroup = memo(function TaskGroup({
   sortBy, onReorder, onToggleComplete, onEditTask, onDeleteTask,
 }: TaskGroupProps) {
   return (
-    <div className="mb-8">
+    <div data-task-group className="mb-8">
       {hasDate && date && (
         <div className="flex items-center gap-3 mb-4">
           <div className="h-px flex-1 bg-border/50" />
@@ -207,21 +207,15 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     return filtered
   }, [allTasks, currentView, selectedListId, showCompleted])
 
-  // Step 2: apply cached Fuse.js search on top of baseTasks
-  const fuseRef = useRef<{ tasks: Task[]; fuse: Fuse<Task> } | null>(null)
+  // Step 2: apply Fuse.js search on top of baseTasks
   const tasks = useMemo(() => {
     if (!searchQuery) return baseTasks
 
-    if (!fuseRef.current || fuseRef.current.tasks !== baseTasks) {
-      fuseRef.current = {
-        tasks: baseTasks,
-        fuse: new Fuse(baseTasks, {
-          keys: ['name', 'description'],
-          threshold: 0.3,
-        }),
-      }
-    }
-    return fuseRef.current.fuse.search(searchQuery).map(r => r.item)
+    const fuse = new Fuse(baseTasks, {
+      keys: ['name', 'description'],
+      threshold: 0.3,
+    })
+    return fuse.search(searchQuery).map(r => r.item)
   }, [baseTasks, searchQuery])
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
 
@@ -422,91 +416,73 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
         </div>
 
         {/* Task Groups */}
-        <AnimatePresence mode="wait">
-          {isEmpty ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="text-center py-20"
-            >
-              {searchQuery ? (
-                <div className="text-muted-foreground">
-                  <SearchX className="size-16 mx-auto mb-4 text-muted-foreground/20" />
-                  <p className="text-lg font-medium mb-1">No results found</p>
-                  <p className="text-sm text-muted-foreground/70">
-                    No tasks match &ldquo;{searchQuery}&rdquo;
-                  </p>
-                </div>
-              ) : allTasks.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="text-muted-foreground"
-                >
-                  <div className="relative mx-auto mb-6 w-24 h-24">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 animate-pulse" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Sparkles className="size-10 text-primary/40" />
-                    </div>
+        {isEmpty ? (
+          <div className="text-center py-20 animate-fade-in">
+            {searchQuery ? (
+              <div className="text-muted-foreground animate-fade-in">
+                <SearchX className="size-16 mx-auto mb-4 text-muted-foreground/20" />
+                <p className="text-lg font-medium mb-1">No results found</p>
+                <p className="text-sm text-muted-foreground/70">
+                  No tasks match &ldquo;{searchQuery}&rdquo;
+                </p>
+              </div>
+            ) : allTasks.length === 0 ? (
+              <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
+                <div className="relative mx-auto mb-6 w-24 h-24">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 animate-pulse" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Sparkles className="size-10 text-primary/40" />
                   </div>
-                  <p className="text-xl font-medium mb-2">
-                    {selectedListId
-                      ? 'This list is empty'
-                      : currentView === 'today'
-                        ? 'No tasks for today'
-                        : currentView === 'next7days'
-                          ? 'Nothing this week'
-                          : currentView === 'upcoming'
-                            ? 'No upcoming tasks'
-                            : 'Your task list is empty'}
-                  </p>
-                  <p className="text-sm text-muted-foreground/70 mb-8">
-                    {selectedListId
-                      ? 'Add a task to get started'
-                      : currentView === 'today'
-                        ? 'Schedule a task for today'
-                        : 'Create your first task and get things done'}
-                  </p>
-                  <Button onClick={onCreateTask} size="lg" className="transition-all duration-200 hover:scale-105 active:scale-95">
-                    <Plus className="size-4 mr-2" />
-                    Create Your First Task
-                  </Button>
-                </motion.div>
-              ) : (
-                <div className="text-muted-foreground">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
-                  >
-                    <CheckCircle2 className="size-20 mx-auto mb-4 text-green-500/30" />
-                  </motion.div>
-                  <p className="text-lg font-medium mb-1">
-                    {currentView === 'today'
-                      ? 'All done for today!'
-                      : currentView === 'next7days'
-                        ? 'All set for the week!'
-                        : currentView === 'upcoming'
-                          ? 'Nothing upcoming'
-                          : 'All done!'}
-                  </p>
-                  <p className="text-sm text-muted-foreground/70">
-                    {currentView === 'today'
-                      ? 'Enjoy your free time'
-                      : currentView === 'next7days'
-                        ? 'Enjoy your week'
-                        : currentView === 'upcoming'
-                          ? 'No tasks on the horizon'
-                          : showCompleted ? 'No tasks match your filters' : 'No uncompleted tasks'}
-                  </p>
                 </div>
-              )}
-            </motion.div>
-          ) : (
-            Object.entries(groupedTasks).map(([groupKey, group]) => (
+                <p className="text-xl font-medium mb-2">
+                  {selectedListId
+                    ? 'This list is empty'
+                    : currentView === 'today'
+                      ? 'No tasks for today'
+                      : currentView === 'next7days'
+                        ? 'Nothing this week'
+                        : currentView === 'upcoming'
+                          ? 'No upcoming tasks'
+                          : 'Your task list is empty'}
+                </p>
+                <p className="text-sm text-muted-foreground/70 mb-8">
+                  {selectedListId
+                    ? 'Add a task to get started'
+                    : currentView === 'today'
+                      ? 'Schedule a task for today'
+                      : 'Create your first task and get things done'}
+                </p>
+                <Button onClick={onCreateTask} size="lg" className="transition-all duration-200 hover:scale-105 active:scale-95">
+                  <Plus className="size-4 mr-2" />
+                  Create Your First Task
+                </Button>
+              </div>
+            ) : (
+              <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
+                <CheckCircle2 className="size-20 mx-auto mb-4 text-green-500/30" />
+                <p className="text-lg font-medium mb-1">
+                  {currentView === 'today'
+                    ? 'All done for today!'
+                    : currentView === 'next7days'
+                      ? 'All set for the week!'
+                      : currentView === 'upcoming'
+                        ? 'Nothing upcoming'
+                        : 'All done!'}
+                </p>
+                <p className="text-sm text-muted-foreground/70">
+                  {currentView === 'today'
+                    ? 'Enjoy your free time'
+                    : currentView === 'next7days'
+                      ? 'Enjoy your week'
+                      : currentView === 'upcoming'
+                        ? 'No tasks on the horizon'
+                        : showCompleted ? 'No tasks match your filters' : 'No uncompleted tasks'}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          Object.entries(groupedTasks).map(([groupKey, group]) => (
               <TaskGroup
                 key={groupKey}
                 groupKey={groupKey}
@@ -526,17 +502,14 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               />
             ))
           )}
-        </AnimatePresence>
 
         {/* Scroll to top */}
         {tasks.length > 5 && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20
+          <button
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 animate-fade-in
               flex items-center gap-1.5 px-4 py-2 rounded-full
               bg-background border shadow-lg text-xs text-muted-foreground
-              hover:text-foreground hover:shadow-xl
+              hover:text-foreground hover:shadow-xl hover:-translate-y-0.5
               transition-all duration-200"
             onClick={() => {
               const container = document.querySelector('.overflow-y-auto')
@@ -546,7 +519,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           >
             <ChevronUp className="size-3.5" />
             Back to top
-          </motion.button>
+          </button>
         )}
       </div>
     </div>
