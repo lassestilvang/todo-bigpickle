@@ -101,7 +101,7 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
                 top: '50%',
                 color: p.color,
               }}
-              initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
+              initial={{ x: 0, y: 0, scale: 0.95, opacity: 0, rotate: 0 }}
               animate={{
                 x: p.x,
                 y: p.y + 20 * p.gravity,
@@ -109,7 +109,7 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
                 opacity: [0, 1, 1, 0],
                 rotate: p.rotation,
               }}
-              exit={{ opacity: 0, scale: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{
                 duration: 1 + (1 - p.gravity) * 0.4,
                 delay: p.delay,
@@ -143,7 +143,7 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
           ))}
           <m.span
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl"
-            initial={{ scale: 0, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{
               scale: [0, 1.8, 0.9, 1.3, 0],
               opacity: [0, 1, 1, 0.8, 0],

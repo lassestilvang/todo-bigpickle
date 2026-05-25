@@ -484,8 +484,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                   </div>
                   <m.div
                     className="absolute -top-1 -right-1"
-                    initial={{ scale: 0, rotate: -30 }}
-                    animate={{ scale: 1, rotate: 0 }}
+                    initial={{ scale: 0.95, opacity: 0, rotate: -30 }}
+                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.2 }}
                   >
                     <span className="text-lg">✨</span>
