@@ -1,10 +1,9 @@
 'use client'
 
-import { memo, useMemo, useState, useEffect, useCallback } from 'react'
+import { memo, useMemo, useCallback, useState, useEffect } from 'react'
 import { useAppStore, useShallow } from '@/store'
 import { useNow } from '@/hooks/use-now'
 import { useDebounce } from '@/hooks/use-debounce'
-import { LazyMotion, domAnimation, m } from 'framer-motion'
 import { ViewType } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -76,8 +75,6 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   useEffect(() => {
     setSearchQuery(debouncedSearch)
   }, [debouncedSearch, setSearchQuery])
-
-
 
   const handleSetSearchQuery = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearch(e.target.value)

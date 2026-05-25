@@ -47,12 +47,6 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   const isOverdue = task.deadline && task.deadline < now && !task.completed
   const [celebrating, setCelebrating] = useState(false)
   const wasCompleted = useRef(task.completed)
-  const [celebrationTick, dispatchCelebration] = useReducer((state: number, action: 'start' | 'end') => {
-    switch (action) {
-      case 'start': return state + 1
-      case 'end': return 0
-    }
-  }, 0)
 
   const [editingName, setEditingName] = useState(false)
   const [editValue, setEditValue] = useState('')
@@ -66,16 +60,12 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   useEffect(() => {
     if (task.completed && !wasCompleted.current) {
       wasCompleted.current = true
-      dispatchCelebration('start')
-      const endTimer = setTimeout(() => dispatchCelebration('end'), 800)
-      return () => clearTimeout(endTimer)
+      setCelebrating(true)
+      const timer = setTimeout(() => setCelebrating(false), 800)
+      return () => clearTimeout(timer)
     }
     wasCompleted.current = task.completed
   }, [task.completed])
-
-  useEffect(() => {
-    setCelebrating(celebrationTick > 0)
-  }, [celebrationTick])
 
   const startEditing = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
