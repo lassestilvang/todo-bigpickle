@@ -170,52 +170,6 @@
   background-repeat: repeat;
   background-size: 128px 128px;
 }
-  body {
-    @apply bg-background text-foreground;
-    transition: background-color 0.15s ease, color 0.15s ease;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    body {
-      transition: none;
-    }
-  }
-
-  ::selection {
-    background-color: var(--primary);
-    color: var(--primary-foreground);
-  }
-
-  /* Refined custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: oklch(0.5 0 0 / 0.12);
-    border-radius: 8px;
-    border: 1px solid transparent;
-    background-clip: content-box;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.5 0 0 / 0.25);
-    background-clip: content-box;
-  }
-
-  /* Subtle focus ring for cards */
-  [data-task-card]:focus-within {
-    outline: none;
-  }
-
-  [data-task-card]:focus-within > .card-focus-target {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-    border-radius: var(--radius);
-  }
-}
 
 [data-task-card] {
   content-visibility: auto;
