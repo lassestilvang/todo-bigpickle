@@ -261,6 +261,34 @@ describe('Store list actions', () => {
     expect(useAppStore.getState().lists).toHaveLength(1)
     expect(useAppStore.getState().error).toBe('Cannot delete the default list')
   })
+
+  it('should update a list', async () => {
+    const list = makeList({ id: 'l1', name: 'Old Name', isDefault: false })
+    useAppStore.setState({ lists: [list] })
+    mockApi.updateList.mockResolvedValue({ ...list, name: 'New Name' })
+
+    await useAppStore.getState().updateList('l1', { name: 'New Name' })
+
+    expect(useAppStore.getState().lists[0].name).toBe('New Name')
+  })
+
+  it('should handle updateList API failure', async () => {
+    const list = makeList({ id: 'l1', name: 'Old Name', isDefault: false })
+    useAppStore.setState({ lists: [list] })
+    mockApi.updateList.mockRejectedValue(new Error('Update failed'))
+
+    await expect(
+      useAppStore.getState().updateList('l1', { name: 'New Name' })
+    ).rejects.toThrow('Update failed')
+  })
+
+  it('should handle addList API failure', async () => {
+    mockApi.createList.mockRejectedValue(new Error('Create failed'))
+
+    await expect(
+      useAppStore.getState().addList({ name: 'Fail', color: '#000', icon: '', isDefault: false })
+    ).rejects.toThrow('Create failed')
+  })
 })
 
 describe('Store label actions', () => {
@@ -299,5 +327,35 @@ describe('Store label actions', () => {
 
     expect(useAppStore.getState().labels).toHaveLength(0)
     expect(useAppStore.getState().tasks[0].labels).toHaveLength(0)
+  })
+
+  it('should update a label', async () => {
+    const label = makeLabel({ id: 'lb1', name: 'Old' })
+    useAppStore.setState({ labels: [label] })
+    mockApi.updateLabel.mockResolvedValue({ ...label, name: 'Updated' })
+
+    await useAppStore.getState().updateLabel('lb1', { name: 'Updated' })
+
+    expect(useAppStore.getState().labels[0].name).toBe('Updated')
+  })
+
+  it('should handle updateLabel API failure', async () => {
+    const label = makeLabel({ id: 'lb1', name: 'Old' })
+    useAppStore.setState({ labels: [label] })
+    mockApi.updateLabel.mockRejectedValue(new Error('Update failed'))
+
+    await expect(
+      useAppStore.getState().updateLabel('lb1', { name: 'New' })
+    ).rejects.toThrow('Update failed')
+  })
+
+  it('should handle deleteLabel API failure', async () => {
+    const label = makeLabel({ id: 'lb1' })
+    useAppStore.setState({ labels: [label] })
+    mockApi.deleteLabel.mockRejectedValue(new Error('Delete failed'))
+
+    await expect(
+      useAppStore.getState().deleteLabel('lb1')
+    ).rejects.toThrow('Delete failed')
   })
 })

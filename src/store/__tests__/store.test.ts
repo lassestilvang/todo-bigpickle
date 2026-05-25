@@ -27,7 +27,7 @@ describe('AppStore', () => {
     useAppStore.getState().setSelectedListId(undefined)
     useAppStore.getState().setShowCompleted(false)
     useAppStore.getState().setSearchQuery('')
-    useAppStore.setState({ tasks: [], lists: [], labels: [] })
+    useAppStore.setState({ tasks: [], lists: [], labels: [], isLoading: false, error: null })
   })
 
   describe('View actions', () => {
@@ -49,6 +49,49 @@ describe('AppStore', () => {
     it('should set search query', () => {
       useAppStore.getState().setSearchQuery('test')
       expect(useAppStore.getState().searchQuery).toBe('test')
+    })
+  })
+
+  describe('Error handling', () => {
+    it('should clear error', () => {
+      useAppStore.setState({ error: 'Something went wrong' })
+      useAppStore.getState().clearError()
+      expect(useAppStore.getState().error).toBeNull()
+    })
+
+    it('should clear error when setting view', () => {
+      useAppStore.setState({ error: 'Oops' })
+      useAppStore.getState().setCurrentView('all')
+      expect(useAppStore.getState().error).toBeNull()
+    })
+  })
+
+  describe('loadData', () => {
+    it('should load tasks, lists, and labels', async () => {
+      useAppStore.setState({ isLoading: false })
+      const tasks = [{ id: 't1', name: 'Test' }] as Task[]
+      const lists = [{ id: 'l1', name: 'Inbox' }] as any[]
+      const labels = [{ id: 'lb1', name: 'Work' }] as any[]
+      mockApi.getTasks.mockResolvedValue(tasks)
+      mockApi.getLists.mockResolvedValue(lists)
+      mockApi.getLabels.mockResolvedValue(labels)
+
+      await useAppStore.getState().loadData()
+
+      expect(useAppStore.getState().tasks).toEqual(tasks)
+      expect(useAppStore.getState().lists).toEqual(lists)
+      expect(useAppStore.getState().labels).toEqual(labels)
+      expect(useAppStore.getState().isLoading).toBe(false)
+    })
+
+    it('should set error on load failure', async () => {
+      useAppStore.setState({ isLoading: false })
+      mockApi.getTasks.mockRejectedValue(new Error('Network error'))
+
+      await useAppStore.getState().loadData()
+
+      expect(useAppStore.getState().error).toBe('Network error')
+      expect(useAppStore.getState().isLoading).toBe(false)
     })
   })
 })

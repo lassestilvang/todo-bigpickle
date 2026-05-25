@@ -112,6 +112,98 @@ describe('updateTaskSchema', () => {
     const result = updateTaskSchema.safeParse({})
     expect(result.success).toBe(true)
   })
+
+  it('should accept partial with only priority', () => {
+    const result = updateTaskSchema.safeParse({ priority: 'high' })
+    expect(result.success).toBe(true)
+  })
+})
+
+describe('createTaskSchema - edge cases', () => {
+  it('should accept valid deadline datetime', () => {
+    const result = createTaskSchema.safeParse({
+      name: 'With Deadline',
+      listId: 'list-1',
+      deadline: '2026-06-01T12:00:00.000Z',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.deadline).toBeInstanceOf(Date)
+    }
+  })
+
+  it('should accept valid recurring type', () => {
+    const result = createTaskSchema.safeParse({
+      name: 'Recurring Task',
+      listId: 'list-1',
+      recurring: 'daily',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.recurring).toBe('daily')
+    }
+  })
+
+  it('should accept all recurring types', () => {
+    const types = ['daily', 'weekly', 'weekdays', 'monthly', 'yearly', 'custom'] as const
+    for (const t of types) {
+      const result = createTaskSchema.safeParse({ name: 'Task', listId: 'l1', recurring: t })
+      expect(result.success).toBe(true)
+    }
+  })
+
+  it('should reject invalid recurring type', () => {
+    const result = createTaskSchema.safeParse({
+      name: 'Task',
+      listId: 'list-1',
+      recurring: 'biweekly',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('should accept reminders array', () => {
+    const result = createTaskSchema.safeParse({
+      name: 'With Reminders',
+      listId: 'list-1',
+      reminders: ['2026-05-30T09:00:00.000Z', '2026-05-30T10:00:00.000Z'],
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.reminders).toHaveLength(2)
+      expect(result.data.reminders![0]).toBeInstanceOf(Date)
+    }
+  })
+
+  it('should accept attachments array', () => {
+    const result = createTaskSchema.safeParse({
+      name: 'With Attachments',
+      listId: 'list-1',
+      attachments: ['/path/to/file.pdf'],
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.attachments).toHaveLength(1)
+    }
+  })
+
+  it('should reject invalid priority string', () => {
+    const result = createTaskSchema.safeParse({
+      name: 'Task',
+      listId: 'list-1',
+      priority: 'super-high',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('should allow completed and completedAt together', () => {
+    const result = createTaskSchema.safeParse({
+      name: 'Completed Task',
+      listId: 'list-1',
+      completed: true,
+      completedAt: '2026-05-25T10:00:00.000Z',
+    })
+    expect(result.success).toBe(true)
+  })
 })
 
 describe('createListSchema', () => {

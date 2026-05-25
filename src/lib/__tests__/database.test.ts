@@ -352,5 +352,71 @@ describe('DatabaseService', () => {
       const tasks = db.getTasks()
       expect(tasks.filter(t => t.listId === testList.id)).toHaveLength(0)
     })
+
+    it('should handle unicode and special characters in names', () => {
+      const task = db.createTask({
+        name: 'Café résumé 🎉 中文 español',
+        description: 'Special chars: ©®™¡¿',
+        priority: 'medium',
+        labels: [],
+        subtasks: [],
+        listId: testList.id,
+      })
+      expect(task.name).toBe('Café résumé 🎉 中文 español')
+      expect(task.description).toBe('Special chars: ©®™¡¿')
+    })
+
+    it('should allow multiple tasks with same position', () => {
+      const t1 = db.createTask({ name: 'First', priority: 'low', labels: [], subtasks: [], listId: testList.id, position: 5 })
+      const t2 = db.createTask({ name: 'Second', priority: 'low', labels: [], subtasks: [], listId: testList.id, position: 5 })
+      const tasks = db.getTasks().filter(t => t.listId === testList.id)
+      expect(tasks.length).toBeGreaterThanOrEqual(2)
+      expect(tasks.every(t => t.position === 5)).toBe(true)
+    })
+  })
+})
+
+describe('Database reminders and attachments', () => {
+  let testList: List
+
+  beforeEach(() => {
+    testList = db.createList({ name: 'Reminder Test', color: '#000', icon: '', isDefault: false })
+  })
+
+  it('should create task with reminders', () => {
+    const task = db.createTask({
+      name: 'With Reminders',
+      priority: 'low',
+      labels: [],
+      subtasks: [],
+      listId: testList.id,
+      reminders: [new Date('2026-06-01T09:00:00Z'), new Date('2026-06-01T10:00:00Z')],
+    })
+    expect(task.reminders).toHaveLength(2)
+  })
+
+  it('should create task with attachments', () => {
+    const task = db.createTask({
+      name: 'With Attachments',
+      priority: 'low',
+      labels: [],
+      subtasks: [],
+      listId: testList.id,
+      attachments: ['/docs/report.pdf', '/images/photo.png'],
+    })
+    expect(task.attachments).toHaveLength(2)
+    expect(task.attachments![0]).toBe('/docs/report.pdf')
+  })
+
+  it('should handle empty reminders and attachments', () => {
+    const task = db.createTask({
+      name: 'Plain Task',
+      priority: 'low',
+      labels: [],
+      subtasks: [],
+      listId: testList.id,
+    })
+    expect(task.reminders).toHaveLength(0)
+    expect(task.attachments).toHaveLength(0)
   })
 })

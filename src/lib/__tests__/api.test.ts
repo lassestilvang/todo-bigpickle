@@ -163,4 +163,36 @@ describe('API error handling', () => {
     } as Response))
     expect(api.getTasks()).rejects.toThrow('Bad request')
   })
+
+  it('should handle JSON parse error in error response gracefully', async () => {
+    mockFetch.mockImplementation(async () => ({
+      ok: false,
+      json: async () => { throw new Error('Invalid JSON') },
+    } as Response))
+    expect(api.getTasks()).rejects.toThrow('Request failed')
+  })
+})
+
+describe('API abort handling', () => {
+  it('should pass abort signal to fetch', async () => {
+    const controller = new AbortController()
+    mockJson.mockResolvedValue([])
+    await api.getTasks(controller.signal)
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/tasks',
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    )
+  })
+})
+
+describe('API reorder edge cases', () => {
+  it('should send reorder payload correctly', async () => {
+    mockJson.mockResolvedValue({ success: true })
+    const reorder = [{ id: 't1', position: 2 }, { id: 't2', position: 0 }]
+    await api.reorderTasks(reorder)
+    expect(mockFetch).toHaveBeenCalledWith('/api/tasks', expect.objectContaining({
+      method: 'PATCH',
+      body: JSON.stringify({ reorder }),
+    }))
+  })
 })
