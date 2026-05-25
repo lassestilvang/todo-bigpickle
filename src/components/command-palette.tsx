@@ -229,8 +229,8 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
         </div>
         <div className="border-t px-4 py-2 flex items-center gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
-            <kbd className="inline-flex h-5 w-5 items-center justify-center rounded border bg-muted font-mono text-[10px] font-medium">↑</kbd>
-            <kbd className="inline-flex h-5 w-5 items-center justify-center rounded border bg-muted font-mono text-[10px] font-medium">↓</kbd>
+            <kbd className="inline-flex size-5 items-center justify-center rounded border bg-muted font-mono text-[10px] font-medium">↑</kbd>
+            <kbd className="inline-flex size-5 items-center justify-center rounded border bg-muted font-mono text-[10px] font-medium">↓</kbd>
             <span>navigate</span>
           </div>
           <div className="flex items-center gap-1">

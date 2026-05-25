@@ -432,7 +432,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           <div className="text-center py-20 animate-fade-in">
             {searchQuery ? (
               <div className="text-muted-foreground animate-fade-in">
-                <div className="relative mx-auto mb-6 w-20 h-20">
+                <div className="relative mx-auto mb-6 size-20">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-muted-foreground/10 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <SearchX className="size-10 text-muted-foreground/30" />
@@ -445,7 +445,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               </div>
             ) : allTasks.length === 0 ? (
               <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
-                <div className="relative mx-auto mb-8 w-32 h-32">
+                <div className="relative mx-auto mb-8 size-32">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent animate-pulse" style={{ animationDuration: '3s' }} />
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/5 to-transparent animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s', transform: 'scale(0.85)' }} />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -477,7 +477,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               </div>
             ) : (
               <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
-                <div className="relative mx-auto mb-6 w-24 h-24">
+                <div className="relative mx-auto mb-6 size-24">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <CheckCircle2 className="size-12 text-emerald-500/40" />
