@@ -39,6 +39,175 @@ interface TaskFormProps {
   onClose: () => void
 }
 
+function DatePickerField({
+  value,
+  onChange,
+  label,
+  placeholder,
+  presets,
+}: {
+  value: Date | undefined
+  onChange: (date: Date | undefined) => void
+  label: string
+  placeholder: string
+  presets?: { label: string; getValue: () => Date }[]
+}) {
+  return (
+    <div className="space-y-2">
+      <FormLabel className="text-sm font-medium">{label}</FormLabel>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full justify-start text-left font-normal h-10">
+            <CalendarIcon className="mr-2 size-4 shrink-0" />
+            <span className="truncate">
+              {value ? format(value, 'PPP') : placeholder}
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          {presets && (
+            <div className="flex gap-1 p-2 border-b">
+              {presets.map(preset => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => onChange(preset.getValue())}
+                  className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <Calendar mode="single" selected={value} onSelect={onChange} initialFocus />
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
+
+function LabelsPicker({
+  labels,
+  selectedLabels,
+  onToggle,
+}: {
+  labels: { id: string; name: string; color: string; icon: string }[]
+  selectedLabels: string[]
+  onToggle: (id: string) => void
+}) {
+  return (
+    <div className="space-y-2">
+      <FormLabel className="text-sm font-medium">Labels</FormLabel>
+      <div className="flex flex-wrap gap-1.5">
+        {labels.map((label) => {
+          const isSelected = selectedLabels.includes(label.id)
+          return (
+            <Badge
+              key={label.id}
+              variant={isSelected ? 'default' : 'outline'}
+              className="cursor-pointer transition-all duration-150 hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: isSelected ? label.color : undefined,
+                borderColor: label.color,
+                color: isSelected ? 'white' : label.color,
+              }}
+              onClick={() => onToggle(label.id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onToggle(label.id)
+                }
+              }}
+            >
+              {label.icon} {label.name}
+            </Badge>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function SubtasksEditor({
+  subtasks,
+  newSubtask,
+  onNewSubtaskChange,
+  onAdd,
+  onRemove,
+  onToggle,
+  inputRef,
+}: {
+  subtasks: { id: string; title: string; completed: boolean }[]
+  newSubtask: string
+  onNewSubtaskChange: (value: string) => void
+  onAdd: () => void
+  onRemove: (id: string) => void
+  onToggle: (id: string) => void
+  inputRef: React.RefObject<HTMLInputElement | null>
+}) {
+  return (
+    <div className="space-y-3">
+      <FormLabel className="text-sm font-medium">Subtasks</FormLabel>
+      <div className="flex gap-2">
+        <Input
+          ref={inputRef}
+          value={newSubtask}
+          onChange={(e) => onNewSubtaskChange(e.target.value)}
+          placeholder="Add a subtask..."
+          className="h-9"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              onAdd()
+            }
+          }}
+        />
+        <Button type="button" onClick={onAdd} size="sm" variant="secondary" className="shrink-0">
+          <Plus className="size-4" />
+        </Button>
+      </div>
+      <AnimatePresence>
+        {subtasks.map((subtask) => (
+          <m.div
+            key={subtask.id}
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center gap-2.5 p-2.5 bg-muted/50 rounded-lg border border-border/50"
+          >
+            <Checkbox
+              checked={subtask.completed}
+              onCheckedChange={() => onToggle(subtask.id)}
+              className="shrink-0"
+            />
+            <span className={`flex-1 text-sm ${subtask.completed ? 'line-through text-muted-foreground' : ''}`}>
+              {subtask.title}
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onRemove(subtask.id)}
+              className="shrink-0 size-7 p-0 text-muted-foreground hover:text-destructive"
+            >
+              <X className="size-3.5" />
+            </Button>
+          </m.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+const datePresets: { label: string; getValue: () => Date }[] = [
+  { label: 'Today', getValue: () => new Date() },
+  { label: 'Tomorrow', getValue: () => addDays(new Date(), 1) },
+  { label: 'Next Week', getValue: () => addWeeks(new Date(), 1) },
+]
+
 const priorityOptions = [
   { value: 'none', label: 'None' },
   { value: 'low', label: 'Low' },
@@ -57,15 +226,9 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
     task?.subtasks.map(st => ({ id: st.id, title: st.title, completed: st.completed })) || []
   )
   const [newSubtask, setNewSubtask] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitState, setSubmitState] = useState<{ isSubmitting: boolean; error: string | null }>({ isSubmitting: false, error: null })
   const subtaskIdCounter = useRef(0)
   const newSubtaskRef = useRef<HTMLInputElement>(null)
-  const [datePresets] = useState(() => [
-    { label: 'Today', getValue: () => new Date() },
-    { label: 'Tomorrow', getValue: () => addDays(new Date(), 1) },
-    { label: 'Next Week', getValue: () => addWeeks(new Date(), 1) },
-  ])
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -94,7 +257,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   }, [isOpen, form])
 
   const onSubmit = async (data: TaskFormData) => {
-    setSubmitError(null)
+    setSubmitState(prev => ({ ...prev, error: null }))
 
     const estimateMinutes = data.estimate ?
       parseInt(data.estimate.split(':')[0]) * 60 + parseInt(data.estimate.split(':')[1]) :
@@ -111,7 +274,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
       completed: task?.completed || false,
     }
 
-    setIsSubmitting(true)
+    setSubmitState(prev => ({ ...prev, isSubmitting: true }))
     try {
       if (task) {
         await updateTask(task.id, taskData as Parameters<typeof updateTask>[1])
@@ -120,9 +283,9 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
       }
       onClose()
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Failed to save task')
+      setSubmitState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Failed to save task' }))
     } finally {
-      setIsSubmitting(false)
+      setSubmitState(prev => ({ ...prev, isSubmitting: false }))
     }
   }
 
@@ -171,9 +334,9 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 pt-4 space-y-5">
-          {submitError && (
+          {submitState.error && (
             <div className="p-3 text-sm text-red-500 bg-red-500/5 border border-red-500/20 rounded-lg">
-              {submitError}
+              {submitState.error}
             </div>
           )}
 
@@ -201,67 +364,19 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <FormLabel className="text-sm font-medium">Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal h-10"
-                  >
-                    <CalendarIcon className="mr-2 size-4 shrink-0" />
-                    <span className="truncate">
-                      {dateValue ? format(dateValue, 'PPP') : 'Pick a date'}
-                    </span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <div className="flex gap-1 p-2 border-b">
-                    {datePresets.map(preset => (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => form.setValue('date', preset.getValue())}
-                        className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors"
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
-                  <Calendar
-                    mode="single"
-                    selected={dateValue}
-                    onSelect={(date) => form.setValue('date', date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <FormLabel className="text-sm font-medium">Deadline</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal h-10"
-                  >
-                    <CalendarIcon className="mr-2 size-4 shrink-0" />
-                    <span className="truncate">
-                      {deadlineValue ? format(deadlineValue, 'PPP') : 'Pick a deadline'}
-                    </span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={deadlineValue}
-                    onSelect={(date) => form.setValue('deadline', date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            <DatePickerField
+              value={dateValue}
+              onChange={(date) => form.setValue('date', date)}
+              label="Date"
+              placeholder="Pick a date"
+              presets={datePresets}
+            />
+            <DatePickerField
+              value={deadlineValue}
+              onChange={(date) => form.setValue('deadline', date)}
+              label="Deadline"
+              placeholder="Pick a deadline"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -329,89 +444,21 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <FormLabel className="text-sm font-medium">Labels</FormLabel>
-            <div className="flex flex-wrap gap-1.5">
-              {labels.map((label) => {
-                const isSelected = selectedLabels.includes(label.id)
-                return (
-                  <Badge
-                    key={label.id}
-                    variant={isSelected ? 'default' : 'outline'}
-                    className="cursor-pointer transition-all duration-150 hover:scale-105 active:scale-95"
-                    style={{
-                      backgroundColor: isSelected ? label.color : undefined,
-                      borderColor: label.color,
-                      color: isSelected ? 'white' : label.color,
-                    }}
-                    onClick={() => toggleLabel(label.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        toggleLabel(label.id)
-                      }
-                    }}
-                  >
-                    {label.icon} {label.name}
-                  </Badge>
-                )
-              })}
-            </div>
-          </div>
+          <LabelsPicker
+            labels={labels}
+            selectedLabels={selectedLabels}
+            onToggle={toggleLabel}
+          />
 
-          <div className="space-y-3">
-            <FormLabel className="text-sm font-medium">Subtasks</FormLabel>
-            <div className="flex gap-2">
-              <Input
-                ref={newSubtaskRef}
-                value={newSubtask}
-                onChange={(e) => setNewSubtask(e.target.value)}
-                placeholder="Add a subtask..."
-                className="h-9"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addSubtask()
-                  }
-                }}
-              />
-              <Button type="button" onClick={addSubtask} size="sm" variant="secondary" className="shrink-0">
-                <Plus className="size-4" />
-              </Button>
-            </div>
-            <AnimatePresence>
-              {subtasks.map((subtask) => (
-                <m.div
-                  key={subtask.id}
-                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                  animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
-                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-2.5 p-2.5 bg-muted/50 rounded-lg border border-border/50"
-                >
-                  <Checkbox
-                    checked={subtask.completed}
-                    onCheckedChange={() => toggleSubtask(subtask.id)}
-                    className="shrink-0"
-                  />
-                  <span className={`flex-1 text-sm ${subtask.completed ? 'line-through text-muted-foreground' : ''}`}>
-                    {subtask.title}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeSubtask(subtask.id)}
-                    className="shrink-0 size-7 p-0 text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="size-3.5" />
-                  </Button>
-                </m.div>
-              ))}
-            </AnimatePresence>
-          </div>
+          <SubtasksEditor
+            subtasks={subtasks}
+            newSubtask={newSubtask}
+            onNewSubtaskChange={setNewSubtask}
+            onAdd={addSubtask}
+            onRemove={removeSubtask}
+            onToggle={toggleSubtask}
+            inputRef={newSubtaskRef}
+          />
 
           <DialogFooter className="pt-2">
             {task && (
@@ -431,8 +478,8 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
+            <Button type="submit" disabled={submitState.isSubmitting}>
+              {submitState.isSubmitting ? (
                 <>
                   <Loader2 className="size-4 mr-2 animate-spin" />
                   {task ? 'Updating...' : 'Creating...'}
