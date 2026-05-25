@@ -113,7 +113,6 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
   const deleteTask = useAppStore(s => s.deleteTask)
   const reorderTasks = useAppStore(s => s.reorderTasks)
-  const reorderVersion = useAppStore(s => s.reorderVersion)
   const addTask = useAppStore(s => s.addTask)
   const currentView = useAppStore(s => s.currentView)
   const selectedListId = useAppStore(s => s.selectedListId)
@@ -125,7 +124,6 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const [quickAddText, setQuickAddText] = useState('')
   const quickAddRef = useRef<HTMLInputElement>(null)
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
-  const prevReorderVersion = useRef(reorderVersion)
   const flatTasksRef = useRef<Task[]>([])
 
   useEffect(() => {
@@ -261,43 +259,19 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [sortedTasks, currentView])
 
   // Stable content-based key to prevent unnecessary effect re-runs
-  const groupedTasksKey = useMemo(() => {
-    return Object.entries(groupedTasks).map(([key, group]) =>
-      `${key}:${group.tasks.map(t => t.id).join(',')}`
-    ).join('|')
-  }, [groupedTasks])
-
   // Keep ref updated
   useEffect(() => {
     flatTasksRef.current = Object.values(groupedTasks).flatMap(g => g.tasks)
   })
 
-  const prevCustomOrderRef = useRef<Record<string, Task[]>>({})
   const customOrder = useMemo(() => {
-    if (sortBy !== 'custom') {
-      prevCustomOrderRef.current = {}
-      return {}
-    }
-    const shouldReset = prevReorderVersion.current !== reorderVersion
-    if (shouldReset) {
-      prevReorderVersion.current = reorderVersion
-    }
-    const prevMap = new Map(shouldReset ? [] : Object.entries(prevCustomOrderRef.current))
+    if (sortBy !== 'custom') return {}
     const next: Record<string, Task[]> = {}
     for (const [key, group] of Object.entries(groupedTasks)) {
-      const prevGroup = prevMap.get(key)
-      const currentIds = new Set(prevGroup?.map(t => t.id) || [])
-      const sameIds = currentIds.size === group.tasks.length &&
-        group.tasks.every(t => currentIds.has(t.id))
-      if (sameIds && prevGroup) {
-        next[key] = prevGroup
-      } else {
-        next[key] = group.tasks
-      }
+      next[key] = group.tasks
     }
-    prevCustomOrderRef.current = next
     return next
-  }, [sortBy, groupedTasks, reorderVersion])
+  }, [sortBy, groupedTasks])
 
   const onEditTaskEvent = useEffectEvent(onEditTask)
 

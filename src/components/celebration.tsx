@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useRef, useMemo } from 'react'
+import { memo } from 'react'
 import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion'
 
 interface CelebrationProps {
@@ -71,20 +71,14 @@ function SquareShape({ size }: { size: number }) {
 }
 
 export const Celebration = memo(function Celebration({ active }: CelebrationProps) {
-  const generation = useRef(0)
-
-  const particles = useMemo(() => {
-    generation.current += 1
-    void active
-    return createParticles()
-  }, [active])
+  const particles = createParticles()
 
   return (
     <LazyMotion features={domAnimation}>
     <AnimatePresence>
       {active && (
         <m.div
-          key={generation.current}
+          key={active ? 'celebrating' : 'idle'}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
