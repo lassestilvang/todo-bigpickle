@@ -202,8 +202,9 @@ export const useAppStore = create<AppStore>()(
         const prevTasks = get().tasks.map(t => ({ ...t }))
         set((state) => {
           const updated = [...state.tasks]
+          const taskMap = new Map(updated.map(t => [t.id, t]))
           for (const item of reorder) {
-            const task = updated.find(t => t.id === item.id)
+            const task = taskMap.get(item.id)
             if (task) task.position = item.position
           }
           updated.sort((a, b) => a.position - b.position)

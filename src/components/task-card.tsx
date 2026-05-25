@@ -164,15 +164,22 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
-                  <h3
-                    className={`font-semibold truncate cursor-text transition-all duration-200
+                  <button
+                    type="button"
+                    className={`font-semibold truncate cursor-text transition-all duration-200 text-left w-full
                       hover:text-primary
                       ${task.completed ? 'line-through text-muted-foreground/70' : ''}
                     `}
                     onClick={startEditing}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation()
+                        startEditing(e as unknown as React.MouseEvent)
+                      }
+                    }}
                   >
                     {task.name}
-                  </h3>
+                  </button>
                 )}
                 {isOverdue && !editingName && (
                   <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[10px] font-semibold whitespace-nowrap border border-red-500/20 shrink-0 animate-in shadow-sm shadow-red-500/10">

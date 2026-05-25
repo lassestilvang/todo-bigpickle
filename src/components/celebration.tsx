@@ -75,8 +75,8 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
 
   const particles = useMemo(() => {
     generation.current += 1
+    void active
     return createParticles()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active])
 
   return (

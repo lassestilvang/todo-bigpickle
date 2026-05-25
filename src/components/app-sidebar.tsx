@@ -135,7 +135,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           >
             <CheckCircle2 className="size-5 text-primary" />
           </m.div>
-          <span className="font-bold text-lg tracking-tight bg-gradient-to-br from-foreground to-foreground/80 bg-clip-text">Todo</span>
+          <span className="font-bold text-lg tracking-tight">Todo</span>
         </div>
         <div className="px-2 pb-2 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50" />

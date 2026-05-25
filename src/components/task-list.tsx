@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { memo, useState, useMemo, useCallback, useRef, useEffect, useEffectEvent } from 'react'
 import { Task } from '@/types'
 import { useAppStore, useShallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
@@ -54,7 +54,7 @@ interface TaskGroupProps {
   date: Date | null
   customOrderTasks: Task[] | undefined
   sortBy: string
-  onReorder: (tasks: Task[]) => void
+  onReorder: (groupKey: string, tasks: Task[]) => void
   onToggleComplete: (id: string) => void
   onEditTask: (task: Task) => void
   onDeleteTask: (id: string) => void
@@ -79,7 +79,7 @@ const TaskGroup = memo(function TaskGroup({
       <Reorder.Group
         axis="y"
         values={customOrderTasks || tasks}
-        onReorder={onReorder}
+        onReorder={(reordered) => onReorder(groupKey, reordered)}
         className="space-y-2"
         layoutScroll
       >
@@ -106,7 +106,7 @@ const TaskGroup = memo(function TaskGroup({
   if (prev.groupKey !== next.groupKey) return false
   if (prev.sortBy !== next.sortBy) return false
   if (prev.tasks.length !== next.tasks.length) return false
-  return prev.tasks.every((t, i) => t.id === next.tasks[i].id && t.completed === next.tasks[i].completed && t.position === next.tasks[i].position)
+  return prev.tasks.length === next.tasks.length && prev.tasks.every((t, i) => t.id === next.tasks[i].id && t.completed === next.tasks[i].completed && t.position === next.tasks[i].position)
 })
 
 export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
@@ -305,6 +305,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     }
   }, [sortBy, groupedTasksKey, reorderVersion])
 
+  const onEditTaskEvent = useEffectEvent(onEditTask)
+
   useEffect(() => {
     const tasks = flatTasksRef.current
     if (tasks.length === 0) return
@@ -332,14 +334,14 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
         const isInCard = target?.closest('[data-task-card]')
         if (isInCard && !isInput) {
           e.preventDefault()
-          onEditTask(currentTasks[focusedTaskIndex])
+          onEditTaskEvent(currentTasks[focusedTaskIndex])
         }
       }
     }
 
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [focusedTaskIndex, onEditTask])
+  }, [focusedTaskIndex])
 
   const cycleSort = useCallback(() => {
     setSortBy(prev => prev === 'date' ? 'priority' : prev === 'priority' ? 'name' : prev === 'name' ? 'custom' : 'date')
@@ -352,6 +354,12 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     }))
     reorderTasks(updates)
   }, [reorderTasks])
+
+  const handleGroupReorder = useCallback((_groupKey: string, reordered: Task[]) => {
+    if (sortBy !== 'custom') return
+    setCustomOrder(prev => ({ ...prev, [_groupKey]: reordered }))
+    handleReorder(reordered)
+  }, [sortBy, handleReorder])
 
   const handleToggleComplete = useCallback((id: string) => {
     toggleTaskComplete(id)
@@ -446,8 +454,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
             ) : allTasks.length === 0 ? (
               <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
                 <div className="relative mx-auto mb-8 size-32">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent animate-pulse" style={{ animationDuration: '3s' }} />
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/5 to-transparent animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s', transform: 'scale(0.85)' }} />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent animate-pulse" style={{ animationDuration: '0.8s' }} />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/5 to-transparent animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.5s', transform: 'scale(0.85)' }} />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <Sparkles className="size-12 text-primary/40" />
                   </div>
@@ -522,11 +530,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 date={group.date}
                 customOrderTasks={customOrder[groupKey]}
                 sortBy={sortBy}
-                onReorder={(reordered) => {
-                  if (sortBy !== 'custom') return
-                  setCustomOrder(prev => ({ ...prev, [groupKey]: reordered }))
-                  handleReorder(reordered)
-                }}
+                onReorder={handleGroupReorder}
                 onToggleComplete={handleToggleComplete}
                 onEditTask={onEditTask}
                 onDeleteTask={handleDeleteTask}
