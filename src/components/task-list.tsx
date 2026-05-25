@@ -207,15 +207,21 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     return filtered
   }, [allTasks, currentView, selectedListId, showCompleted])
 
-  // Step 2: apply Fuse.js search on top of baseTasks
+  // Step 2: apply cached Fuse.js search on top of baseTasks
+  const fuseRef = useRef<{ tasks: Task[]; fuse: Fuse<Task> } | null>(null)
   const tasks = useMemo(() => {
     if (!searchQuery) return baseTasks
 
-    const fuse = new Fuse(baseTasks, {
-      keys: ['name', 'description'],
-      threshold: 0.3,
-    })
-    return fuse.search(searchQuery).map(r => r.item)
+    if (!fuseRef.current || fuseRef.current.tasks !== baseTasks) {
+      fuseRef.current = {
+        tasks: baseTasks,
+        fuse: new Fuse(baseTasks, {
+          keys: ['name', 'description'],
+          threshold: 0.3,
+        }),
+      }
+    }
+    return fuseRef.current.fuse.search(searchQuery).map(r => r.item)
   }, [baseTasks, searchQuery])
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
 
