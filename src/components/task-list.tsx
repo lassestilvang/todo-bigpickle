@@ -106,7 +106,7 @@ const TaskGroup = memo(function TaskGroup({
   if (prev.groupKey !== next.groupKey) return false
   if (prev.sortBy !== next.sortBy) return false
   if (prev.tasks.length !== next.tasks.length) return false
-  return prev.tasks.every((t, i) => t === next.tasks[i])
+  return prev.tasks.every((t, i) => t.id === next.tasks[i].id && t.completed === next.tasks[i].completed && t.position === next.tasks[i].position)
 })
 
 export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
@@ -207,15 +207,18 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     return filtered
   }, [allTasks, currentView, selectedListId, showCompleted])
 
-  // Step 2: apply Fuse.js search on top of baseTasks
+  // Step 2: apply Fuse.js search on top of baseTasks - cached fuse instance
+  const fuseRef = useRef<Fuse<Task> | null>(null)
   const tasks = useMemo(() => {
     if (!searchQuery) return baseTasks
 
-    const fuse = new Fuse(baseTasks, {
-      keys: ['name', 'description'],
-      threshold: 0.3,
-    })
-    return fuse.search(searchQuery).map(r => r.item)
+    if (!fuseRef.current || fuseRef.current._docs !== baseTasks) {
+      fuseRef.current = new Fuse(baseTasks, {
+        keys: ['name', 'description'],
+        threshold: 0.3,
+      })
+    }
+    return fuseRef.current.search(searchQuery).map(r => r.item)
   }, [baseTasks, searchQuery])
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
 
@@ -343,13 +346,21 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     setSortBy(prev => prev === 'date' ? 'priority' : prev === 'priority' ? 'name' : prev === 'name' ? 'custom' : 'date')
   }, [])
 
-  const handleReorder = useCallback((group: typeof sortedTasks) => {
+  const handleReorder = useCallback((group: Task[]) => {
     const updates = group.map((task, idx) => ({
       id: task.id,
       position: idx,
     }))
     reorderTasks(updates)
   }, [reorderTasks])
+
+  const handleToggleComplete = useCallback((id: string) => {
+    toggleTaskComplete(id)
+  }, [toggleTaskComplete])
+
+  const handleDeleteTask = useCallback((id: string) => {
+    deleteTask(id)
+  }, [deleteTask])
 
   const ViewIcon = viewIcons[currentView as keyof typeof viewIcons] || LayoutList
   const isEmpty = Object.entries(groupedTasks).length === 0
@@ -496,9 +507,9 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                   setCustomOrder(prev => ({ ...prev, [groupKey]: reordered }))
                   handleReorder(reordered)
                 }}
-                onToggleComplete={toggleTaskComplete}
+                onToggleComplete={handleToggleComplete}
                 onEditTask={onEditTask}
-                onDeleteTask={deleteTask}
+                onDeleteTask={handleDeleteTask}
               />
             ))
           )}
