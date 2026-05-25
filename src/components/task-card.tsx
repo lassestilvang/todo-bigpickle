@@ -29,10 +29,10 @@ interface TaskCardProps {
 }
 
 const priorityConfig = {
-  high: { color: 'bg-red-500', label: 'High', bar: 'bg-red-500', border: 'border-l-red-500', text: 'text-red-500', gradient: 'from-red-500/20 to-transparent' },
-  medium: { color: 'bg-amber-500', label: 'Medium', bar: 'bg-amber-500', border: 'border-l-amber-500', text: 'text-amber-500', gradient: 'from-amber-500/20 to-transparent' },
-  low: { color: 'bg-emerald-500', label: 'Low', bar: 'bg-emerald-500', border: 'border-l-emerald-500', text: 'text-emerald-500', gradient: 'from-emerald-500/20 to-transparent' },
-  none: { color: 'bg-zinc-400', label: 'None', bar: 'bg-zinc-400', border: 'border-l-zinc-400', text: 'text-zinc-400', gradient: 'from-zinc-400/10 to-transparent' },
+  high: { color: 'bg-red-500', label: 'High', bar: 'from-red-500 to-red-400', border: 'border-l-red-500', text: 'text-red-500', gradient: 'from-red-500/20 to-transparent', badge: 'bg-red-500/10 text-red-500 border-red-500/20', ring: 'ring-red-500/20' },
+  medium: { color: 'bg-amber-500', label: 'Medium', bar: 'from-amber-500 to-amber-400', border: 'border-l-amber-500', text: 'text-amber-500', gradient: 'from-amber-500/20 to-transparent', badge: 'bg-amber-500/10 text-amber-500 border-amber-500/20', ring: 'ring-amber-500/20' },
+  low: { color: 'bg-emerald-500', label: 'Low', bar: 'from-emerald-500 to-emerald-400', border: 'border-l-emerald-500', text: 'text-emerald-500', gradient: 'from-emerald-500/20 to-transparent', badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', ring: 'ring-emerald-500/20' },
+  none: { color: 'bg-zinc-400', label: 'None', bar: 'from-zinc-400 to-zinc-300', border: 'border-l-zinc-400', text: 'text-zinc-400', gradient: 'from-zinc-400/10 to-transparent', badge: 'bg-muted text-muted-foreground border-border', ring: 'ring-border' },
 } as const
 
 function formatRelativeDate(date: Date): string {
@@ -94,16 +94,15 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   return (
     <div
       data-task-card
-      className="task-card-motion task-card-enter"
+      className="task-card-motion"
     >
       <Card
-        className={`group/card relative cursor-pointer transition-all duration-200 ease-out
-          hover:shadow-xl hover:-translate-y-1 active:translate-y-0
-          dark:hover:shadow-primary/5
+        className={`group/card relative cursor-pointer transition-all duration-300 ease-out
+          hover:shadow-xl hover:-translate-y-[2px] active:translate-y-0
+          dark:hover:shadow-primary/5 dark:hover:shadow-2xl
           bg-background hover:bg-accent/30
-          border-border/60 hover:border-border
-          ${task.completed ? 'opacity-60 saturate-50' : 'shadow-sm'}
-          ${isOverdue ? 'border-l-[3px] border-l-red-500' : priority.border + ' border-l-[3px]'}
+          border-border/60 hover:border-border/80
+          ${task.completed ? 'opacity-60 saturate-50' : 'shadow-sm hover:shadow-primary/5'}
           overflow-hidden
         `}
         onClick={() => { if (!editingName) onEdit(task) }}
@@ -119,15 +118,18 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
           }
         }}
       >
-        <div className={`absolute inset-0 bg-gradient-to-r opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none ${priority.gradient}`} />
+        {/* Priority gradient bar at top */}
+        <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${priority.bar} opacity-60 group-hover/card:opacity-100 transition-opacity duration-300`} />
 
-        <CardContent className="p-4 relative">
+        <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none ${priority.gradient}`} />
+
+        <CardContent className="p-4 pt-[14px] relative">
           <div className="flex items-start gap-3">
 
             <Celebration active={celebrating} />
 
             <div className="flex flex-col items-center gap-1.5 pt-0.5">
-              <div className="opacity-0 group-hover/card:opacity-50 group-focus-within/card:opacity-50 transition-all duration-200 hover:opacity-100">
+              <div className="opacity-0 group-hover/card:opacity-40 group-focus-within/card:opacity-40 transition-all duration-200 hover:opacity-100">
                 <GripVertical
                   className="size-3.5 text-muted-foreground/60 cursor-grab active:cursor-grabbing hover:text-muted-foreground transition-colors"
                   aria-label="Drag to reorder"
@@ -138,10 +140,10 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                 onCheckedChange={() => onToggleComplete(task.id)}
                 onClick={(e) => e.stopPropagation()}
                 aria-label={`Mark "${task.name}" as ${task.completed ? 'incomplete' : 'complete'}`}
-                className={`transition-all duration-200 hover:scale-110 active:scale-95
+                className={`transition-all duration-200 hover:scale-110 active:scale-90
                   ${task.completed
                     ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:shadow-md data-[state=checked]:shadow-emerald-500/30'
-                    : 'hover:border-emerald-400'
+                    : 'hover:border-emerald-400 hover:shadow-sm hover:shadow-emerald-500/20'
                   }`}
               />
             </div>
@@ -164,7 +166,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                   />
                 ) : (
                   <h3
-                    className={`font-semibold truncate cursor-text transition-colors
+                    className={`font-semibold truncate cursor-text transition-all duration-200
                       hover:text-primary
                       ${task.completed ? 'line-through text-muted-foreground/70' : ''}
                     `}
@@ -174,10 +176,10 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                   </h3>
                 )}
                 {isOverdue && !editingName && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[10px] font-semibold whitespace-nowrap border border-red-500/20 shrink-0 animate-in">
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[10px] font-semibold whitespace-nowrap border border-red-500/20 shrink-0 animate-in shadow-sm shadow-red-500/10">
                     <AlertTriangle className="size-3" data-testid="alert-triangle" />
                     Overdue
-                  </span>
+                  </div>
                 )}
               </div>
 
@@ -215,9 +217,9 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                   </div>
                 )}
 
-                <div className="flex items-center gap-1">
+                <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border ${priority.badge}`}>
                   <Flag className={`size-3 ${priority.text}`} />
-                  <span className={`text-[10px] font-semibold ${priority.text}`}>
+                  <span className={`text-[10px] font-semibold`}>
                     {priority.label}
                   </span>
                 </div>
@@ -254,10 +256,10 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
 
               {totalSubtasks > 0 && (
                 <div className="mt-3 pl-0.5">
-                  <div className="h-1.5 bg-muted/70 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-muted/70 rounded-full overflow-hidden ring-1 ring-inset ring-black/[0.02]">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ease-out ${
-                        progress >= 1 ? 'bg-emerald-500' : 'bg-primary/70'
+                      className={`h-full rounded-full transition-all duration-700 ease-out ${
+                        progress >= 1 ? 'bg-emerald-500' : 'bg-primary/60'
                       }`}
                       style={{ width: `${progress * 100}%` }}
                     />
