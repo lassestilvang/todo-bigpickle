@@ -124,11 +124,9 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name' | 'custom'>('custom')
   const [quickAddText, setQuickAddText] = useState('')
   const quickAddRef = useRef<HTMLInputElement>(null)
-  const [customOrder, setCustomOrder] = useState<Record<string, Task[]>>({})
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
   const prevReorderVersion = useRef(reorderVersion)
   const flatTasksRef = useRef<Task[]>([])
-  const groupedTasksRef = useRef<Record<string, { date: Date | null; tasks: Task[] }>>(undefined as unknown as Record<string, { date: Date | null; tasks: Task[] }>)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -269,39 +267,37 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     ).join('|')
   }, [groupedTasks])
 
-  // Keep refs updated
+  // Keep ref updated
   useEffect(() => {
     flatTasksRef.current = Object.values(groupedTasks).flatMap(g => g.tasks)
-    groupedTasksRef.current = groupedTasks
   })
 
-  useEffect(() => {
-    const currentGrouped = groupedTasksRef.current
-    if (sortBy === 'custom') {
-      const shouldReset = prevReorderVersion.current !== reorderVersion
-      if (shouldReset) {
-        prevReorderVersion.current = reorderVersion
-      }
-      setCustomOrder(prev => {
-        const prevMap = new Map(shouldReset ? [] : Object.entries(prev))
-        const next: Record<string, Task[]> = {}
-        for (const [key, group] of Object.entries(currentGrouped)) {
-          const prevGroup = prevMap.get(key)
-          const currentIds = new Set(prevGroup?.map(t => t.id) || [])
-          const sameIds = currentIds.size === group.tasks.length &&
-            group.tasks.every(t => currentIds.has(t.id))
-          if (sameIds && prevGroup) {
-            next[key] = prevGroup
-          } else {
-            next[key] = group.tasks
-          }
-        }
-        return next
-      })
-    } else {
-      setCustomOrder({})
+  const prevCustomOrderRef = useRef<Record<string, Task[]>>({})
+  const customOrder = useMemo(() => {
+    if (sortBy !== 'custom') {
+      prevCustomOrderRef.current = {}
+      return {}
     }
-  }, [sortBy, groupedTasksKey, reorderVersion])
+    const shouldReset = prevReorderVersion.current !== reorderVersion
+    if (shouldReset) {
+      prevReorderVersion.current = reorderVersion
+    }
+    const prevMap = new Map(shouldReset ? [] : Object.entries(prevCustomOrderRef.current))
+    const next: Record<string, Task[]> = {}
+    for (const [key, group] of Object.entries(groupedTasks)) {
+      const prevGroup = prevMap.get(key)
+      const currentIds = new Set(prevGroup?.map(t => t.id) || [])
+      const sameIds = currentIds.size === group.tasks.length &&
+        group.tasks.every(t => currentIds.has(t.id))
+      if (sameIds && prevGroup) {
+        next[key] = prevGroup
+      } else {
+        next[key] = group.tasks
+      }
+    }
+    prevCustomOrderRef.current = next
+    return next
+  }, [sortBy, groupedTasks, reorderVersion])
 
   const onEditTaskEvent = useEffectEvent(onEditTask)
 
@@ -354,10 +350,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [reorderTasks])
 
   const handleGroupReorder = useCallback((_groupKey: string, reordered: Task[]) => {
-    if (sortBy !== 'custom') return
-    setCustomOrder(prev => ({ ...prev, [_groupKey]: reordered }))
     handleReorder(reordered)
-  }, [sortBy, handleReorder])
+  }, [handleReorder])
 
   const handleToggleComplete = useCallback((id: string) => {
     toggleTaskComplete(id)
