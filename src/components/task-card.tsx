@@ -45,7 +45,10 @@ function formatRelativeDate(date: Date): string {
 export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit, onDelete }: TaskCardProps) {
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
-  const [celebrating, setCelebrating] = useState(false)
+  const [celebrating, dispatchCelebration] = useReducer(
+    (state: boolean, action: 'celebrate' | 'stop') => action === 'celebrate',
+    false
+  )
   const wasCompleted = useRef(task.completed)
 
   const [editingName, setEditingName] = useState(false)
@@ -60,8 +63,8 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   useEffect(() => {
     if (task.completed && !wasCompleted.current) {
       wasCompleted.current = true
-      setCelebrating(true)
-      const timer = setTimeout(() => setCelebrating(false), 800)
+      dispatchCelebration('celebrate')
+      const timer = setTimeout(() => dispatchCelebration('stop'), 800)
       return () => clearTimeout(timer)
     }
     wasCompleted.current = task.completed
