@@ -4,7 +4,7 @@ import { memo, useMemo, useState, useEffect, useCallback } from 'react'
 import { useAppStore, useShallow } from '@/store'
 import { useNow } from '@/hooks/use-now'
 import { useDebounce } from '@/hooks/use-debounce'
-import { motion } from 'framer-motion'
+import { LazyMotion, domAnimation, m } from 'framer-motion'
 import { ViewType } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -122,18 +122,19 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   }, [tasks, now])
 
   return (
+    <LazyMotion features={domAnimation}>
     <Sidebar>
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
-          <motion.div
+          <m.div
             className="p-1.5 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10"
             whileHover={{ scale: 1.05 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           >
             <CheckCircle2 className="size-5 text-primary" />
-          </motion.div>
+          </m.div>
           <span className="font-bold text-lg tracking-tight bg-gradient-to-br from-foreground to-foreground/80 bg-clip-text">Todo</span>
         </div>
         <div className="px-2 pb-2 relative">
@@ -177,14 +178,14 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                           variant={isActive ? 'default' : 'secondary'}
                           className="ml-auto text-[10px] px-1.5 min-w-5 h-5 flex items-center justify-center"
                         >
-                          <motion.span
+                          <m.span
                             key={count}
                             initial={{ scale: 1.3, y: -2 }}
                             animate={{ scale: 1, y: 0 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                           >
                             {count}
-                          </motion.span>
+                          </m.span>
                         </Badge>
                       )}
                     </SidebarMenuButton>
@@ -202,16 +203,16 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           <SidebarGroupContent>
             <SidebarMenu>
               {lists.length === 0 ? (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="px-3 py-2 text-xs text-muted-foreground"
                 >
                   No lists yet
-                </motion.div>
+                </m.div>
               ) : (
                 lists.map((list, i) => (
-                  <motion.div
+                  <m.div
                     key={list.id}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -223,7 +224,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                         aria-current={selectedListId === list.id ? 'page' : undefined}
                         onClick={() => handleListClick(list.id)}
                       >
-                        <motion.div
+                        <m.div
                           className="size-2.5 rounded-full shrink-0"
                           style={{ backgroundColor: list.color }}
                           whileHover={{ scale: 1.3 }}
@@ -232,7 +233,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                         <span>{list.icon} {list.name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  </motion.div>
+                  </m.div>
                 ))
               )}
             </SidebarMenu>
@@ -251,14 +252,14 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                 <div className="px-2 py-1">
                   <Badge variant="destructive" className="w-full justify-center gap-1.5">
                     <AlertTriangle className="size-3" />
-                    <motion.span
+                    <m.span
                       key={overdueCount}
                       initial={{ scale: 1.3 }}
                       animate={{ scale: 1 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     >
                       {overdueCount} overdue {overdueCount === 1 ? 'task' : 'tasks'}
-                    </motion.span>
+                    </m.span>
                   </Badge>
                 </div>
               </SidebarGroupContent>
@@ -269,7 +270,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
 
       <SidebarFooter>
         <div className="p-2">
-          <motion.div
+          <m.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -280,7 +281,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                 ⌘N
               </kbd>
             </Button>
-          </motion.div>
+          </m.div>
         </div>
         <div className="px-3 pb-3">
           <label htmlFor="show-completed" className="flex items-center gap-2.5 text-sm cursor-pointer group">
@@ -297,5 +298,6 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
         </div>
       </SidebarFooter>
     </Sidebar>
+    </LazyMotion>
   )
 })

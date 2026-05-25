@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { CalendarIcon, Plus, X, Trash2, Loader2 } from 'lucide-react'
 import { format, addDays, addWeeks } from 'date-fns'
-import { motion, AnimatePresence } from 'framer-motion'
+import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion'
 
 const taskSchema = z.object({
   name: z.string().min(1, 'Task name is required'),
@@ -153,6 +153,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   }
 
   return (
+    <LazyMotion features={domAnimation}>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
         <div className="p-6 pb-0">
@@ -381,7 +382,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             </div>
             <AnimatePresence>
               {subtasks.map((subtask) => (
-                <motion.div
+                <m.div
                   key={subtask.id}
                   initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                   animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
@@ -406,7 +407,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                   >
                     <X className="size-3.5" />
                   </Button>
-                </motion.div>
+                </m.div>
               ))}
             </AnimatePresence>
           </div>
@@ -443,5 +444,6 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
         </form>
       </DialogContent>
     </Dialog>
+    </LazyMotion>
   )
 }

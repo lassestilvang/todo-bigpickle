@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { X, CheckCircle2, XCircle, Info, AlertTriangle } from 'lucide-react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion'
 import type { ToastData } from '@/hooks/use-toast'
 import { subscribeToasts, dismissToast } from '@/hooks/use-toast'
 
@@ -62,6 +62,7 @@ export function ToastContainer() {
   if (toasts.length === 0) return null
 
   return (
+    <LazyMotion features={domAnimation}>
     <div
       className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2.5 pointer-events-none"
       aria-live="polite"
@@ -72,7 +73,7 @@ export function ToastContainer() {
           const Icon = iconMap[t.type] || iconMap.info
           const s = styles[t.type] || styles.info
           return (
-            <motion.div
+            <m.div
               key={t.id}
               layout
               initial={{ opacity: 0, x: 80, scale: 0.9 }}
@@ -113,10 +114,11 @@ export function ToastContainer() {
                   <X className="size-3.5" />
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           )
         })}
       </AnimatePresence>
     </div>
+    </LazyMotion>
   )
 }

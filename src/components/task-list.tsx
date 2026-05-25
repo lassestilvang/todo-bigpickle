@@ -6,7 +6,7 @@ import { useAppStore, useShallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Reorder, motion } from 'framer-motion'
+import { LazyMotion, domAnimation, Reorder, m } from 'framer-motion'
 import Fuse from 'fuse.js'
 import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
@@ -365,6 +365,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const isEmpty = Object.entries(groupedTasks).length === 0
 
   return (
+    <LazyMotion features={domAnimation}>
     <div className="flex-1 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -481,14 +482,14 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                   <div className="absolute inset-0 flex items-center justify-center">
                     <CheckCircle2 className="size-12 text-emerald-500/40" />
                   </div>
-                  <motion.div
+                  <m.div
                     className="absolute -top-1 -right-1"
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.2 }}
                   >
                     <span className="text-lg">✨</span>
-                  </motion.div>
+                  </m.div>
                 </div>
                 <p className="text-lg font-medium mb-1">
                   {currentView === 'today'
@@ -535,7 +536,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
 
         {/* Scroll to top */}
         {tasks.length > 5 && (
-          <motion.button
+          <m.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20
@@ -551,9 +552,10 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           >
             <ChevronUp className="size-3.5" />
             Back to top
-          </motion.button>
+          </m.button>
         )}
       </div>
     </div>
+    </LazyMotion>
   )
 })

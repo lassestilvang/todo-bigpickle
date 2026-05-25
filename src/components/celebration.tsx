@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useRef, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion'
 
 interface CelebrationProps {
   active: boolean
@@ -80,9 +80,10 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
   }, [active])
 
   return (
+    <LazyMotion features={domAnimation}>
     <AnimatePresence>
       {active && (
-        <motion.div
+        <m.div
           key={generation.current}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
           initial={{ opacity: 1 }}
@@ -90,7 +91,7 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
           exit={{ opacity: 0, transition: { duration: 0.5 } }}
         >
           {particles.map((p) => (
-            <motion.div
+            <m.div
               key={p.id}
               className="absolute"
               style={{
@@ -138,9 +139,9 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
                   }}
                 />
               )}
-            </motion.div>
+            </m.div>
           ))}
-          <motion.span
+          <m.span
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl"
             initial={{ scale: 0, opacity: 0 }}
             animate={{
@@ -152,9 +153,10 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
             transition={{ duration: 0.9, ease: 'easeOut' }}
           >
             ✨
-          </motion.span>
-        </motion.div>
+          </m.span>
+        </m.div>
       )}
     </AnimatePresence>
+    </LazyMotion>
   )
 })

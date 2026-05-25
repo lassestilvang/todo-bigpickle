@@ -11,7 +11,7 @@ import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
-import { motion, AnimatePresence } from 'framer-motion'
+import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion'
 import { CommandPalette } from '@/components/command-palette'
 import { RefreshCw, AlertCircle, X } from 'lucide-react'
 
@@ -129,6 +129,7 @@ export default function Home() {
   }, [])
 
   return (
+    <LazyMotion features={domAnimation}>
     <ThemeProvider
       defaultTheme="system"
       enableSystem
@@ -138,7 +139,7 @@ export default function Home() {
           {isLoading ? (
             <LoadingSkeleton />
           ) : (
-            <motion.div
+            <m.div
               className="flex flex-1 overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -155,7 +156,7 @@ export default function Home() {
 
                 <AnimatePresence>
                   {error && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
@@ -180,13 +181,13 @@ export default function Home() {
                       >
                         <X className="size-4" />
                       </button>
-                    </motion.div>
+            </m.div>
                   )}
                 </AnimatePresence>
 
                 <div className="flex-1 overflow-y-auto">
                   <AnimatePresence mode="wait">
-                    <motion.div
+                    <m.div
                       key={`${currentView}-${selectedListId || 'all'}`}
                       initial={{ opacity: 0, x: 12 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -194,7 +195,7 @@ export default function Home() {
                       transition={{ duration: 0.15, ease: 'easeOut' }}
                     >
                       <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
-                    </motion.div>
+                    </m.div>
                   </AnimatePresence>
                 </div>
               </SidebarInset>
@@ -213,10 +214,11 @@ export default function Home() {
                 onClose={() => setCommandPaletteOpen(false)}
                 onCreateTask={handleCreateTask}
               />
-            </motion.div>
+            </m.div>
           )}
         </div>
       </SidebarProvider>
     </ThemeProvider>
+    </LazyMotion>
   )
 }
