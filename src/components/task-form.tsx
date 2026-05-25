@@ -83,7 +83,8 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => form.setFocus('name'), 100)
+      const timer = setTimeout(() => form.setFocus('name'), 100)
+      return () => clearTimeout(timer)
     }
   }, [isOpen, form])
 
