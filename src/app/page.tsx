@@ -173,6 +173,7 @@ export default function Home() {
                         Retry
                       </Button>
                       <button
+                        type="button"
                         onClick={() => clearError()}
                         className="rounded-md p-1 text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
                         aria-label="Dismiss error"

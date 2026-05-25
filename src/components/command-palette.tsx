@@ -165,6 +165,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
                     const Icon = cmd.icon
                     return (
                       <button
+                        type="button"
                         key={cmd.id}
                         data-index={idx}
                         className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
@@ -197,6 +198,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
                           const globalIdx = flatIndexLookup!.indexOf(cmd)
                           return (
                             <button
+                              type="button"
                               key={cmd.id}
                               data-index={globalIdx}
                               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${

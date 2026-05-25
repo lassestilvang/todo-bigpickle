@@ -291,6 +291,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
           </div>
 
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation()
               onDelete(task.id)

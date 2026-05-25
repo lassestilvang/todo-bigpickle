@@ -97,6 +97,7 @@ export function ToastContainer() {
               <div className="flex items-center gap-1 shrink-0 pt-0.5">
                 {t.action && (
                   <button
+                    type="button"
                     onClick={() => handleAction(t)}
                     className="text-xs font-bold text-foreground hover:text-primary transition-colors whitespace-nowrap px-2 py-1 rounded-lg hover:bg-accent"
                   >
@@ -104,6 +105,7 @@ export function ToastContainer() {
                   </button>
                 )}
                 <button
+                  type="button"
                   onClick={(e) => handleDismiss(t.id, e)}
                   className="rounded-lg p-1 text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-all duration-150"
                   aria-label="Dismiss"
