@@ -4,6 +4,19 @@ import { describe, expect, it, beforeEach } from 'bun:test'
 import { render, screen } from '@testing-library/react'
 import { ThemeProvider, useTheme } from '@/components/theme-provider'
 
+if (!globalThis.matchMedia) {
+  globalThis.matchMedia = (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }) as MediaQueryList
+}
+
 function TestConsumer() {
   const { theme, setTheme } = useTheme()
   return (
