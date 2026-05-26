@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { getDatabase } from '@/lib/database-singleton'
 
 describe('database-singleton', () => {
