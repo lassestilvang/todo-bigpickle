@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { parseJSONBody } from '@/lib/api-utils'
 
 function createMockRequest(body: unknown): Request {
@@ -13,7 +13,7 @@ function createMockRequest(body: unknown): Request {
 describe('parseJSONBody', () => {
   it('should parse valid JSON body', async () => {
     const req = createMockRequest({ name: 'test' })
-    const result = await parseJSONBody(req as any)
+    const result = await parseJSONBody(req)
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toEqual({ name: 'test' })
@@ -22,7 +22,7 @@ describe('parseJSONBody', () => {
 
   it('should handle empty object body', async () => {
     const req = createMockRequest({})
-    const result = await parseJSONBody(req as any)
+    const result = await parseJSONBody(req)
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toEqual({})
@@ -31,7 +31,7 @@ describe('parseJSONBody', () => {
 
   it('should handle array body', async () => {
     const req = createMockRequest([1, 2, 3])
-    const result = await parseJSONBody(req as any)
+    const result = await parseJSONBody(req)
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toEqual([1, 2, 3])
@@ -40,7 +40,7 @@ describe('parseJSONBody', () => {
 
   it('should return error response for invalid JSON', async () => {
     const req = createMockRequest(new SyntaxError('Failed to parse'))
-    const result = await parseJSONBody(req as any)
+    const result = await parseJSONBody(req)
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.response.status).toBe(400)
@@ -51,7 +51,7 @@ describe('parseJSONBody', () => {
 
   it('should handle null body', async () => {
     const req = createMockRequest(null)
-    const result = await parseJSONBody(req as any)
+    const result = await parseJSONBody(req)
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toBeNull()
