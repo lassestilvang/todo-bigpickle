@@ -5,6 +5,19 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
 
+if (!globalThis.matchMedia) {
+  globalThis.matchMedia = (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }) as MediaQueryList
+}
+
 describe('ThemeToggle', () => {
   it('should render theme toggle button', () => {
     render(
