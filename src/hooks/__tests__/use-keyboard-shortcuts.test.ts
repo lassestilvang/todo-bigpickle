@@ -1,6 +1,6 @@
 // @bun-test-environment jsdom
 
-import { describe, expect, it, mock, afterEach } from 'bun:test'
+import { describe, expect, it, mock } from 'bun:test'
 import { renderHook } from '@testing-library/react'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 
@@ -20,10 +20,6 @@ function fireKey(key: string, mods: Partial<KeyboardEvent> = {}) {
 }
 
 describe('useKeyboardShortcuts', () => {
-  afterEach(() => {
-    // Clean up event listeners between tests
-  })
-
   it('should call handler when matching key is pressed', () => {
     const handler = mock()
     renderHook(() =>
