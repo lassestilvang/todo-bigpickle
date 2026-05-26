@@ -39,7 +39,7 @@ describe('parseJSONBody', () => {
   })
 
   it('should return error response for invalid JSON', async () => {
-    const req = createMockRequest(new Error('Unexpected token'))
+    const req = createMockRequest(new SyntaxError('Failed to parse'))
     const result = await parseJSONBody(req as any)
     expect(result.success).toBe(false)
     if (!result.success) {
