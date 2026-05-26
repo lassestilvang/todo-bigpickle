@@ -1,5 +1,5 @@
 import { mock, describe, expect, it, beforeEach } from 'bun:test'
-import { Task } from '@/types'
+import { Task, List, Label } from '@/types'
 
 const mockApi = {
   getTasks: mock(() => {}),
@@ -70,8 +70,8 @@ describe('AppStore', () => {
     it('should load tasks, lists, and labels', async () => {
       useAppStore.setState({ isLoading: false })
       const tasks = [{ id: 't1', name: 'Test' }] as Task[]
-      const lists = [{ id: 'l1', name: 'Inbox' }] as any[]
-      const labels = [{ id: 'lb1', name: 'Work' }] as any[]
+      const lists = [{ id: 'l1', name: 'Inbox' }] as List[]
+      const labels = [{ id: 'lb1', name: 'Work' }] as Label[]
       mockApi.getTasks.mockResolvedValue(tasks)
       mockApi.getLists.mockResolvedValue(lists)
       mockApi.getLabels.mockResolvedValue(labels)
@@ -117,6 +117,3 @@ describe('Store state', () => {
     expect(useAppStore.getState().tasks[0].name).toBe('Test task')
   })
 })
-
-function test(x: string) { return x }
-
