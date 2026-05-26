@@ -367,8 +367,8 @@ describe('DatabaseService', () => {
     })
 
     it('should allow multiple tasks with same position', () => {
-      const t1 = db.createTask({ name: 'First', priority: 'low', labels: [], subtasks: [], listId: testList.id, position: 5 })
-      const t2 = db.createTask({ name: 'Second', priority: 'low', labels: [], subtasks: [], listId: testList.id, position: 5 })
+      db.createTask({ name: 'First', priority: 'low', labels: [], subtasks: [], listId: testList.id, position: 5 })
+      db.createTask({ name: 'Second', priority: 'low', labels: [], subtasks: [], listId: testList.id, position: 5 })
       const tasks = db.getTasks().filter(t => t.listId === testList.id)
       expect(tasks.length).toBeGreaterThanOrEqual(2)
       expect(tasks.every(t => t.position === 5)).toBe(true)
