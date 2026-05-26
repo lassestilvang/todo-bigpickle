@@ -7,7 +7,7 @@ import { toast, subscribeToasts } from '@/hooks/use-toast'
 
 describe('ToastContainer', () => {
   beforeEach(() => {
-    // Reset toast state by subscribing and immediately unsubscribing
+    // Reset internal toast state
     const unsub = subscribeToasts(() => {})
     unsub()
   })
