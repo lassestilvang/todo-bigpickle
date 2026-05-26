@@ -13,8 +13,14 @@ globalThis.fetch = mockFetch
 const { api } = await import('@/lib/api')
 
 beforeEach(() => {
-  mockFetch.mockClear()
-  mockJson.mockClear()
+  mockFetch.mockReset()
+  mockJson.mockReset()
+  mockFetch.mockImplementation(() =>
+    Promise.resolve({
+      ok: true,
+      json: mockJson,
+    })
+  )
   globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch
 })
 
