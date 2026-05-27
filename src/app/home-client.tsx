@@ -172,7 +172,7 @@ export default function HomeClient() {
                   )}
                 </AnimatePresence>
 
-                <div className="flex-1 overflow-y-auto">
+                <div data-main-content className="flex-1 overflow-y-auto">
                   <div className="animate-fade-slide-in">
                     <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
                   </div>

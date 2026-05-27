@@ -182,7 +182,6 @@
   content-visibility: auto;
   contain-intrinsic-height: 120px;
   contain: layout style paint;
-  will-change: transform;
 }
 
 [data-task-card]:hover {
@@ -196,8 +195,8 @@
   contain: layout style paint;
 }
 
-/* Smooth scroll container for main content */
-.overflow-y-auto {
+/* Smooth scroll container for main content area only */
+[data-main-content] {
   scroll-behavior: smooth;
   overscroll-behavior: contain;
 }
@@ -210,12 +209,6 @@
 /* Optimize dialogs and sheets */
 [data-state="open"] > [data-radix-popper-content-wrapper] {
   animation: fadeIn 0.15s ease-out;
-}
-
-[data-reorder-item]:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-  border-radius: var(--radius);
 }
 
 /* Task card animations */
