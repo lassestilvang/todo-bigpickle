@@ -17,8 +17,18 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Todo App',
-  description: 'A modern todo application built with Next.js',
+  title: 'Todo - Big Pickle',
+  description: 'A modern, high-performance task management app',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Todo',
+  },
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 const themeScript = `

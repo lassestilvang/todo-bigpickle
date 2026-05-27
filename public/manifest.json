@@ -1,0 +1,18 @@
+{
+  "name": "Todo - Big Pickle",
+  "short_name": "Todo",
+  "description": "A modern, high-performance task management app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#18181b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
