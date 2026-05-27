@@ -125,8 +125,11 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const quickAddRef = useRef<HTMLInputElement>(null)
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
   const focusedTaskIndexRef = useRef(focusedTaskIndex)
-  focusedTaskIndexRef.current = focusedTaskIndex
   const flatTasksRef = useRef<Task[]>([])
+
+  useEffect(() => {
+    focusedTaskIndexRef.current = focusedTaskIndex
+  }, [focusedTaskIndex])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -276,7 +279,10 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [sortBy, groupedTasks])
 
   const onEditRef = useRef(onEditTask)
-  onEditRef.current = onEditTask
+
+  useEffect(() => {
+    onEditRef.current = onEditTask
+  }, [onEditTask])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

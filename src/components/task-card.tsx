@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useRef, useEffect, useCallback } from 'react'
+import { memo, useState, useRef, useEffect, useCallback, startTransition } from 'react'
 import { Task } from '@/types'
 import { useNow } from '@/hooks/use-now'
 import { Celebration } from '@/components/celebration'
@@ -60,8 +60,8 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   useEffect(() => {
     if (task.completed && !wasCompleted.current) {
       wasCompleted.current = true
-      setCelebrating(true)
-      const timer = setTimeout(() => setCelebrating(false), 800)
+      startTransition(() => setCelebrating(true))
+      const timer = setTimeout(() => startTransition(() => setCelebrating(false)), 800)
       return () => clearTimeout(timer)
     }
     wasCompleted.current = task.completed
