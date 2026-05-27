@@ -142,7 +142,7 @@ export default function HomeClient() {
               <AppSidebar onCreateTask={handleCreateTask} />
 
               <SidebarInset className="flex-1 flex flex-col bg-grid-pattern">
-                <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+                <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/70 backdrop-blur-xl sticky top-0 z-10 supports-[backdrop-filter]:bg-background/60">
                   <SidebarTrigger className="-ml-1" />
                   <div className="flex-1" />
                   <ThemeToggle />

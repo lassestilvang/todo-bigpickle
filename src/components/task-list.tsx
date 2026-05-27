@@ -418,11 +418,12 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               </div>
             ) : allTasks.length === 0 ? (
               <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
-                <div className="relative mx-auto mb-8 size-32">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent animate-pulse" style={{ animationDuration: '0.8s' }} />
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/5 to-transparent animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.5s', transform: 'scale(0.85)' }} />
+                <div className="relative mx-auto mb-8 size-36">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/15 via-primary/8 to-transparent animate-pulse" style={{ animationDuration: '0.8s' }} />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/8 to-transparent animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.5s', transform: 'scale(0.8)' }} />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/[0.03] to-transparent" style={{ transform: 'scale(0.6)' }} />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Sparkles className="size-12 text-primary/40" />
+                    <Sparkles className="size-14 text-primary/30" />
                   </div>
                 </div>
                 <p className="text-xl font-medium mb-2">

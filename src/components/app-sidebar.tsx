@@ -121,16 +121,19 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
 
   return (
     <Sidebar>
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-primary/[0.01] to-transparent pointer-events-none" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-      <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10 transition-transform duration-200 hover:scale-105">
+      <SidebarHeader className="pb-0">
+        <div className="flex items-center gap-2.5 p-2 pb-1">
+          <div className="p-1.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10 transition-all duration-200 hover:scale-105 hover:shadow-md hover:shadow-primary/10">
             <CheckCircle2 className="size-5 text-primary" />
           </div>
-          <span className="font-bold text-lg tracking-tight">Todo</span>
+          <div>
+            <span className="font-bold text-lg tracking-tight">Todo</span>
+            <p className="text-[10px] text-muted-foreground/50 font-medium tracking-wide uppercase">Big Pickle</p>
+          </div>
         </div>
-        <div className="px-2 pb-2 relative">
+        <div className="px-2 pb-3 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50" />
           <Input
             type="search"
@@ -148,7 +151,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Views</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/60">Views</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {Object.entries(viewLabels).map(([view, label]) => {
@@ -187,7 +190,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
         <Separator className="my-2" />
 
         <SidebarGroup>
-          <SidebarGroupLabel>Lists</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/60">Lists</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {lists.length === 0 ? (
