@@ -361,10 +361,7 @@ export const useAppStore = create<AppStore>()(
         selectedListId: state.selectedListId,
         showCompleted: state.showCompleted,
         searchQuery: state.searchQuery,
-        tasks: state.tasks,
-        lists: state.lists,
-        labels: state.labels
-      }) satisfies AppState
+      })
     }
   )
 )
