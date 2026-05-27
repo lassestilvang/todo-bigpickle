@@ -45,6 +45,9 @@ yarn-error.log*
 todo.db
 todo.db-wal
 todo.db-shm
+*.db
+*.db-wal
+*.db-shm
 
 # typescript
 *.tsbuildinfo

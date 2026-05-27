@@ -117,6 +117,7 @@ export class DatabaseService {
     this.db.run('PRAGMA mmap_size = 536870912')
     this.db.run('PRAGMA busy_timeout = 5000')
     this.db.run('PRAGMA wal_autocheckpoint = 2000')
+    this.db.run('PRAGMA foreign_keys = ON')
 
     this.initializeTables()
   }
