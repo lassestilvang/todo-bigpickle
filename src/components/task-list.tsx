@@ -124,6 +124,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const [quickAddText, setQuickAddText] = useState('')
   const quickAddRef = useRef<HTMLInputElement>(null)
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
+  const focusedTaskIndexRef = useRef(focusedTaskIndex)
+  focusedTaskIndexRef.current = focusedTaskIndex
   const flatTasksRef = useRef<Task[]>([])
 
   useEffect(() => {
@@ -277,9 +279,6 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   onEditRef.current = onEditTask
 
   useEffect(() => {
-    const tasks = flatTasksRef.current
-    if (tasks.length === 0) return
-
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null
       const isInput = target?.matches?.('input, textarea, select, [contenteditable], [contenteditable] *')
@@ -287,6 +286,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
 
       const currentTasks = flatTasksRef.current
       if (currentTasks.length === 0) return
+
+      const currentIndex = focusedTaskIndexRef.current
 
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault()
@@ -299,18 +300,18 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           cards[next]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
           return next
         })
-      } else if (e.key === 'Enter' && focusedTaskIndex >= 0 && currentTasks[focusedTaskIndex]) {
+      } else if (e.key === 'Enter' && currentIndex >= 0 && currentTasks[currentIndex]) {
         const isInCard = target?.closest('[data-task-card]')
         if (isInCard && !isInput) {
           e.preventDefault()
-          onEditRef.current(currentTasks[focusedTaskIndex])
+          onEditRef.current(currentTasks[currentIndex])
         }
       }
     }
 
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [focusedTaskIndex])
+  }, [])
 
   const cycleSort = useCallback(() => {
     setSortBy(prev => prev === 'date' ? 'priority' : prev === 'priority' ? 'name' : prev === 'name' ? 'custom' : 'date')
