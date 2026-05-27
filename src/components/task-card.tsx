@@ -29,10 +29,10 @@ interface TaskCardProps {
 }
 
 const priorityConfig = {
-  high: { color: 'bg-red-500', label: 'High', bar: 'from-red-500 to-red-400', border: 'border-l-red-500', text: 'text-red-500', gradient: 'from-red-500/20 to-transparent', badge: 'bg-red-500/10 text-red-500 border-red-500/20', ring: 'ring-red-500/20' },
-  medium: { color: 'bg-amber-500', label: 'Medium', bar: 'from-amber-500 to-amber-400', border: 'border-l-amber-500', text: 'text-amber-500', gradient: 'from-amber-500/20 to-transparent', badge: 'bg-amber-500/10 text-amber-500 border-amber-500/20', ring: 'ring-amber-500/20' },
-  low: { color: 'bg-emerald-500', label: 'Low', bar: 'from-emerald-500 to-emerald-400', border: 'border-l-emerald-500', text: 'text-emerald-500', gradient: 'from-emerald-500/20 to-transparent', badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', ring: 'ring-emerald-500/20' },
-  none: { color: 'bg-zinc-400', label: 'None', bar: 'from-zinc-400 to-zinc-300', border: 'border-l-zinc-400', text: 'text-zinc-400', gradient: 'from-zinc-400/10 to-transparent', badge: 'bg-muted text-muted-foreground border-border', ring: 'ring-border' },
+  high: { color: 'bg-red-500', label: 'High', bar: 'from-red-500 to-red-400', border: 'border-l-red-500', text: 'text-red-500', gradient: 'from-red-500/15 to-transparent', badge: 'bg-red-500/10 text-red-500 border-red-500/20', ring: 'ring-red-500/20', glow: 'shadow-red-500/5' },
+  medium: { color: 'bg-amber-500', label: 'Medium', bar: 'from-amber-500 to-amber-400', border: 'border-l-amber-500', text: 'text-amber-500', gradient: 'from-amber-500/15 to-transparent', badge: 'bg-amber-500/10 text-amber-500 border-amber-500/20', ring: 'ring-amber-500/20', glow: 'shadow-amber-500/5' },
+  low: { color: 'bg-emerald-500', label: 'Low', bar: 'from-emerald-500 to-emerald-400', border: 'border-l-emerald-500', text: 'text-emerald-500', gradient: 'from-emerald-500/15 to-transparent', badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', ring: 'ring-emerald-500/20', glow: 'shadow-emerald-500/5' },
+  none: { color: 'bg-zinc-400', label: 'None', bar: 'from-zinc-400 to-zinc-300', border: 'border-l-zinc-400', text: 'text-zinc-400', gradient: 'from-zinc-400/10 to-transparent', badge: 'bg-muted text-muted-foreground border-border', ring: 'ring-border', glow: 'shadow-transparent' },
 } as const
 
 function formatRelativeDate(date: Date): string {
@@ -102,7 +102,10 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
           dark:hover:shadow-primary/5 dark:hover:shadow-2xl
           bg-background hover:bg-accent/30
           border-border/60 hover:border-border/80
-          ${task.completed ? 'opacity-60 saturate-50' : 'shadow-sm hover:shadow-primary/5'}
+          ${task.completed
+            ? 'opacity-60 saturate-50 scale-[0.995]'
+            : 'shadow-sm hover:shadow-primary/5'
+          }
           overflow-hidden
         `}
         onClick={() => { if (!editingName) onEdit(task) }}
@@ -119,11 +122,14 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
         }}
       >
         {/* Priority gradient bar at top */}
-        <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${priority.bar} opacity-60 group-hover/card:opacity-100 transition-opacity duration-300`} />
+        <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${priority.bar} opacity-70 group-hover/card:opacity-100 transition-all duration-300 group-hover/card:h-1`} />
+
+        {/* Ambient priority glow on hover */}
+        <div className={`absolute -top-4 -right-4 size-16 rounded-full bg-gradient-to-br ${priority.bar} opacity-0 group-hover/card:opacity-[0.04] blur-2xl transition-opacity duration-500 pointer-events-none`} />
 
         <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none ${priority.gradient}`} />
 
-        <CardContent className="p-4 pt-[14px] relative">
+        <CardContent className="p-4 pt-[15px] relative">
           <div className="flex items-start gap-3">
 
             <Celebration active={celebrating} />
@@ -142,7 +148,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                 aria-label={`Mark "${task.name}" as ${task.completed ? 'incomplete' : 'complete'}`}
                 className={`transition-all duration-200 hover:scale-110 active:scale-90
                   ${task.completed
-                    ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:shadow-md data-[state=checked]:shadow-emerald-500/30'
+                    ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:shadow-lg data-[state=checked]:shadow-emerald-500/40'
                     : 'hover:border-emerald-400 hover:shadow-sm hover:shadow-emerald-500/20'
                   }`}
               />
@@ -198,17 +204,17 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
 
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
                 {task.date && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40 transition-colors duration-200 hover:bg-muted/80">
                     <Calendar className="size-3" />
                     {formatRelativeDate(task.date)}
                   </div>
                 )}
 
                 {task.deadline && (
-                  <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border ${
+                  <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border transition-all duration-200 ${
                     isOverdue
-                      ? 'bg-red-500/10 text-red-500 font-medium border-red-500/20'
-                      : 'bg-muted/60 border-border/40'
+                      ? 'bg-red-500/10 text-red-500 font-medium border-red-500/20 hover:bg-red-500/[0.12]'
+                      : 'bg-muted/60 border-border/40 hover:bg-muted/80'
                   }`}>
                     <Clock className="size-3" />
                     {isOverdue ? 'Overdue!' : formatRelativeDate(task.deadline)}
@@ -216,7 +222,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                 )}
 
                 {task.estimate && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40 transition-colors duration-200 hover:bg-muted/80">
                     <Clock className="size-3" />
                     {task.estimate >= 60
                       ? `${Math.floor(task.estimate / 60)}h ${task.estimate % 60}m`
@@ -237,7 +243,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                       <Badge
                         key={label.id}
                         variant="outline"
-                        className="text-[10px] px-1.5 py-0 h-5 font-medium"
+                        className="text-[10px] px-1.5 py-0 h-5 font-medium transition-all duration-200 hover:scale-105"
                         style={{ borderColor: label.color, color: label.color }}
                       >
                         {label.icon} {label.name}
@@ -265,11 +271,15 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                 <div className="mt-3 pl-0.5">
                   <div className="h-1.5 bg-muted/70 rounded-full overflow-hidden ring-1 ring-inset ring-black/[0.02]">
                     <div
-                      className={`h-full rounded-full transition-all duration-700 ease-out ${
+                      className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${
                         progress >= 1 ? 'bg-emerald-500' : 'bg-primary/60'
                       }`}
                       style={{ width: `${progress * 100}%` }}
-                    />
+                    >
+                      {progress > 0 && progress < 1 && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                      )}
+                    </div>
                   </div>
                   <div className="mt-2 space-y-1">
                     {task.subtasks.slice(0, 3).map((subtask) => (
