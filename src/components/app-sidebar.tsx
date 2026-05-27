@@ -1,7 +1,6 @@
 'use client'
 
 import { memo, useMemo, useCallback, useState, useEffect, useRef } from 'react'
-import { LazyMotion, domAnimation, m } from 'framer-motion'
 import { useAppStore, useShallow } from '@/store'
 import { useNow } from '@/hooks/use-now'
 import { ViewType } from '@/types'
@@ -121,19 +120,14 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   }, [tasks, now])
 
   return (
-    <LazyMotion features={domAnimation}>
     <Sidebar>
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
-          <m.div
-            className="p-1.5 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          >
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10 transition-transform duration-200 hover:scale-105">
             <CheckCircle2 className="size-5 text-primary" />
-          </m.div>
+          </div>
           <span className="font-bold text-lg tracking-tight">Todo</span>
         </div>
         <div className="px-2 pb-2 relative">
@@ -177,14 +171,9 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                           variant={isActive ? 'default' : 'secondary'}
                           className="ml-auto text-[10px] px-1.5 min-w-5 h-5 flex items-center justify-center"
                         >
-                          <m.span
-                            key={count}
-                            initial={{ scale: 1.3, y: -2 }}
-                            animate={{ scale: 1, y: 0 }}
-                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                          >
+                          <span key={count} className="animate-count-in">
                             {count}
-                          </m.span>
+                          </span>
                         </Badge>
                       )}
                     </SidebarMenuButton>
@@ -202,20 +191,15 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           <SidebarGroupContent>
             <SidebarMenu>
               {lists.length === 0 ? (
-                <m.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="px-3 py-2 text-xs text-muted-foreground"
-                >
+                <div className="px-3 py-2 text-xs text-muted-foreground animate-fade-in">
                   No lists yet
-                </m.div>
+                </div>
               ) : (
                 lists.map((list, i) => (
-                  <m.div
+                  <div
                     key={list.id}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.02 }}
+                    className="animate-fade-in"
+                    style={{ animationDelay: `${i * 20}ms` }}
                   >
                     <SidebarMenuItem>
                       <SidebarMenuButton
@@ -223,16 +207,14 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                         aria-current={selectedListId === list.id ? 'page' : undefined}
                         onClick={() => handleListClick(list.id)}
                       >
-                        <m.div
-                          className="size-2.5 rounded-full shrink-0"
+                        <div
+                          className="size-2.5 rounded-full shrink-0 transition-transform duration-200 hover:scale-[1.3]"
                           style={{ backgroundColor: list.color }}
-                          whileHover={{ scale: 1.3 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                         />
                         <span>{list.icon} {list.name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  </m.div>
+                  </div>
                 ))
               )}
             </SidebarMenu>
@@ -251,14 +233,9 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                 <div className="px-2 py-1">
                   <Badge variant="destructive" className="w-full justify-center gap-1.5">
                     <AlertTriangle className="size-3" />
-                    <m.span
-                      key={overdueCount}
-                      initial={{ scale: 1.3 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    >
+                    <span key={overdueCount} className="animate-count-in">
                       {overdueCount} overdue {overdueCount === 1 ? 'task' : 'tasks'}
-                    </m.span>
+                    </span>
                   </Badge>
                 </div>
               </SidebarGroupContent>
@@ -269,18 +246,13 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
 
       <SidebarFooter>
         <div className="p-2">
-          <m.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Button onClick={onCreateTask} className="w-full group transition-all duration-200">
-              <Plus className="size-4 mr-2 transition-transform group-hover:rotate-90 duration-200" />
-              New Task
-              <kbd className="ml-auto hidden md:inline-flex h-5 items-center gap-1 rounded border border-primary-foreground/20 bg-primary-foreground/10 px-1.5 font-mono text-[10px] font-medium">
-                ⌘N
-              </kbd>
-            </Button>
-          </m.div>
+          <Button onClick={onCreateTask} className="w-full group transition-all duration-200 active:scale-[0.98] hover:scale-[1.02]">
+            <Plus className="size-4 mr-2 transition-transform group-hover:rotate-90 duration-200" />
+            New Task
+            <kbd className="ml-auto hidden md:inline-flex h-5 items-center gap-1 rounded border border-primary-foreground/20 bg-primary-foreground/10 px-1.5 font-mono text-[10px] font-medium">
+              ⌘N
+            </kbd>
+          </Button>
         </div>
         <div className="px-3 pb-3">
           <label htmlFor="show-completed" className="flex items-center gap-2.5 text-sm cursor-pointer group">
@@ -297,6 +269,5 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
         </div>
       </SidebarFooter>
     </Sidebar>
-    </LazyMotion>
   )
 })

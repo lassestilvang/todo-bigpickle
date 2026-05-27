@@ -11,7 +11,7 @@ import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
-import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { CommandPalette } from '@/components/command-palette'
 import { RefreshCw, AlertCircle, X } from 'lucide-react'
 
@@ -129,7 +129,6 @@ export default function HomeClient() {
   }, [])
 
   return (
-    <LazyMotion features={domAnimation}>
     <ThemeProvider
       defaultTheme="system"
       enableSystem
@@ -139,12 +138,7 @@ export default function HomeClient() {
           {isLoading ? (
             <LoadingSkeleton />
           ) : (
-            <m.div
-              className="flex flex-1 overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-            >
+            <div className="flex flex-1 overflow-hidden animate-fade-in">
               <AppSidebar onCreateTask={handleCreateTask} />
 
               <SidebarInset className="flex-1 flex flex-col bg-grid-pattern">
@@ -156,12 +150,7 @@ export default function HomeClient() {
 
                 <AnimatePresence>
                   {error && (
-                    <m.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex items-center gap-3 px-6 py-3 bg-destructive/5 border-b border-destructive/10 text-destructive text-sm"
-                    >
+                    <div className="flex items-center gap-3 px-6 py-3 bg-destructive/5 border-b border-destructive/10 text-destructive text-sm animate-in">
                       <AlertCircle className="size-4 shrink-0" />
                       <span className="flex-1">{error}</span>
                       <Button
@@ -181,22 +170,17 @@ export default function HomeClient() {
                       >
                         <X className="size-4" />
                       </button>
-            </m.div>
+                    </div>
                   )}
                 </AnimatePresence>
 
                 <div className="flex-1 overflow-y-auto">
-                  <AnimatePresence mode="wait">
-                    <m.div
-                      key={`${currentView}-${selectedListId || 'all'}`}
-                      initial={{ opacity: 0, x: 12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -12 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                    >
-                      <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
-                    </m.div>
-                  </AnimatePresence>
+                  <div
+                    key={`${currentView}-${selectedListId || 'all'}`}
+                    className="animate-fade-slide-in"
+                  >
+                    <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
+                  </div>
                 </div>
               </SidebarInset>
 
@@ -214,11 +198,10 @@ export default function HomeClient() {
                 onClose={() => setCommandPaletteOpen(false)}
                 onCreateTask={handleCreateTask}
               />
-            </m.div>
+            </div>
           )}
         </div>
       </SidebarProvider>
     </ThemeProvider>
-    </LazyMotion>
   )
 }
