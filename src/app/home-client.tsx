@@ -67,8 +67,6 @@ export default function HomeClient() {
   const clearError = useAppStore(s => s.clearError)
   const isLoading = useAppStore(s => s.isLoading)
   const error = useAppStore(s => s.error)
-  const currentView = useAppStore(s => s.currentView)
-  const selectedListId = useAppStore(s => s.selectedListId)
 
   useEffect(() => {
     loadData()
@@ -175,10 +173,7 @@ export default function HomeClient() {
                 </AnimatePresence>
 
                 <div className="flex-1 overflow-y-auto">
-                  <div
-                    key={`${currentView}-${selectedListId || 'all'}`}
-                    className="animate-fade-slide-in"
-                  >
+                  <div className="animate-fade-slide-in">
                     <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
                   </div>
                 </div>
