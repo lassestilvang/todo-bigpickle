@@ -33,3 +33,6 @@ export const createLabelSchema = z.object({
   color: z.string().min(1, 'Color is required'),
   icon: z.string().default(''),
 })
+
+export const updateListSchema = createListSchema.partial()
+export const updateLabelSchema = createLabelSchema.partial()

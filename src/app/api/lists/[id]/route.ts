@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/database-singleton'
-import { createListSchema } from '@/lib/validators'
+import { updateListSchema } from '@/lib/validators'
 import { z } from 'zod'
 import { parseJSONBody } from '@/lib/api-utils'
 
 const db = getDatabase()
-
-const updateListSchema = createListSchema.partial()
 
 export async function PUT(
   request: NextRequest,
