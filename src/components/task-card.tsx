@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useRef, useEffect, useCallback, useReducer } from 'react'
+import { memo, useState, useRef, useEffect, useCallback } from 'react'
 import { Task } from '@/types'
 import { useNow } from '@/hooks/use-now'
 import { Celebration } from '@/components/celebration'
@@ -45,10 +45,7 @@ function formatRelativeDate(date: Date): string {
 export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit, onDelete }: TaskCardProps) {
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
-  const [celebrating, dispatchCelebration] = useReducer(
-    (state: boolean, action: 'celebrate' | 'stop') => action === 'celebrate',
-    false
-  )
+  const [celebrating, setCelebrating] = useState(false)
   const wasCompleted = useRef(task.completed)
 
   const [editingName, setEditingName] = useState(false)
@@ -63,21 +60,24 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   useEffect(() => {
     if (task.completed && !wasCompleted.current) {
       wasCompleted.current = true
-      dispatchCelebration('celebrate')
-      const timer = setTimeout(() => dispatchCelebration('stop'), 800)
+      setCelebrating(true)
+      const timer = setTimeout(() => setCelebrating(false), 800)
       return () => clearTimeout(timer)
     }
     wasCompleted.current = task.completed
   }, [task.completed])
 
+  useEffect(() => {
+    if (editingName) {
+      editInputRef.current?.focus()
+      editInputRef.current?.select()
+    }
+  }, [editingName])
+
   const startEditing = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     setEditValue(task.name)
     setEditingName(true)
-    setTimeout(() => {
-      editInputRef.current?.focus()
-      editInputRef.current?.select()
-    }, 10)
   }, [task.name])
 
   const saveEdit = useCallback(() => {
