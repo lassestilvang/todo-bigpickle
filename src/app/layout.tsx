@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import type {} from '../../test/setup'
 import Script from 'next/script'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'

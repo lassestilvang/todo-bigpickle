@@ -1,12 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { shallow } from 'zustand/shallow'
 import { useShallow } from 'zustand/react/shallow'
 import { Task, List, Label, ViewType, AppState } from '@/types'
 import { api } from '@/lib/api'
 import { toast, dismissToast } from '@/hooks/use-toast'
 
-export { shallow, useShallow }
+export { useShallow }
 
 const handleError = (message: string, error: unknown, set: (state: Partial<AppStore>) => void) => {
   const errorMessage = error instanceof Error ? error.message : message

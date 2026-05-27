@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useMemo, useCallback, useRef, useEffect, useEffectEvent } from 'react'
+import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Task } from '@/types'
 import { useAppStore, useShallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
@@ -273,7 +273,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     return next
   }, [sortBy, groupedTasks])
 
-  const onEditTaskEvent = useEffectEvent(onEditTask)
+  const onEditRef = useRef(onEditTask)
+  onEditRef.current = onEditTask
 
   useEffect(() => {
     const tasks = flatTasksRef.current
@@ -302,7 +303,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
         const isInCard = target?.closest('[data-task-card]')
         if (isInCard && !isInput) {
           e.preventDefault()
-          onEditTaskEvent(currentTasks[focusedTaskIndex])
+          onEditRef.current(currentTasks[focusedTaskIndex])
         }
       }
     }
