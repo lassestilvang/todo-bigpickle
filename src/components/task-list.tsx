@@ -510,7 +510,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               hover:text-foreground hover:shadow-xl hover:-translate-y-1
               transition-all duration-200"
             onClick={() => {
-              const container = document.querySelector('.overflow-y-auto')
+              const container = document.querySelector('[data-main-content]')
               container?.scrollTo({ top: 0, behavior: 'smooth' })
             }}
             aria-label="Scroll to top"
