@@ -1,11 +1,44 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useShallow } from 'zustand/react/shallow'
-import { Task, List, Label, ViewType, AppState } from '@/types'
+import { Task, List, Label, ViewType, AppState, RecurringType } from '@/types'
 import { api } from '@/lib/api'
 import { toast, dismissToast } from '@/hooks/use-toast'
 
 export { useShallow }
+
+function getNextRecurringDate(recurring: RecurringType, config?: Task['recurringConfig']): Date | undefined {
+  const now = new Date()
+  switch (recurring) {
+    case 'daily':
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+    case 'weekdays': {
+      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+      while (next.getDay() === 0 || next.getDay() === 6) next.setDate(next.getDate() + 1)
+      return next
+    }
+    case 'weekly':
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7)
+    case 'monthly': {
+      const next = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
+      if (next.getMonth() !== (now.getMonth() + 1) % 12) next.setDate(0)
+      return next
+    }
+    case 'yearly': {
+      const next = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
+      if (next.getMonth() !== now.getMonth()) next.setDate(0)
+      return next
+    }
+    case 'custom': {
+      if (config?.interval) {
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate() + config.interval)
+      }
+      return undefined
+    }
+    default:
+      return undefined
+  }
+}
 
 const handleError = (message: string, error: unknown, set: (state: Partial<AppStore>) => void) => {
   const errorMessage = error instanceof Error ? error.message : message
@@ -186,6 +219,46 @@ export const useAppStore = create<AppStore>()(
               onClick: () => get().toggleTaskComplete(id),
             },
           })
+
+          if (task.recurring) {
+            const nextDate = getNextRecurringDate(task.recurring, task.recurringConfig)
+            if (nextDate) {
+              const recurringTask: Task = {
+                ...task,
+                id: `temp_${Date.now()}`,
+                completed: false,
+                completedAt: undefined,
+                date: nextDate,
+                createdAt: now,
+                updatedAt: now,
+                position: 0,
+                history: [],
+              }
+              set((state) => ({ tasks: [recurringTask, ...state.tasks] }))
+              try {
+                const created = await api.createTask({
+                  name: task.name,
+                  description: task.description,
+                  date: nextDate,
+                  deadline: task.deadline,
+                  estimate: task.estimate,
+                  actualTime: task.actualTime,
+                  labels: task.labels.map(l => ({ id: l.id, name: l.name, color: l.color, icon: l.icon, createdAt: l.createdAt, updatedAt: l.updatedAt })),
+                  priority: task.priority,
+                  subtasks: task.subtasks.map(st => ({ title: st.title, completed: false, createdAt: new Date(), updatedAt: new Date() })),
+                  recurring: task.recurring,
+                  recurringConfig: task.recurringConfig,
+                  listId: task.listId,
+                  completed: false,
+                })
+                set((state) => ({
+                  tasks: state.tasks.map(t => t.id === recurringTask.id ? created : t),
+                }))
+              } catch {
+                set((state) => ({ tasks: state.tasks.filter(t => t.id !== recurringTask.id) }))
+              }
+            }
+          }
         }
 
         try {
