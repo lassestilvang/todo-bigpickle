@@ -30,6 +30,7 @@ interface AppStore extends AppState {
   updateTask: (id: string, updates: Partial<Task>) => void
   deleteTask: (id: string) => void
   toggleTaskComplete: (id: string) => void
+  clearCompleted: () => void
   reorderTasks: (reorder: { id: string; position: number }[]) => void
   
   // List actions
@@ -216,6 +217,24 @@ export const useAppStore = create<AppStore>()(
           handleError('Failed to reorder tasks', error, set)
           toast({ type: 'error', title: 'Failed to save order' })
         }
+      },
+
+      clearCompleted: () => {
+        const completedIds = get().tasks.filter(t => t.completed).map(t => t.id)
+        if (completedIds.length === 0) return
+
+        const count = completedIds.length
+        set((state) => ({
+          tasks: state.tasks.filter(t => !t.completed),
+          error: null,
+        }))
+
+        toast({ type: 'info', title: `Cleared ${count} completed ${count === 1 ? 'task' : 'tasks'}` })
+
+        api.deleteCompletedTasks(completedIds).catch((error) => {
+          handleError('Failed to clear completed tasks', error, set)
+          toast({ type: 'error', title: 'Failed to clear completed tasks' })
+        })
       },
 
       // List actions

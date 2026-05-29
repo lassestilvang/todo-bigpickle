@@ -92,6 +92,16 @@ export const api = {
     return handleResponse<void>(response)
   },
 
+  async deleteCompletedTasks(ids: string[], signal?: AbortSignal) {
+    const response = await fetchWithTimeout(`${API_BASE}/tasks`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+      signal,
+    })
+    return handleResponse<void>(response)
+  },
+
   // Lists
   async getLists(signal?: AbortSignal) {
     const response = await fetchWithTimeout(`${API_BASE}/lists`, { signal })

@@ -120,6 +120,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const searchQuery = useAppStore(s => s.searchQuery)
   const allTasks = useAppStore(useShallow(s => s.tasks))
   const lists = useAppStore(useShallow(s => s.lists))
+  const clearCompleted = useAppStore(s => s.clearCompleted)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name' | 'custom'>('custom')
   const [quickAddText, setQuickAddText] = useState('')
   const quickAddRef = useRef<HTMLInputElement>(null)
@@ -367,6 +368,17 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           </div>
 
           <div className="flex items-center gap-2">
+            {completedCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearCompleted}
+                className="text-muted-foreground/60 hover:text-destructive transition-all duration-200"
+              >
+                <CheckCircle2 className="size-3.5 mr-1.5" />
+                Clear completed
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

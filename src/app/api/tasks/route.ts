@@ -51,3 +51,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create task', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
+
+const deleteCompletedSchema = z.object({
+  ids: z.array(z.string()),
+})
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const result = await parseJSONBody(request)
+    if (!result.success) return result.response
+    const validated = deleteCompletedSchema.parse(result.data)
+    db.deleteTasks(validated.ids)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
+    }
+    return NextResponse.json({ error: 'Failed to delete tasks', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
+  }
+}

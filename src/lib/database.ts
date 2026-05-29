@@ -770,6 +770,16 @@ export class DatabaseService {
     this.stmts.deleteTask.run(id)
   }
 
+  deleteTasks(ids: string[]): void {
+    const deleteMany = this.db.transaction((taskIds: string[]) => {
+      for (const id of taskIds) {
+        this.stmts.deleteTaskLabels.run(id)
+        this.stmts.deleteTask.run(id)
+      }
+    })
+    deleteMany(ids)
+  }
+
   getTaskById(id: string): Task | undefined {
     const row = this.stmts.getTaskById.get(id) as TaskRow | undefined
     if (!row) return undefined
