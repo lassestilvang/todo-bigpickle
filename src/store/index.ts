@@ -228,20 +228,36 @@ export const useAppStore = create<AppStore>()(
       },
 
       clearCompleted: () => {
-        const completedIds = get().tasks.filter(t => t.completed).map(t => t.id)
-        if (completedIds.length === 0) return
+        const completedTasks = get().tasks.filter(t => t.completed)
+        if (completedTasks.length === 0) return
 
-        const count = completedIds.length
+        const count = completedTasks.length
         set((state) => ({
           tasks: state.tasks.filter(t => !t.completed),
           error: null,
         }))
 
-        toast({ type: 'info', title: `Cleared ${count} completed ${count === 1 ? 'task' : 'tasks'}` })
+        toast({
+          type: 'info',
+          title: `Cleared ${count} completed ${count === 1 ? 'task' : 'tasks'}`,
+          duration: 6000,
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              set((state) => ({
+                tasks: [...state.tasks, ...completedTasks].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
+              }))
+              toast({ type: 'info', title: `Restored ${count} completed ${count === 1 ? 'task' : 'tasks'}` })
+            },
+          },
+        })
 
-        api.deleteCompletedTasks(completedIds).catch((error) => {
+        api.deleteCompletedTasks(completedTasks.map(t => t.id)).catch((error) => {
+          set((state) => ({
+            tasks: [...state.tasks, ...completedTasks].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
+          }))
           handleError('Failed to clear completed tasks', error, set)
-          toast({ type: 'error', title: 'Failed to clear completed tasks' })
+          toast({ type: 'error', title: 'Failed to clear completed tasks on server' })
         })
       },
 
