@@ -120,6 +120,15 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
     return { overdueCount: overdue, todayCount, next7Count }
   }, [tasks, now])
 
+  const listTaskCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const t of tasks) {
+      if (t.completed) continue
+      counts[t.listId] = (counts[t.listId] || 0) + 1
+    }
+    return counts
+  }, [tasks])
+
   return (
     <Sidebar>
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-primary/[0.01] to-transparent pointer-events-none" />
@@ -216,6 +225,11 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                           style={{ backgroundColor: list.color }}
                         />
                         <span>{list.icon} {list.name}</span>
+                        {listTaskCounts[list.id] > 0 && (
+                          <span className="ml-auto text-[10px] text-muted-foreground font-medium tabular-nums">
+                            {listTaskCounts[list.id]}
+                          </span>
+                        )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   </div>
