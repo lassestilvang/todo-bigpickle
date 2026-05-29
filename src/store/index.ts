@@ -44,6 +44,12 @@ const handleError = (message: string, error: unknown, set: (state: Partial<AppSt
   const errorMessage = error instanceof Error ? error.message : message
   console.error(`${message}: ${errorMessage}`)
   set({ error: errorMessage })
+  setTimeout(() => {
+    const current = useAppStore.getState().error
+    if (current === errorMessage) {
+      useAppStore.setState({ error: null })
+    }
+  }, 8000)
 }
 
 interface AppStore extends AppState {
