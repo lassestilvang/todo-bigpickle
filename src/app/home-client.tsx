@@ -12,10 +12,10 @@ import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { Task } from '@/types'
 import { AnimatePresence } from 'framer-motion'
-import { CommandPalette } from '@/components/command-palette'
 import { RefreshCw, AlertCircle, X } from 'lucide-react'
 
 const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
+const CommandPalette = lazy(() => import('@/components/command-palette').then(m => ({ default: m.CommandPalette })))
 
 function LoadingSkeleton() {
   return (
@@ -148,7 +148,7 @@ export default function HomeClient() {
 
                 <AnimatePresence>
                   {error && (
-                    <div className="flex items-center gap-3 px-6 py-3 bg-destructive/5 border-b border-destructive/10 text-destructive text-sm animate-in">
+                    <div role="alert" className="flex items-center gap-3 px-6 py-3 bg-destructive/5 border-b border-destructive/10 text-destructive text-sm animate-in">
                       <AlertCircle className="size-4 shrink-0" />
                       <span className="flex-1">{error}</span>
                       <Button
@@ -188,11 +188,13 @@ export default function HomeClient() {
                 />
               </Suspense>
 
-              <CommandPalette
-                open={commandPaletteOpen}
-                onClose={() => setCommandPaletteOpen(false)}
-                onCreateTask={handleCreateTask}
-              />
+              <Suspense fallback={null}>
+                <CommandPalette
+                  open={commandPaletteOpen}
+                  onClose={() => setCommandPaletteOpen(false)}
+                  onCreateTask={handleCreateTask}
+                />
+              </Suspense>
             </div>
           )}
         </div>

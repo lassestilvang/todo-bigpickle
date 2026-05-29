@@ -21,7 +21,7 @@ import { format, addDays, addWeeks } from 'date-fns'
 import { m, AnimatePresence } from 'framer-motion'
 
 const taskSchema = z.object({
-  name: z.string().min(1, 'Task name is required'),
+  name: z.string().min(1, 'Task name is required').max(200, 'Task name must be 200 characters or fewer'),
   description: z.string().optional(),
   date: z.date().optional(),
   deadline: z.date().optional(),
@@ -29,6 +29,9 @@ const taskSchema = z.object({
   priority: z.enum(['high', 'medium', 'low', 'none']),
   recurring: z.enum(['daily', 'weekly', 'weekdays', 'monthly', 'yearly', 'custom']).optional(),
   listId: z.string(),
+}).refine(data => !data.date || !data.deadline || data.deadline >= data.date, {
+  message: 'Deadline must be after the task date',
+  path: ['deadline'],
 })
 
 type TaskFormData = z.infer<typeof taskSchema>
@@ -423,6 +426,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
                 <SelectItem value="weekly">Weekly</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
                 <SelectItem value="yearly">Yearly</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
               </SelectContent>
             </Select>
           </div>

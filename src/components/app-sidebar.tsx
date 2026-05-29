@@ -154,7 +154,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
             className="w-full pl-8 bg-muted/50 border-muted-foreground/20 focus:bg-background focus:border-primary/40 transition-all duration-200 [&::-webkit-search-cancel-button]:hidden"
           />
           <kbd className="absolute right-3.5 top-1/2 -translate-y-1/2 hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground/50">
-            ⌘/
+            /
           </kbd>
         </div>
       </SidebarHeader>
