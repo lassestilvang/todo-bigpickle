@@ -46,7 +46,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
   const [celebrating, setCelebrating] = useState(false)
-  const wasCompleted = useRef(task.completed)
+  const prevCompleted = useRef(task.completed)
 
   const [editingName, setEditingName] = useState(false)
   const [editValue, setEditValue] = useState('')
@@ -58,13 +58,12 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
   const progress = totalSubtasks > 0 ? completedSubtasks / totalSubtasks : 0
 
   useEffect(() => {
-    if (task.completed && !wasCompleted.current) {
-      wasCompleted.current = true
+    if (task.completed && !prevCompleted.current) {
       startTransition(() => setCelebrating(true))
       const timer = setTimeout(() => startTransition(() => setCelebrating(false)), 800)
       return () => clearTimeout(timer)
     }
-    wasCompleted.current = task.completed
+    prevCompleted.current = task.completed
   }, [task.completed])
 
   useEffect(() => {
