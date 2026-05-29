@@ -64,3 +64,10 @@ export function subscribeToasts(listener: Listener) {
   listener(toasts)
   return () => { listeners.delete(listener) }
 }
+
+/** @internal — reset state between tests */
+export function resetToasts() {
+  toasts = []
+  listeners.clear()
+  counter = 0
+}

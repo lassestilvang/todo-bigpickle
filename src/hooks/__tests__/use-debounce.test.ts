@@ -1,5 +1,3 @@
-// @bun-test-environment jsdom
-
 import { describe, expect, it } from 'bun:test'
 import { renderHook, act } from '@testing-library/react'
 import { useDebounce } from '@/hooks/use-debounce'

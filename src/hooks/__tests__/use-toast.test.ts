@@ -1,7 +1,10 @@
-import { describe, expect, it, mock } from 'bun:test'
-import { toast, dismissToast, subscribeToasts } from '@/hooks/use-toast'
+import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { toast, dismissToast, subscribeToasts, resetToasts } from '@/hooks/use-toast'
 
 describe('use-toast', () => {
+  beforeEach(() => {
+    resetToasts()
+  })
   it('should add a toast and notify subscribers', () => {
     const listener = mock()
     subscribeToasts(listener)

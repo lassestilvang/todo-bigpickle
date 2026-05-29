@@ -1,5 +1,3 @@
-// @bun-test-environment jsdom
-
 import { describe, expect, it } from 'bun:test'
 import { renderHook } from '@testing-library/react'
 import { useNow } from '@/hooks/use-now'

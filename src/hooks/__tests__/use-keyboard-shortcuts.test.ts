@@ -1,11 +1,10 @@
-// @bun-test-environment jsdom
-
 import { describe, expect, it, mock } from 'bun:test'
 import { renderHook } from '@testing-library/react'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 
 function fireKey(key: string, mods: Partial<KeyboardEvent> = {}) {
-  window.dispatchEvent(
+  const target = document.activeElement || window
+  target.dispatchEvent(
     new KeyboardEvent('keydown', {
       key,
       bubbles: true,

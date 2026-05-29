@@ -1,15 +1,11 @@
-// @bun-test-environment jsdom
-
 import { describe, expect, it, beforeEach } from 'bun:test'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { ToastContainer } from '@/components/toaster'
-import { toast, subscribeToasts } from '@/hooks/use-toast'
+import { toast, resetToasts } from '@/hooks/use-toast'
 
 describe('ToastContainer', () => {
   beforeEach(() => {
-    // Reset internal toast state
-    const unsub = subscribeToasts(() => {})
-    unsub()
+    resetToasts()
   })
 
   it('should render nothing when there are no toasts', () => {
@@ -19,19 +15,19 @@ describe('ToastContainer', () => {
 
   it('should render toasts that are added', () => {
     render(<ToastContainer />)
-    toast({ type: 'success', title: 'Task saved!' })
+    act(() => { toast({ type: 'success', title: 'Task saved!' }) })
     expect(screen.getByText('Task saved!')).toBeInTheDocument()
   })
 
   it('should render description when provided', () => {
     render(<ToastContainer />)
-    toast({ type: 'info', title: 'Info', description: 'Here are the details' })
+    act(() => { toast({ type: 'info', title: 'Info', description: 'Here are the details' }) })
     expect(screen.getByText('Here are the details')).toBeInTheDocument()
   })
 
   it('should dismiss toast when dismiss button is clicked', () => {
     render(<ToastContainer />)
-    toast({ type: 'success', title: 'Temporary' })
+    act(() => { toast({ type: 'success', title: 'Temporary' }) })
 
     expect(screen.getByText('Temporary')).toBeInTheDocument()
 
@@ -42,7 +38,7 @@ describe('ToastContainer', () => {
 
   it('should render action button when provided', () => {
     render(<ToastContainer />)
-    toast({ type: 'success', title: 'Deleted', action: { label: 'Undo', onClick: () => {} } })
+    act(() => { toast({ type: 'success', title: 'Deleted', action: { label: 'Undo', onClick: () => {} } }) })
     expect(screen.getByText('Undo')).toBeInTheDocument()
   })
 })
