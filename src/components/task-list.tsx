@@ -510,6 +510,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
         {/* Scroll to top */}
         {tasks.length > 5 && (
           <button
+            type="button"
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 animate-fade-slide-in
               flex items-center gap-1.5 px-5 py-2.5 rounded-full
               bg-background/80 backdrop-blur-lg border shadow-lg text-xs text-muted-foreground
