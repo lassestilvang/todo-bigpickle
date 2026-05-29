@@ -69,6 +69,7 @@ interface AppStore extends AppState {
   updateTask: (id: string, updates: Partial<Task>) => void
   deleteTask: (id: string) => void
   toggleTaskComplete: (id: string) => void
+  toggleSubtask: (taskId: string, subtaskId: string) => void
   clearCompleted: () => void
   reorderTasks: (reorder: { id: string; position: number }[]) => void
   
@@ -283,6 +284,17 @@ export const useAppStore = create<AppStore>()(
           handleError('Failed to toggle task completion', error, set)
           toast({ type: 'error', title: 'Failed to update task' })
         }
+      },
+
+      toggleSubtask: (taskId, subtaskId) => {
+        const task = get().tasks.find(t => t.id === taskId)
+        if (!task) return
+
+        const updatedSubtasks = task.subtasks.map(st =>
+          st.id === subtaskId ? { ...st, completed: !st.completed, updatedAt: new Date() } : st
+        )
+
+        get().updateTask(taskId, { subtasks: updatedSubtasks })
       },
 
       reorderTasks: async (reorder) => {

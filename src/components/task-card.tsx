@@ -24,6 +24,7 @@ import {
 interface TaskCardProps {
   task: Task
   onToggleComplete: (id: string) => void
+  onToggleSubtask: (taskId: string, subtaskId: string) => void
   onEdit: (task: Task) => void
   onDelete: (id: string) => void
 }
@@ -42,7 +43,7 @@ function formatRelativeDate(date: Date): string {
   return format(date, 'MMM d')
 }
 
-export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit, onDelete }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggleSubtask, onEdit, onDelete }: TaskCardProps) {
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
   const [celebrating, setCelebrating] = useState(false)
@@ -282,9 +283,14 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                   </div>
                   <div className="mt-2 space-y-1">
                     {task.subtasks.slice(0, 3).map((subtask) => (
-                      <div
+                      <button
                         key={subtask.id}
-                        className="flex items-center gap-2 text-xs"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleSubtask(task.id, subtask.id)
+                        }}
+                        className="flex items-center gap-2 text-xs w-full text-left transition-opacity hover:opacity-80"
                       >
                         {subtask.completed ? (
                           <CheckCircle2 className="size-3 text-emerald-500 shrink-0" />
@@ -294,7 +300,7 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onEdit,
                         <span className={`truncate ${subtask.completed ? 'line-through text-muted-foreground/60' : ''}`}>
                           {subtask.title}
                         </span>
-                      </div>
+                      </button>
                     ))}
                     {task.subtasks.length > 3 && (
                       <div className="text-xs text-muted-foreground/70 font-medium">

@@ -56,13 +56,14 @@ interface TaskGroupProps {
   sortBy: string
   onReorder: (groupKey: string, tasks: Task[]) => void
   onToggleComplete: (id: string) => void
+  onToggleSubtask: (taskId: string, subtaskId: string) => void
   onEditTask: (task: Task) => void
   onDeleteTask: (id: string) => void
 }
 
 const TaskGroup = memo(function TaskGroup({
   tasks, hasDate, date, customOrderTasks, groupKey,
-  sortBy, onReorder, onToggleComplete, onEditTask, onDeleteTask,
+  sortBy, onReorder, onToggleComplete, onToggleSubtask, onEditTask, onDeleteTask,
 }: TaskGroupProps & { groupKey: string }) {
   return (
     <div data-task-group className="mb-8">
@@ -94,6 +95,7 @@ const TaskGroup = memo(function TaskGroup({
             <TaskCard
               task={task}
               onToggleComplete={onToggleComplete}
+              onToggleSubtask={onToggleSubtask}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
             />
@@ -111,6 +113,7 @@ const TaskGroup = memo(function TaskGroup({
 
 export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: TaskListProps) {
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
+  const toggleSubtask = useAppStore(s => s.toggleSubtask)
   const deleteTask = useAppStore(s => s.deleteTask)
   const reorderTasks = useAppStore(s => s.reorderTasks)
   const addTask = useAppStore(s => s.addTask)
@@ -513,6 +516,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 sortBy={sortBy}
                 onReorder={handleGroupReorder}
                 onToggleComplete={handleToggleComplete}
+                onToggleSubtask={toggleSubtask}
                 onEditTask={onEditTask}
                 onDeleteTask={handleDeleteTask}
               />
