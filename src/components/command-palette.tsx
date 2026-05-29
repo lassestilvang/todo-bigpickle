@@ -155,8 +155,11 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent
         className="max-w-lg top-[15%] -translate-y-0 p-0 gap-0 overflow-hidden shadow-2xl"
-        aria-describedby={undefined}
+        aria-describedby="command-palette-desc"
       >
+        <p id="command-palette-desc" className="sr-only">
+          Search and run commands. Type to filter available commands, use arrow keys to navigate, and press Enter to execute.
+        </p>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50" />
           <Input
