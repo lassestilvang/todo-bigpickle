@@ -177,7 +177,15 @@ export const useAppStore = create<AppStore>()(
         }))
 
         if (newCompleted) {
-          toast({ type: 'success', title: 'Task completed!' })
+          toast({
+            type: 'success',
+            title: 'Task completed!',
+            duration: 6000,
+            action: {
+              label: 'Undo',
+              onClick: () => get().toggleTaskComplete(id),
+            },
+          })
         }
 
         try {
