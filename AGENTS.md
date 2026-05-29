@@ -9,7 +9,8 @@
 - `bun run test:watch` - Run tests in watch mode
 - `bun run test:coverage` - Run tests with coverage
 - **Single test**: `bun test --test-name-pattern="TaskCard"` or `bun test src/components/__tests__/task-card.test.tsx`
-- **React component tests**: add `// @bun-test-environment jsdom` comment at top of test file
+- **React component tests**: no special comment needed; JSDOM is provided globally via `test/setup.ts` (preloaded in `bunfig.toml`)
+- **Radix UI interactions**: use `@testing-library/user-event` instead of `fireEvent` for dropdowns/menus (dispatches proper event sequence)
 - **DOM matchers**: use `@testing-library/jest-dom` (custom matchers via `test/setup.ts`)
 
 ## Code Style Guidelines
