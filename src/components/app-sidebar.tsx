@@ -277,6 +277,28 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
         )}
       </SidebarContent>
 
+      {/* Stats section */}
+      <div className="px-3 py-3 border-t border-border/50">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="text-center">
+            <div className="text-lg font-bold tabular-nums">{tasks.length}</div>
+            <div className="text-[10px] text-muted-foreground/70 font-medium">Total</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold tabular-nums text-emerald-500">{tasks.filter(t => t.completed).length}</div>
+            <div className="text-[10px] text-muted-foreground/70 font-medium">Done</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold tabular-nums">
+              {tasks.length > 0
+                ? Math.round((tasks.filter(t => t.completed).length / tasks.length) * 100)
+                : 0}%
+            </div>
+            <div className="text-[10px] text-muted-foreground/70 font-medium">Rate</div>
+          </div>
+        </div>
+      </div>
+
       <SidebarFooter>
         <div className="p-2">
           <Button onClick={onCreateTask} className="w-full group transition-all duration-200 active:scale-[0.98] hover:scale-[1.02]">
