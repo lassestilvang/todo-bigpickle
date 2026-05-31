@@ -107,6 +107,8 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggl
             : 'shadow-sm hover:shadow-primary/5'
           }
           overflow-hidden
+          before:absolute before:inset-0 before:rounded-[inherit] before:opacity-0 before:transition-opacity before:duration-300
+          hover:before:opacity-100 before:bg-gradient-to-br before:from-primary/[0.02] before:to-transparent
         `}
         onClick={() => { if (!editingName) onEdit(task) }}
         role="button"
@@ -122,10 +124,13 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggl
         }}
       >
         {/* Priority gradient bar at top */}
-        <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${priority.bar} opacity-70 group-hover/card:opacity-100 transition-all duration-300 group-hover/card:h-1`} />
+        <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${priority.bar} opacity-70 group-hover/card:opacity-100 transition-all duration-300`} />
+
+        {/* Priority left border accent */}
+        <div className={`absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-gradient-to-b ${priority.bar} opacity-40 group-hover/card:opacity-80 transition-opacity duration-300`} />
 
         {/* Ambient priority glow on hover */}
-        <div className={`absolute -top-4 -right-4 size-16 rounded-full bg-gradient-to-br ${priority.bar} opacity-0 group-hover/card:opacity-[0.04] blur-2xl transition-opacity duration-500 pointer-events-none`} />
+        <div className={`absolute -top-4 -right-4 size-20 rounded-full bg-gradient-to-br ${priority.bar} opacity-0 group-hover/card:opacity-[0.06] blur-3xl transition-opacity duration-500 pointer-events-none`} />
 
         <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none ${priority.gradient}`} />
 
@@ -257,29 +262,31 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggl
                   </div>
                 )}
 
-                {totalSubtasks > 0 && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40">
-                    <CheckCircle2 className={`size-3 ${progress >= 1 ? 'text-emerald-500' : ''}`} />
-                    <span className={progress >= 1 ? 'text-emerald-500 font-medium' : ''}>
-                      {completedSubtasks}/{totalSubtasks}
-                    </span>
-                  </div>
-                )}
               </div>
 
               {totalSubtasks > 0 && (
-                <div className="mt-3 pl-0.5">
-                  <div className="h-1.5 bg-muted/70 rounded-full overflow-hidden ring-1 ring-inset ring-black/[0.02]">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${
-                        progress >= 1 ? 'bg-emerald-500' : 'bg-primary/60'
-                      }`}
-                      style={{ width: `${progress * 100}%` }}
-                    >
-                      {progress > 0 && progress < 1 && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                      )}
-                    </div>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-medium text-muted-foreground/70">Subtasks</span>
+                    <span className={`text-[10px] font-semibold tabular-nums ${progress >= 1 ? 'text-emerald-500' : 'text-muted-foreground/70'}`}>
+                      {completedSubtasks}/{totalSubtasks}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-muted/70 rounded-full overflow-hidden ring-1 ring-inset ring-black/[0.02] relative">
+                    {progress > 0 && (
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${
+                          progress >= 1
+                            ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                            : 'bg-gradient-to-r from-primary/70 to-primary/40'
+                        }`}
+                        style={{ width: `${Math.max(progress * 100, 8)}%` }}
+                      >
+                        {progress > 0 && progress < 1 && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="mt-2 space-y-1">
                     {task.subtasks.slice(0, 3).map((subtask) => (
