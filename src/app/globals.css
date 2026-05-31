@@ -203,6 +203,14 @@
 /* Optimize sidebar for GPU compositing */
 [data-sidebar] {
   will-change: transform;
+  content-visibility: auto;
+}
+
+/* Optimize sidebar group content for reduce-reflow */
+[data-sidebar-group] {
+  content-visibility: auto;
+  contain-intrinsic-height: 300px;
+  contain: layout style paint;
 }
 
 /* Optimize dialogs and sheets */
@@ -278,6 +286,11 @@
 
 .animate-shimmer {
   animation: shimmer 2.5s ease-in-out infinite;
+}
+
+  /* Enable CSS transitions for dynamic height changes */
+@supports (interpolate-size: allow-keywords) {
+  :root { interpolate-size: allow-keywords; }
 }
 
 /* Reduce motion for accessibility */

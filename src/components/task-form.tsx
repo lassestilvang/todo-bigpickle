@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -42,7 +42,7 @@ interface TaskFormProps {
   onClose: () => void
 }
 
-function DatePickerField({
+const DatePickerField = memo(function DatePickerField({
   value,
   onChange,
   label,
@@ -87,9 +87,9 @@ function DatePickerField({
       </Popover>
     </div>
   )
-}
+})
 
-function LabelsPicker({
+const LabelsPicker = memo(function LabelsPicker({
   labels,
   selectedLabels,
   onToggle,
@@ -131,9 +131,9 @@ function LabelsPicker({
       </div>
     </div>
   )
-}
+})
 
-function SubtasksEditor({
+const SubtasksEditor = memo(function SubtasksEditor({
   subtasks,
   newSubtask,
   onNewSubtaskChange,
@@ -203,7 +203,7 @@ function SubtasksEditor({
       </AnimatePresence>
     </div>
   )
-}
+})
 
 const datePresets: { label: string; getValue: () => Date }[] = [
   { label: 'Today', getValue: () => new Date() },
