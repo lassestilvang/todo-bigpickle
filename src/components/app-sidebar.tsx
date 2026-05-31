@@ -30,8 +30,11 @@ import {
   Plus, 
   Search, 
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Settings2
 } from 'lucide-react'
+import { ListManager } from '@/components/list-manager'
+import { LabelManager } from '@/components/label-manager'
 
 const viewIcons = {
   today: CalendarDays,
@@ -52,6 +55,8 @@ interface AppSidebarProps {
 }
 
 export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarProps) {
+  const [listManagerOpen, setListManagerOpen] = useState(false)
+  const [labelManagerOpen, setLabelManagerOpen] = useState(false)
   const { lists, currentView, selectedListId, showCompleted, tasks } = useAppStore(
     useShallow(s => ({
       lists: s.lists,
@@ -200,7 +205,17 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
         <Separator className="my-2" />
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/60">Lists</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/60 flex items-center justify-between pr-2">
+            <span>Lists</span>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setListManagerOpen(true) }}
+              className="text-muted-foreground/50 hover:text-foreground transition-colors p-0.5"
+              aria-label="Manage lists"
+            >
+              <Settings2 className="size-3" />
+            </button>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {lists.length === 0 ? (
@@ -272,6 +287,16 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
             </kbd>
           </Button>
         </div>
+        <div className="px-3 pb-2">
+          <button
+            type="button"
+            onClick={() => setLabelManagerOpen(true)}
+            className="w-full text-xs text-muted-foreground/70 hover:text-foreground transition-colors flex items-center gap-2 px-1 py-1.5"
+          >
+            <Settings2 className="size-3" />
+            Manage Labels
+          </button>
+        </div>
         <div className="px-3 pb-3">
           <label htmlFor="show-completed" className="flex items-center gap-2.5 text-sm cursor-pointer group">
             <Checkbox
@@ -286,6 +311,8 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           </label>
         </div>
       </SidebarFooter>
+      <ListManager open={listManagerOpen} onClose={() => setListManagerOpen(false)} />
+      <LabelManager open={labelManagerOpen} onClose={() => setLabelManagerOpen(false)} />
     </Sidebar>
   )
 })
