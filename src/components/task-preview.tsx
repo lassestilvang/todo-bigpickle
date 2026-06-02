@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { Task } from '@/types'
 import { useNow } from '@/hooks/use-now'
 import { format, isToday, isTomorrow, isYesterday } from 'date-fns'
@@ -60,6 +60,7 @@ export const TaskPreview = memo(function TaskPreview({
   onToggleComplete,
   onToggleSubtask,
 }: TaskPreviewProps) {
+  const [showAllHistory, setShowAllHistory] = useState(false)
   const now = useNow()
   if (!task) return null
 
@@ -234,21 +235,40 @@ export const TaskPreview = memo(function TaskPreview({
             {/* Activity history */}
             {task.history.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">Activity</p>
-                <div className="space-y-1 max-h-28 overflow-y-auto">
-                  {task.history.slice(0, 5).map((h) => (
-                    <div key={h.id} className="text-xs text-muted-foreground/70 flex items-center gap-2">
-                      <span className="size-1.5 rounded-full bg-muted-foreground/20 shrink-0" />
-                      <span className="capitalize">{h.field}</span>
-                      <span className="text-muted-foreground/40">changed</span>
-                      <span className="text-[10px] text-muted-foreground/40 ml-auto">
-                        {format(new Date(h.changedAt), 'MMM d, HH:mm')}
-                      </span>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-muted-foreground">Activity</p>
+                  {task.history.length > 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllHistory(v => !v)}
+                      className="text-xs text-muted-foreground/50 hover:text-foreground transition-colors"
+                    >
+                      {showAllHistory ? 'Show less' : `View all (${task.history.length})`}
+                    </button>
+                  )}
+                </div>
+                <div className={`space-y-1 overflow-y-auto ${showAllHistory ? 'max-h-64' : 'max-h-28'}`}>
+                  {(showAllHistory ? task.history : task.history.slice(0, 5)).map((h) => (
+                    <div key={h.id} className="text-xs text-muted-foreground/70 flex items-start gap-2">
+                      <span className="size-1.5 rounded-full bg-muted-foreground/20 shrink-0 mt-1.5" />
+                      <div className="flex-1 min-w-0">
+                        <span className="capitalize font-medium">{h.field.replace(/([A-Z])/g, ' $1').trim()}</span>
+                        <span className="text-muted-foreground/40 mx-1">changed</span>
+                        {h.oldValue !== null && h.oldValue !== undefined && (
+                          <span className="text-muted-foreground/50 line-through">{String(h.oldValue)}</span>
+                        )}
+                        {h.oldValue !== null && h.oldValue !== undefined && h.newValue !== null && h.newValue !== undefined && (
+                          <span className="text-muted-foreground/40 mx-1">→</span>
+                        )}
+                        {h.newValue !== null && h.newValue !== undefined && (
+                          <span className="text-foreground/60">{String(h.newValue)}</span>
+                        )}
+                        <span className="text-[10px] text-muted-foreground/40 ml-auto block sm:inline sm:ml-2">
+                          {format(new Date(h.changedAt), 'MMM d, HH:mm')}
+                        </span>
+                      </div>
                     </div>
                   ))}
-                  {task.history.length > 5 && (
-                    <p className="text-xs text-muted-foreground/50 pt-1">+{task.history.length - 5} more changes</p>
-                  )}
                 </div>
               </div>
             )}
