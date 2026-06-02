@@ -30,6 +30,14 @@ export const metadata: Metadata = {
   },
 }
 
+const swScript = `
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js').catch(function() {});
+    });
+  }
+`
+
 const themeScript = `
   (function() {
     try {
@@ -54,6 +62,9 @@ export default function RootLayout({
       <head>
         <Script id="theme-script" strategy="beforeInteractive">
           {themeScript}
+        </Script>
+        <Script id="sw-script" strategy="afterInteractive">
+          {swScript}
         </Script>
       </head>
       <body
