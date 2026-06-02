@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { CalendarIcon, Plus, X, Trash2, Loader2, GripVertical } from 'lucide-react'
+import { CalendarIcon, Plus, X, Trash2, Loader2, GripVertical, Paperclip } from 'lucide-react'
 import { format, addDays, addWeeks } from 'date-fns'
 import { m, AnimatePresence, Reorder } from 'framer-motion'
 
@@ -234,10 +234,12 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
   const [subtasks, setSubtasks] = useState(
     task?.subtasks.map(st => ({ id: st.id, title: st.title, completed: st.completed })) || []
   )
+  const [attachments, setAttachments] = useState<string[]>(task?.attachments || [])
   const [newSubtask, setNewSubtask] = useState('')
   const [submitState, setSubmitState] = useState<{ isSubmitting: boolean; error: string | null }>({ isSubmitting: false, error: null })
   const subtaskIdCounter = useRef(0)
   const newSubtaskRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -281,6 +283,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
         completed: st.completed,
         position: i,
       })),
+      attachments: attachments.length > 0 ? attachments : undefined,
       completed: task?.completed || false,
     }
 
@@ -324,6 +327,19 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
   const reorderSubtasks = useCallback((reordered: { id: string; title: string; completed: boolean }[]) => {
     setSubtasks(reordered)
+  }, [])
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+    for (const file of Array.from(files)) {
+      setAttachments(prev => [...prev, file.name])
+    }
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [])
+
+  const removeAttachment = useCallback((name: string) => {
+    setAttachments(prev => prev.filter(a => a !== name))
   }, [])
 
   const toggleLabel = (labelId: string) => {
@@ -474,6 +490,48 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             onReorder={reorderSubtasks}
             inputRef={newSubtaskRef}
           />
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Attachments</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className="size-3.5 mr-1.5" />
+                Add File
+              </Button>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {attachments.map((name) => (
+                  <div
+                    key={name}
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-muted rounded-md text-xs"
+                  >
+                    <Paperclip className="size-3" />
+                    <span className="truncate max-w-32">{name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(name)}
+                      className="text-muted-foreground hover:text-foreground ml-0.5"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <DialogFooter className="pt-2">
             {task && (

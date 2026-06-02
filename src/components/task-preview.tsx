@@ -24,6 +24,7 @@ import {
   Pencil,
   Trash2,
   ExternalLink,
+  Paperclip,
 } from 'lucide-react'
 
 function formatRelativeDate(date: Date): string {
@@ -195,6 +196,24 @@ export const TaskPreview = memo(function TaskPreview({
                         {subtask.title}
                       </span>
                     </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Attachments */}
+            {task.attachments && task.attachments.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Attachments</p>
+                <div className="flex flex-wrap gap-2">
+                  {task.attachments.map((name) => (
+                    <div
+                      key={name}
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-muted/60 rounded-md border border-border/40 text-xs text-muted-foreground"
+                    >
+                      <Paperclip className="size-3" />
+                      {name}
+                    </div>
                   ))}
                 </div>
               </div>
