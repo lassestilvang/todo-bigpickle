@@ -360,12 +360,16 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [])
 
   const handleReorder = useCallback((group: Task[]) => {
+    const groupIds = new Set(group.map(t => t.id))
+    const sorted = [...allTasks].sort((a, b) => a.position - b.position)
+    const groupStart = sorted.findIndex(t => groupIds.has(t.id))
+    if (groupStart === -1) return
     const updates = group.map((task, idx) => ({
       id: task.id,
-      position: idx,
+      position: groupStart + idx,
     }))
     reorderTasks(updates)
-  }, [reorderTasks])
+  }, [allTasks, reorderTasks])
 
   const handleGroupReorder = useCallback((_groupKey: string, reordered: Task[]) => {
     handleReorder(reordered)
