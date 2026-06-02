@@ -102,9 +102,10 @@ export const TaskCard = memo(function TaskCard({ task, selected, onToggleComplet
   return (
     <div
       data-task-card
+      className="relative"
     >
       <Card
-        className={`group/card relative cursor-pointer transition-all duration-300 ease-out
+        className={`group/card cursor-pointer transition-all duration-300 ease-out
           hover:shadow-xl hover:-translate-y-[2px] active:translate-y-0
           dark:hover:shadow-primary/5 dark:hover:shadow-2xl
           bg-background hover:bg-accent/30
@@ -114,14 +115,14 @@ export const TaskCard = memo(function TaskCard({ task, selected, onToggleComplet
             : 'shadow-sm hover:shadow-primary/5'
           }
           ${selected ? 'ring-2 ring-primary/40 shadow-lg shadow-primary/10 bg-primary/[0.02]' : ''}
-          overflow-hidden
+          ${celebrating ? 'overflow-visible' : 'overflow-hidden'}
           before:absolute before:inset-0 before:rounded-[inherit] before:opacity-0 before:transition-opacity before:duration-300
           hover:before:opacity-100 before:bg-gradient-to-br before:from-primary/[0.02] before:to-transparent
         `}
         onClick={(e) => {
           if (onSelectToggle && (e.shiftKey || e.metaKey || e.ctrlKey)) {
             e.preventDefault()
-            onSelectToggle(task.id, e.shiftKey)
+            onSelectToggle(task.id, e.shiftKey ? true : undefined)
           } else if (!editingName) {
             onEdit(task)
           }

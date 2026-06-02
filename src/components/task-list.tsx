@@ -137,6 +137,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const [quickAddText, setQuickAddText] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [selectedLabelIds, setSelectedLabelIds] = useState<Set<string>>(new Set())
+  const lastClickedIndexRef = useRef<number>(-1)
   const quickAddRef = useRef<HTMLInputElement>(null)
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
   const focusedTaskIndexRef = useRef(focusedTaskIndex)
@@ -384,15 +385,32 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [deleteTask])
 
   const handleSelectToggle = useCallback((id: string, shiftKey?: boolean) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
+    const flatTasks = flatTasksRef.current
+    const clickedIndex = flatTasks.findIndex(t => t.id === id)
+    if (shiftKey && lastClickedIndexRef.current >= 0 && clickedIndex >= 0) {
+      const start = Math.min(lastClickedIndexRef.current, clickedIndex)
+      const end = Math.max(lastClickedIndexRef.current, clickedIndex)
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        for (let i = start; i <= end; i++) {
+          next.add(flatTasks[i].id)
+        }
+        return next
+      })
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        if (next.has(id)) {
+          next.delete(id)
+        } else {
+          next.add(id)
+        }
+        return next
+      })
+    }
+    if (clickedIndex >= 0) {
+      lastClickedIndexRef.current = clickedIndex
+    }
   }, [])
 
   const handleSelectAll = useCallback(() => {
