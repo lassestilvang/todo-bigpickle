@@ -2,6 +2,7 @@
 
 import { memo, useState } from 'react'
 import { Task } from '@/types'
+import { useAppStore } from '@/store'
 import { useNow } from '@/hooks/use-now'
 import { format, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
@@ -61,6 +62,7 @@ export const TaskPreview = memo(function TaskPreview({
   onToggleSubtask,
 }: TaskPreviewProps) {
   const [showAllHistory, setShowAllHistory] = useState(false)
+  const lists = useAppStore(s => s.lists)
   const now = useNow()
   if (!task) return null
 
@@ -229,7 +231,7 @@ export const TaskPreview = memo(function TaskPreview({
 
             {/* List info */}
             <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2 border border-border/40">
-              List ID: <span className="font-mono">{task.listId}</span>
+              List: <span className="font-medium">{lists.find(l => l.id === task.listId)?.name || task.listId}</span>
             </div>
 
             {/* Activity history */}
