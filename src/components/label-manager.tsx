@@ -113,6 +113,8 @@ export function LabelManager({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const confirmDeleteLabel = labels.find(l => l.id === confirmDeleteId)
 
   const handleAdd = useCallback(async (data: { name: string; icon: string; color: string }) => {
     try {
@@ -228,7 +230,7 @@ export function LabelManager({
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(label.id)}
+                      onClick={() => setConfirmDeleteId(label.id)}
                       className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all"
                       aria-label={`Delete ${label.name}`}
                     >
@@ -246,6 +248,32 @@ export function LabelManager({
             Done
           </Button>
         </DialogFooter>
+
+        {confirmDeleteLabel && (
+          <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-6 rounded-lg">
+            <div className="bg-card border rounded-xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+              <div className="space-y-1">
+                <h3 className="font-semibold text-base">Delete label?</h3>
+                <p className="text-sm text-muted-foreground">
+                  This will permanently delete the label{' '}
+                  <span className="font-medium text-foreground">{confirmDeleteLabel.icon} {confirmDeleteLabel.name}</span>{' '}
+                  and remove it from all tasks.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(null)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => {
+                  handleDelete(confirmDeleteLabel.id)
+                  setConfirmDeleteId(null)
+                }}>
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )
