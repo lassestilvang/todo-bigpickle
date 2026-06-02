@@ -1,10 +1,10 @@
 'use client'
 
-import { memo, useCallback } from 'react'
-import { useAppStore } from '@/store'
+import { memo, useCallback, useMemo } from 'react'
+import { useAppStore, useShallow } from '@/store'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CheckCircle2, Trash2, Move, X } from 'lucide-react'
+import { CheckCircle2, Trash2, Move, X, RotateCcw, Copy } from 'lucide-react'
 
 interface BulkActionBarProps {
   selectedIds: string[]
@@ -18,12 +18,32 @@ export const BulkActionBar = memo(function BulkActionBar({
   const bulkCompleteTasks = useAppStore(s => s.bulkCompleteTasks)
   const bulkDeleteTasks = useAppStore(s => s.bulkDeleteTasks)
   const bulkMoveTasks = useAppStore(s => s.bulkMoveTasks)
+  const duplicateTask = useAppStore(s => s.duplicateTask)
   const lists = useAppStore(s => s.lists)
+  const tasks = useAppStore(useShallow(s => s.tasks))
+
+  const hasCompleted = useMemo(
+    () => selectedIds.some(id => tasks.find(t => t.id === id)?.completed),
+    [selectedIds, tasks]
+  )
 
   const handleComplete = useCallback(() => {
     bulkCompleteTasks(selectedIds, true)
     onClearSelection()
   }, [selectedIds, bulkCompleteTasks, onClearSelection])
+
+  const handleMarkIncomplete = useCallback(() => {
+    bulkCompleteTasks(selectedIds, false)
+    onClearSelection()
+  }, [selectedIds, bulkCompleteTasks, onClearSelection])
+
+  const handleDuplicate = useCallback(() => {
+    for (const id of selectedIds) {
+      const task = tasks.find(t => t.id === id)
+      if (task) duplicateTask(task)
+    }
+    onClearSelection()
+  }, [selectedIds, tasks, duplicateTask, onClearSelection])
 
   const handleDelete = useCallback(() => {
     bulkDeleteTasks(selectedIds)
@@ -47,14 +67,35 @@ export const BulkActionBar = memo(function BulkActionBar({
           {count} selected
         </span>
         <div className="w-px h-6 bg-border/50 mx-1" />
+        {hasCompleted ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleMarkIncomplete}
+            className="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+          >
+            <RotateCcw className="size-3.5 mr-1.5" />
+            Incomplete
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleComplete}
+            className="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+          >
+            <CheckCircle2 className="size-3.5 mr-1.5" />
+            Complete
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleComplete}
-          className="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+          onClick={handleDuplicate}
+          className="text-muted-foreground hover:text-foreground"
         >
-          <CheckCircle2 className="size-3.5 mr-1.5" />
-          Complete
+          <Copy className="size-3.5 mr-1.5" />
+          Duplicate
         </Button>
         <Select onValueChange={handleMove}>
           <SelectTrigger className="h-8 w-auto gap-1 text-xs border-dashed">

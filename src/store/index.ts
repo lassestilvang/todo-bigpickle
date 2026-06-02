@@ -72,6 +72,7 @@ interface AppStore extends AppState {
   toggleSubtask: (taskId: string, subtaskId: string) => void
   clearCompleted: () => void
   reorderTasks: (reorder: { id: string; position: number }[]) => void
+  duplicateTask: (task: Task) => void
   bulkCompleteTasks: (ids: string[], completed: boolean) => void
   bulkDeleteTasks: (ids: string[]) => void
   bulkMoveTasks: (ids: string[], listId: string) => void
@@ -353,6 +354,46 @@ export const useAppStore = create<AppStore>()(
           handleError('Failed to clear completed tasks', error, set)
           toast({ type: 'error', title: 'Failed to clear completed tasks on server' })
         })
+      },
+
+      duplicateTask: async (task: Task) => {
+        const taskData = {
+          name: `${task.name} (copy)`,
+          description: task.description,
+          date: task.date,
+          deadline: task.deadline,
+          estimate: task.estimate,
+          actualTime: task.actualTime,
+          labels: task.labels.map(l => ({ id: l.id, name: l.name, color: l.color, icon: l.icon })),
+          priority: task.priority,
+          subtasks: task.subtasks.map(s => ({ title: s.title, completed: false })),
+          recurring: task.recurring,
+          recurringConfig: task.recurringConfig,
+          listId: task.listId,
+          completed: false,
+        }
+        const tempId = `temp_${Date.now()}`
+        const now = new Date()
+        const optimisticTask: Task = {
+          id: tempId,
+          ...taskData,
+          position: 0,
+          createdAt: now,
+          updatedAt: now,
+          history: [],
+        }
+        set((state) => ({ tasks: [optimisticTask, ...state.tasks], error: null }))
+        try {
+          const created = await api.createTask(taskData)
+          set((state) => ({
+            tasks: state.tasks.map(t => t.id === tempId ? created : t),
+          }))
+          toast({ type: 'success', title: 'Task duplicated', description: task.name })
+        } catch (error) {
+          set((state) => ({ tasks: state.tasks.filter(t => t.id !== tempId) }))
+          handleError('Failed to duplicate task', error, set)
+          toast({ type: 'error', title: 'Failed to duplicate task' })
+        }
       },
 
       bulkCompleteTasks: async (ids, completed) => {

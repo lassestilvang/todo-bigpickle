@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Trash2,
   GripVertical,
+  Copy,
 } from 'lucide-react'
 import { Markdown } from '@/components/ui/markdown'
 
@@ -58,6 +59,7 @@ export const TaskCard = memo(function TaskCard({ task, selected, onToggleComplet
   const [editValue, setEditValue] = useState('')
   const editInputRef = useRef<HTMLInputElement>(null)
   const updateTask = useAppStore(s => s.updateTask)
+  const duplicateTask = useAppStore(s => s.duplicateTask)
   const priority = priorityConfig[task.priority]
   const completedSubtasks = task.subtasks.filter(st => st.completed).length
   const totalSubtasks = task.subtasks.length
@@ -357,20 +359,33 @@ export const TaskCard = memo(function TaskCard({ task, selected, onToggleComplet
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete(task.id)
-            }}
-            className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 group-focus-within/card:opacity-100 focus-visible:opacity-100 transition-all duration-200
-              p-1.5 rounded-md text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/10 hover:scale-110 active:scale-90
-              focus-visible:text-red-500 focus-visible:bg-red-500/10"
-            aria-label={`Delete "${task.name}"`}
-            tabIndex={0}
-          >
-            <Trash2 className="size-4" />
-          </button>
+          <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 group-focus-within/card:opacity-100 focus-visible:opacity-100 transition-all duration-200">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                duplicateTask(task)
+              }}
+              className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-accent hover:scale-110 active:scale-90 transition-all duration-200"
+              aria-label={`Duplicate "${task.name}"`}
+              tabIndex={0}
+            >
+              <Copy className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(task.id)
+              }}
+              className="p-1.5 rounded-md text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/10 hover:scale-110 active:scale-90
+                focus-visible:text-red-500 focus-visible:bg-red-500/10 transition-all duration-200"
+              aria-label={`Delete "${task.name}"`}
+              tabIndex={0}
+            >
+              <Trash2 className="size-4" />
+            </button>
+          </div>
         </CardContent>
       </Card>
     </div>
