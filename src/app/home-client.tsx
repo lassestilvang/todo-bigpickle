@@ -10,6 +10,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { useNotifications } from '@/hooks/use-notifications'
 import { Task } from '@/types'
 import { AnimatePresence } from 'framer-motion'
 import { RefreshCw, AlertCircle, X } from 'lucide-react'
@@ -76,6 +77,8 @@ export default function HomeClient() {
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  useNotifications()
 
   useKeyboardShortcuts([
     {
