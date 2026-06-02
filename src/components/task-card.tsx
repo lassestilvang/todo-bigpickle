@@ -21,6 +21,7 @@ import {
   Trash2,
   GripVertical,
 } from 'lucide-react'
+import { Markdown } from '@/components/ui/markdown'
 
 interface TaskCardProps {
   task: Task
@@ -229,9 +230,9 @@ export const TaskCard = memo(function TaskCard({ task, selected, onToggleComplet
               </div>
 
               {task.description && (
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
-                  {task.description}
-                </p>
+                <div className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
+                  <Markdown content={task.description} />
+                </div>
               )}
 
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">

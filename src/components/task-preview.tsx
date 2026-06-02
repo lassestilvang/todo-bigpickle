@@ -7,6 +7,7 @@ import { useNow } from '@/hooks/use-now'
 import { format, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Markdown } from '@/components/ui/markdown'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -94,8 +95,10 @@ export const TaskPreview = memo(function TaskPreview({
                     {task.name}
                   </DialogTitle>
                   {task.description && (
-                    <DialogDescription className="text-sm mt-1.5 leading-relaxed">
-                      {task.description}
+                    <DialogDescription className="text-sm mt-1.5 leading-relaxed" asChild>
+                      <div>
+                        <Markdown content={task.description} />
+                      </div>
                     </DialogDescription>
                   )}
                 </div>
