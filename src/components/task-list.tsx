@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Reorder } from 'framer-motion'
 import Fuse from 'fuse.js'
-import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp, CheckSquare, Square } from 'lucide-react'
+import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp, CheckSquare, Square, Tag } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
 
 const sortLabels = { date: 'Date', priority: 'Priority', name: 'Name', custom: 'Custom' } as const
@@ -131,10 +131,12 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const searchQuery = useAppStore(s => s.searchQuery)
   const allTasks = useAppStore(useShallow(s => s.tasks))
   const lists = useAppStore(useShallow(s => s.lists))
+  const labels = useAppStore(useShallow(s => s.labels))
   const clearCompleted = useAppStore(s => s.clearCompleted)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name' | 'custom'>('custom')
   const [quickAddText, setQuickAddText] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [selectedLabelIds, setSelectedLabelIds] = useState<Set<string>>(new Set())
   const quickAddRef = useRef<HTMLInputElement>(null)
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
   const focusedTaskIndexRef = useRef(focusedTaskIndex)
@@ -143,6 +145,21 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   useEffect(() => {
     focusedTaskIndexRef.current = focusedTaskIndex
   }, [focusedTaskIndex])
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const menu = document.getElementById('label-filter-menu')
+      if (menu && !menu.classList.contains('hidden')) {
+        const trigger = menu.parentElement
+        if (trigger && !trigger.contains(target)) {
+          menu.classList.add('hidden')
+        }
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -214,12 +231,18 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
       }
     }
 
+    if (selectedLabelIds.size > 0) {
+      filtered = filtered.filter(task =>
+        task.labels.some(l => selectedLabelIds.has(l.id))
+      )
+    }
+
     if (!showCompleted) {
       filtered = filtered.filter(task => !task.completed)
     }
 
     return filtered
-  }, [allTasks, currentView, selectedListId, showCompleted])
+  }, [allTasks, currentView, selectedListId, showCompleted, selectedLabelIds])
 
   // Step 2: apply Fuse.js search on top of baseTasks
   const hasQuery = !!searchQuery
@@ -440,6 +463,72 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               )}
               {selectedIds.size > 0 ? `${selectedIds.size}` : 'Select'}
             </Button>
+            <div className="relative group">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const el = document.getElementById('label-filter-menu')
+                  if (el) el.classList.toggle('hidden')
+                }}
+                className={`transition-all duration-200 ${selectedLabelIds.size > 0 ? 'border-primary/50 text-primary bg-primary/5' : ''}`}
+              >
+                <Tag className="size-3.5 mr-1.5" />
+                {selectedLabelIds.size > 0 ? `${selectedLabelIds.size}` : 'Label'}
+              </Button>
+              <div
+                id="label-filter-menu"
+                className="hidden absolute right-0 top-full mt-2 z-50 min-w-48 p-2 rounded-xl border bg-popover shadow-xl animate-in"
+              >
+                <div className="text-xs font-medium text-muted-foreground px-2 py-1.5">Filter by label</div>
+                {labels.length === 0 && (
+                  <div className="text-xs text-muted-foreground/50 px-2 py-3 text-center">No labels yet</div>
+                )}
+                {labels.map(label => (
+                  <button
+                    key={label.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedLabelIds(prev => {
+                        const next = new Set(prev)
+                        if (next.has(label.id)) next.delete(label.id)
+                        else next.add(label.id)
+                        return next
+                      })
+                    }}
+                    className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-sm transition-colors hover:bg-accent ${
+                      selectedLabelIds.has(label.id) ? 'bg-accent font-medium' : ''
+                    }`}
+                  >
+                    <div
+                      className={`size-3.5 rounded border-2 transition-all ${
+                        selectedLabelIds.has(label.id)
+                          ? 'border-current bg-current'
+                          : 'border-muted-foreground/30'
+                      }`}
+                      style={{ color: label.color }}
+                    >
+                      {selectedLabelIds.has(label.id) && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+                    <span>{label.icon} {label.name}</span>
+                  </button>
+                ))}
+                {selectedLabelIds.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedLabelIds(new Set())}
+                    className="w-full mt-1 px-2 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-left"
+                  >
+                    Clear filter
+                  </button>
+                )}
+              </div>
+            </div>
+
             <Button
               variant="outline"
               size="sm"
