@@ -72,6 +72,9 @@ interface AppStore extends AppState {
   toggleSubtask: (taskId: string, subtaskId: string) => void
   clearCompleted: () => void
   reorderTasks: (reorder: { id: string; position: number }[]) => void
+  bulkCompleteTasks: (ids: string[], completed: boolean) => void
+  bulkDeleteTasks: (ids: string[]) => void
+  bulkMoveTasks: (ids: string[], listId: string) => void
   
   // List actions
   addList: (list: Omit<List, 'id' | 'createdAt' | 'updatedAt'>) => void
@@ -350,6 +353,67 @@ export const useAppStore = create<AppStore>()(
           handleError('Failed to clear completed tasks', error, set)
           toast({ type: 'error', title: 'Failed to clear completed tasks on server' })
         })
+      },
+
+      bulkCompleteTasks: async (ids, completed) => {
+        const now = new Date()
+        set((state) => ({
+          tasks: state.tasks.map(t =>
+            ids.includes(t.id)
+              ? { ...t, completed, completedAt: completed ? now : undefined, updatedAt: now }
+              : t
+          ),
+          error: null,
+        }))
+        const count = ids.length
+        toast({
+          type: 'success',
+          title: completed ? `Completed ${count} ${count === 1 ? 'task' : 'tasks'}` : `Uncompleted ${count} ${count === 1 ? 'task' : 'tasks'}`,
+          duration: 4000,
+        })
+        await Promise.allSettled(ids.map(id => api.updateTask(id, { completed, completedAt: completed ? now : undefined })))
+      },
+
+      bulkDeleteTasks: async (ids) => {
+        const prevTasks = get().tasks.filter(t => ids.includes(t.id))
+        set((state) => ({
+          tasks: state.tasks.filter(t => !ids.includes(t.id)),
+          error: null,
+        }))
+        const count = ids.length
+        toast({
+          type: 'success',
+          title: `Deleted ${count} ${count === 1 ? 'task' : 'tasks'}`,
+          duration: 5000,
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              set((state) => ({
+                tasks: [...state.tasks, ...prevTasks].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
+              }))
+              toast({ type: 'info', title: `Restored ${count} ${count === 1 ? 'task' : 'tasks'}` })
+              Promise.allSettled(prevTasks.map(t => api.createTask(t)))
+            },
+          },
+        })
+        await api.deleteCompletedTasks(ids).catch(() => {})
+      },
+
+      bulkMoveTasks: async (ids, listId) => {
+        const list = get().lists.find(l => l.id === listId)
+        set((state) => ({
+          tasks: state.tasks.map(t =>
+            ids.includes(t.id) ? { ...t, listId, updatedAt: new Date() } : t
+          ),
+          error: null,
+        }))
+        const count = ids.length
+        toast({
+          type: 'info',
+          title: `Moved ${count} ${count === 1 ? 'task' : 'tasks'} to ${list?.name || 'list'}`,
+          duration: 4000,
+        })
+        await Promise.allSettled(ids.map(id => api.updateTask(id, { listId })))
       },
 
       // List actions

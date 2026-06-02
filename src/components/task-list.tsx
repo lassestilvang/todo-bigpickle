@@ -4,11 +4,12 @@ import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Task } from '@/types'
 import { useAppStore, useShallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
+import { BulkActionBar } from '@/components/bulk-action-bar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Reorder } from 'framer-motion'
 import Fuse from 'fuse.js'
-import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp } from 'lucide-react'
+import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp, CheckSquare, Square } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
 
 const sortLabels = { date: 'Date', priority: 'Priority', name: 'Name', custom: 'Custom' } as const
@@ -53,18 +54,20 @@ interface TaskGroupProps {
   hasDate: boolean
   date: Date | null
   customOrderTasks: Task[] | undefined
+  selectedIds: Set<string>
   sortBy: string
   onReorder: (groupKey: string, tasks: Task[]) => void
   onToggleComplete: (id: string) => void
   onToggleSubtask: (taskId: string, subtaskId: string) => void
   onReorderSubtasks: (taskId: string, subtaskIds: string[]) => void
+  onSelectToggle: (id: string, shiftKey?: boolean) => void
   onEditTask: (task: Task) => void
   onDeleteTask: (id: string) => void
 }
 
 const TaskGroup = memo(function TaskGroup({
-  tasks, hasDate, date, customOrderTasks, groupKey,
-  sortBy, onReorder, onToggleComplete, onToggleSubtask, onReorderSubtasks, onEditTask, onDeleteTask,
+  tasks, hasDate, date, customOrderTasks, selectedIds, groupKey,
+  sortBy, onReorder, onToggleComplete, onToggleSubtask, onReorderSubtasks, onSelectToggle, onEditTask, onDeleteTask,
 }: TaskGroupProps & { groupKey: string }) {
   return (
     <div data-task-group className="mb-8">
@@ -95,11 +98,13 @@ const TaskGroup = memo(function TaskGroup({
           >
             <TaskCard
               task={task}
+              selected={selectedIds.has(task.id)}
               onToggleComplete={onToggleComplete}
               onToggleSubtask={onToggleSubtask}
               onReorderSubtasks={onReorderSubtasks}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
+              onSelectToggle={onSelectToggle}
             />
           </Reorder.Item>
         ))}
@@ -129,6 +134,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const clearCompleted = useAppStore(s => s.clearCompleted)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name' | 'custom'>('custom')
   const [quickAddText, setQuickAddText] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const quickAddRef = useRef<HTMLInputElement>(null)
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
   const focusedTaskIndexRef = useRef(focusedTaskIndex)
@@ -350,6 +356,31 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     deleteTask(id)
   }, [deleteTask])
 
+  const handleSelectToggle = useCallback((id: string, shiftKey?: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }, [])
+
+  const handleSelectAll = useCallback(() => {
+    const visibleIds = Object.values(groupedTasks).flatMap(g => g.tasks).map(t => t.id)
+    if (visibleIds.every(id => selectedIds.has(id))) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(visibleIds))
+    }
+  }, [groupedTasks, selectedIds])
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set())
+  }, [])
+
   const handleReorderSubtasks = useCallback((taskId: string, subtaskIds: string[]) => {
     const task = allTasks.find(t => t.id === taskId)
     if (!task) return
@@ -395,6 +426,20 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 Clear completed
               </Button>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSelectAll}
+              className="text-muted-foreground/60 hover:text-foreground transition-all duration-200"
+              aria-label={selectedIds.size > 0 ? 'Deselect all' : 'Select all'}
+            >
+              {selectedIds.size > 0 ? (
+                <CheckSquare className="size-3.5 mr-1.5" />
+              ) : (
+                <Square className="size-3.5 mr-1.5" />
+              )}
+              {selectedIds.size > 0 ? `${selectedIds.size}` : 'Select'}
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -526,16 +571,24 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 hasDate={!!group.date}
                 date={group.date}
                 customOrderTasks={customOrder[groupKey]}
+                selectedIds={selectedIds}
                 sortBy={sortBy}
                 onReorder={handleGroupReorder}
                 onToggleComplete={handleToggleComplete}
                 onToggleSubtask={toggleSubtask}
                 onReorderSubtasks={handleReorderSubtasks}
+                onSelectToggle={handleSelectToggle}
                 onEditTask={onEditTask}
                 onDeleteTask={handleDeleteTask}
               />
             ))
           )}
+
+        {/* Bulk action bar */}
+        <BulkActionBar
+          selectedIds={Array.from(selectedIds)}
+          onClearSelection={handleClearSelection}
+        />
 
         {/* Scroll to top */}
         {tasks.length > 5 && (

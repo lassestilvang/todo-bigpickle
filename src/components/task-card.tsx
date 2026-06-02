@@ -24,11 +24,13 @@ import {
 
 interface TaskCardProps {
   task: Task
+  selected?: boolean
   onToggleComplete: (id: string) => void
   onToggleSubtask: (taskId: string, subtaskId: string) => void
   onReorderSubtasks: (taskId: string, subtaskIds: string[]) => void
   onEdit: (task: Task) => void
   onDelete: (id: string) => void
+  onSelectToggle?: (id: string, shiftKey?: boolean) => void
 }
 
 const priorityConfig = {
@@ -45,7 +47,7 @@ function formatRelativeDate(date: Date): string {
   return format(date, 'MMM d')
 }
 
-export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggleSubtask, onReorderSubtasks, onEdit, onDelete }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, selected, onToggleComplete, onToggleSubtask, onReorderSubtasks, onEdit, onDelete, onSelectToggle }: TaskCardProps) {
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
   const [celebrating, setCelebrating] = useState(false)
@@ -108,11 +110,19 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggl
             ? 'opacity-60 saturate-50 scale-[0.995]'
             : 'shadow-sm hover:shadow-primary/5'
           }
+          ${selected ? 'ring-2 ring-primary/40 shadow-lg shadow-primary/10 bg-primary/[0.02]' : ''}
           overflow-hidden
           before:absolute before:inset-0 before:rounded-[inherit] before:opacity-0 before:transition-opacity before:duration-300
           hover:before:opacity-100 before:bg-gradient-to-br before:from-primary/[0.02] before:to-transparent
         `}
-        onClick={() => { if (!editingName) onEdit(task) }}
+        onClick={(e) => {
+          if (onSelectToggle && (e.shiftKey || e.metaKey || e.ctrlKey)) {
+            e.preventDefault()
+            onSelectToggle(task.id, e.shiftKey)
+          } else if (!editingName) {
+            onEdit(task)
+          }
+        }}
         role="button"
         tabIndex={0}
         aria-label={`Task: ${task.name}. Priority: ${priority.label}. ${task.completed ? 'Completed.' : 'Not completed.'} ${isOverdue ? 'Overdue!' : ''} Click to edit.`}
@@ -138,6 +148,21 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggl
 
         <CardContent className="p-4 pt-[15px] relative">
           <div className="flex items-start gap-3">
+            {onSelectToggle && (
+              <div className="pt-0.5">
+                <Checkbox
+                  checked={!!selected}
+                  onCheckedChange={() => onSelectToggle(task.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className={`transition-all duration-200 ${
+                    selected
+                      ? 'data-[state=checked]:bg-primary data-[state=checked]:border-primary'
+                      : 'opacity-0 group-hover/card:opacity-40 group-focus-within/card:opacity-40'
+                  }`}
+                  aria-label={`Select "${task.name}"`}
+                />
+              </div>
+            )}
 
             <Celebration active={celebrating} />
 
