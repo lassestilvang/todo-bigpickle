@@ -95,6 +95,13 @@ export default function HomeClient() {
       },
     },
     {
+      key: ',',
+      metaKey: true,
+      handler: () => {
+        setCommandPaletteOpen(true)
+      },
+    },
+    {
       key: '/',
       handler: () => {
         const searchInput = document.querySelector<HTMLInputElement>('input[aria-label="Search tasks"]')

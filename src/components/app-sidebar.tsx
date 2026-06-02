@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import { ListManager } from '@/components/list-manager'
 import { LabelManager } from '@/components/label-manager'
+import { StatsDashboard } from '@/components/stats-dashboard'
 
 const viewIcons = {
   today: CalendarDays,
@@ -57,6 +58,7 @@ interface AppSidebarProps {
 export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarProps) {
   const [listManagerOpen, setListManagerOpen] = useState(false)
   const [labelManagerOpen, setLabelManagerOpen] = useState(false)
+  const [statsOpen, setStatsOpen] = useState(false)
   const { lists, currentView, selectedListId, showCompleted, tasks } = useAppStore(
     useShallow(s => ({
       lists: s.lists,
@@ -280,22 +282,34 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
       {/* Stats section */}
       <div className="px-3 py-3 border-t border-border/50">
         <div className="grid grid-cols-3 gap-2">
-          <div className="text-center">
-            <div className="text-lg font-bold tabular-nums">{tasks.length}</div>
+          <button
+            type="button"
+            onClick={() => setStatsOpen(true)}
+            className="text-center group cursor-pointer"
+          >
+            <div className="text-lg font-bold tabular-nums group-hover:text-primary transition-colors">{tasks.length}</div>
             <div className="text-[10px] text-muted-foreground/70 font-medium">Total</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold tabular-nums text-emerald-500">{tasks.filter(t => t.completed).length}</div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatsOpen(true)}
+            className="text-center group cursor-pointer"
+          >
+            <div className="text-lg font-bold tabular-nums text-emerald-500 group-hover:text-emerald-400 transition-colors">{tasks.filter(t => t.completed).length}</div>
             <div className="text-[10px] text-muted-foreground/70 font-medium">Done</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold tabular-nums">
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatsOpen(true)}
+            className="text-center group cursor-pointer"
+          >
+            <div className="text-lg font-bold tabular-nums group-hover:text-primary transition-colors">
               {tasks.length > 0
                 ? Math.round((tasks.filter(t => t.completed).length / tasks.length) * 100)
                 : 0}%
             </div>
             <div className="text-[10px] text-muted-foreground/70 font-medium">Rate</div>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -335,6 +349,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
       </SidebarFooter>
       <ListManager open={listManagerOpen} onClose={() => setListManagerOpen(false)} />
       <LabelManager open={labelManagerOpen} onClose={() => setLabelManagerOpen(false)} />
+      <StatsDashboard open={statsOpen} onClose={() => setStatsOpen(false)} />
     </Sidebar>
   )
 })
