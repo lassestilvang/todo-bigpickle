@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import { useAppStore } from '@/store'
-import { differenceInMinutes, parseISO } from 'date-fns'
+import { differenceInMinutes } from 'date-fns'
 
 const CHECK_INTERVAL = 60000 // Check every minute
 const NOTIFY_BEFORE = 30 // Notify 30 minutes before deadline

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'bun:test'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, expect, it, beforeEach } from 'bun:test'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { TaskCard } from '@/components/task-card'
 import { Task } from '@/types'
 
@@ -27,6 +27,10 @@ const mockTask: Task = {
 }
 
 describe('TaskCard', () => {
+  beforeEach(() => {
+    cleanup()
+  })
+
   it('renders task information correctly', () => {
     const onToggleComplete = () => {}
     const onEdit = () => {}
@@ -60,7 +64,7 @@ describe('TaskCard', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByRole('checkbox', { name: /mark.*complete/i }))
     expect(called).toBe(true)
   })
 
@@ -94,7 +98,7 @@ describe('TaskCard', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /delete/i }))
+    fireEvent.click(screen.getByRole('button', { name: /delete.*test task/i }))
     expect(called).toBe(true)
   })
 
@@ -110,7 +114,7 @@ describe('TaskCard', () => {
       />,
     )
 
-    expect(screen.getByRole('checkbox')).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: /mark.*incomplete/i })).toBeChecked()
     expect(screen.getByText('Test Task')).toHaveClass('line-through')
   })
 
@@ -129,6 +133,6 @@ describe('TaskCard', () => {
       />,
     )
 
-    expect(screen.getByTestId('alert-triangle')).toBeInTheDocument()
+    expect(screen.getAllByTestId('alert-triangle')[0]).toBeInTheDocument()
   })
 })

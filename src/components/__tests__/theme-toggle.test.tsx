@@ -1,10 +1,16 @@
-import { describe, expect, it } from 'bun:test'
-import { render, screen } from '@testing-library/react'
+import { describe, expect, it, beforeEach } from 'bun:test'
+import { render, screen, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 describe('ThemeToggle', () => {
+  beforeEach(() => {
+    cleanup()
+    localStorage.clear()
+    document.documentElement.className = ''
+  })
+
   it('should render theme toggle button', () => {
     render(
       <ThemeProvider>

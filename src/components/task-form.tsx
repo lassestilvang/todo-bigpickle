@@ -493,7 +493,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Attachments</Label>
+              <FormLabel className="text-sm font-medium">Attachments</FormLabel>
               <Button
                 type="button"
                 variant="outline"

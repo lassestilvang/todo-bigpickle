@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'bun:test'
-import { render, screen } from '@testing-library/react'
+import { render, screen, cleanup } from '@testing-library/react'
 import { ThemeProvider, useTheme } from '@/components/theme-provider'
 
 function TestConsumer() {
@@ -15,6 +15,7 @@ function TestConsumer() {
 
 describe('ThemeProvider', () => {
   beforeEach(() => {
+    cleanup()
     localStorage.clear()
     document.documentElement.className = ''
   })

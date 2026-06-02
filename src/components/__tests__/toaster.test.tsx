@@ -1,10 +1,11 @@
 import { describe, expect, it, beforeEach } from 'bun:test'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent, act, cleanup } from '@testing-library/react'
 import { ToastContainer } from '@/components/toaster'
 import { toast, resetToasts } from '@/hooks/use-toast'
 
 describe('ToastContainer', () => {
   beforeEach(() => {
+    cleanup()
     resetToasts()
   })
 

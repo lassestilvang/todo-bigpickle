@@ -20,9 +20,6 @@ export const BulkActionBar = memo(function BulkActionBar({
   const bulkMoveTasks = useAppStore(s => s.bulkMoveTasks)
   const lists = useAppStore(s => s.lists)
 
-  const count = selectedIds.length
-  if (count === 0) return null
-
   const handleComplete = useCallback(() => {
     bulkCompleteTasks(selectedIds, true)
     onClearSelection()
@@ -39,6 +36,9 @@ export const BulkActionBar = memo(function BulkActionBar({
       onClearSelection()
     }
   }, [selectedIds, bulkMoveTasks, onClearSelection])
+
+  const count = selectedIds.length
+  if (count === 0) return null
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-fade-slide-in">
