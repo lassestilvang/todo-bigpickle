@@ -3,7 +3,7 @@ import { Task, List, Label, Subtask, TaskHistory, Priority, RecurringType } from
 import { randomUUID } from 'crypto'
 
 type LabelRef = { id: string }
-type SubtaskInput = { title: string; completed?: boolean }
+type SubtaskInput = { title: string; completed?: boolean; position?: number }
 interface TaskInput {
   name: string
   description?: string
@@ -64,6 +64,7 @@ interface SubtaskRow {
   task_id: string
   title: string
   completed: number
+  position: number
   created_at: string
   updated_at: string
 }
@@ -174,11 +175,19 @@ export class DatabaseService {
         task_id TEXT NOT NULL,
         title TEXT NOT NULL,
         completed INTEGER DEFAULT 0,
+        position INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
       )
     `)
+
+    // Migration: add position column if missing
+    try {
+      this.db.run('ALTER TABLE subtasks ADD COLUMN position INTEGER DEFAULT 0')
+    } catch {
+      // Column already exists
+    }
 
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS task_history (
@@ -259,7 +268,7 @@ export class DatabaseService {
         INSERT INTO task_history (id, task_id, field, old_value, new_value) VALUES (?, ?, ?, ?, ?)
       `),
       insertSubtask: this.db.query(`
-        INSERT INTO subtasks (id, task_id, title, completed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO subtasks (id, task_id, title, completed, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
       `),
       insertReminder: this.db.query(`
         INSERT INTO reminders (id, task_id, reminder_time) VALUES (?, ?, ?)
@@ -531,7 +540,7 @@ export class DatabaseService {
 
     if (taskIds.length === 0) return map
     const rows = this.db.query(
-      `SELECT * FROM subtasks WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY created_at`
+      `SELECT * FROM subtasks WHERE task_id IN (${taskIds.map(() => '?').join(',')}) ORDER BY position ASC, created_at ASC`
     ).all(...taskIds) as SubtaskRow[]
 
     for (const row of rows) {
@@ -539,6 +548,7 @@ export class DatabaseService {
         id: row.id,
         title: row.title,
         completed: row.completed === 1,
+        position: row.position,
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at)
       })
@@ -649,8 +659,8 @@ export class DatabaseService {
       }
 
       if (task.subtasks) {
-        for (const subtask of task.subtasks) {
-          this.createSubtask(id, subtask)
+        for (let i = 0; i < task.subtasks.length; i++) {
+          this.createSubtask(id, task.subtasks[i], i)
         }
       }
 
@@ -756,8 +766,8 @@ export class DatabaseService {
 
       if (updates.subtasks !== undefined) {
         this.stmts.deleteSubtasks.run(id)
-        for (const subtask of updates.subtasks) {
-          this.createSubtask(id, subtask)
+        for (let i = 0; i < updates.subtasks.length; i++) {
+          this.createSubtask(id, updates.subtasks[i], i)
         }
       }
     })
@@ -787,20 +797,22 @@ export class DatabaseService {
   }
 
   private getSubtasksForTask(taskId: string): Subtask[] {
-    const rows = this.stmts.getSubtasks.all(taskId) as SubtaskRow[]
+    const rows = this.db.query('SELECT * FROM subtasks WHERE task_id = ? ORDER BY position ASC, created_at ASC').all(taskId) as SubtaskRow[]
     return rows.map(row => ({
       id: row.id,
       title: row.title,
       completed: row.completed === 1,
+      position: row.position,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at)
     }))
   }
 
-  private createSubtask(taskId: string, subtask: SubtaskInput): void {
+  private createSubtask(taskId: string, subtask: SubtaskInput, index?: number): void {
     const id = randomUUID()
     const now = new Date().toISOString()
-    this.stmts.insertSubtask.run(id, taskId, subtask.title, subtask.completed ? 1 : 0, now, now)
+    const position = subtask.position ?? index ?? 0
+    this.stmts.insertSubtask.run(id, taskId, subtask.title, subtask.completed ? 1 : 0, position, now, now)
   }
 
   private getTaskHistory(taskId: string): TaskHistory[] {

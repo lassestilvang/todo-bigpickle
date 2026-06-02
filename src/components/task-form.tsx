@@ -16,9 +16,9 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { CalendarIcon, Plus, X, Trash2, Loader2 } from 'lucide-react'
+import { CalendarIcon, Plus, X, Trash2, Loader2, GripVertical } from 'lucide-react'
 import { format, addDays, addWeeks } from 'date-fns'
-import { m, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence, Reorder } from 'framer-motion'
 
 const taskSchema = z.object({
   name: z.string().min(1, 'Task name is required').max(200, 'Task name must be 200 characters or fewer'),
@@ -140,6 +140,7 @@ const SubtasksEditor = memo(function SubtasksEditor({
   onAdd,
   onRemove,
   onToggle,
+  onReorder,
   inputRef,
 }: {
   subtasks: { id: string; title: string; completed: boolean }[]
@@ -148,6 +149,7 @@ const SubtasksEditor = memo(function SubtasksEditor({
   onAdd: () => void
   onRemove: (id: string) => void
   onToggle: (id: string) => void
+  onReorder: (subtasks: { id: string; title: string; completed: boolean }[]) => void
   inputRef: React.RefObject<HTMLInputElement | null>
 }) {
   return (
@@ -171,36 +173,40 @@ const SubtasksEditor = memo(function SubtasksEditor({
           <Plus className="size-4" />
         </Button>
       </div>
-      <AnimatePresence>
-        {subtasks.map((subtask) => (
-          <m.div
-            key={subtask.id}
-            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
-            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex items-center gap-2.5 p-2.5 bg-muted/50 rounded-lg border border-border/50"
-          >
-            <Checkbox
-              checked={subtask.completed}
-              onCheckedChange={() => onToggle(subtask.id)}
-              className="shrink-0"
-            />
-            <span className={`flex-1 text-sm ${subtask.completed ? 'line-through text-muted-foreground' : ''}`}>
-              {subtask.title}
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onRemove(subtask.id)}
-              className="shrink-0 size-7 p-0 text-muted-foreground hover:text-destructive"
+      <Reorder.Group axis="y" values={subtasks} onReorder={onReorder} className="space-y-2" layoutScroll>
+        <AnimatePresence initial={false}>
+          {subtasks.map((subtask) => (
+            <Reorder.Item
+              key={subtask.id}
+              value={subtask}
+              className="flex items-center gap-2.5 p-2.5 bg-muted/50 rounded-lg border border-border/50 cursor-grab active:cursor-grabbing"
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.2 }}
             >
-              <X className="size-3.5" />
-            </Button>
-          </m.div>
-        ))}
-      </AnimatePresence>
+              <GripVertical className="size-3.5 text-muted-foreground/40 shrink-0 cursor-grab active:cursor-grabbing" />
+              <Checkbox
+                checked={subtask.completed}
+                onCheckedChange={() => onToggle(subtask.id)}
+                className="shrink-0"
+              />
+              <span className={`flex-1 text-sm ${subtask.completed ? 'line-through text-muted-foreground' : ''}`}>
+                {subtask.title}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onRemove(subtask.id)}
+                className="shrink-0 size-7 p-0 text-muted-foreground hover:text-destructive"
+              >
+                <X className="size-3.5" />
+              </Button>
+            </Reorder.Item>
+          ))}
+        </AnimatePresence>
+      </Reorder.Group>
     </div>
   )
 })
@@ -270,9 +276,10 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
       ...data,
       estimate: estimateMinutes ?? undefined,
       labels: labels.filter(l => selectedLabels.includes(l.id)),
-      subtasks: subtasks.map(st => ({
+      subtasks: subtasks.map((st, i) => ({
         title: st.title,
         completed: st.completed,
+        position: i,
       })),
       completed: task?.completed || false,
     }
@@ -314,6 +321,10 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
       st.id === id ? { ...st, completed: !st.completed } : st
     ))
   }
+
+  const reorderSubtasks = useCallback((reordered: { id: string; title: string; completed: boolean }[]) => {
+    setSubtasks(reordered)
+  }, [])
 
   const toggleLabel = (labelId: string) => {
     setSelectedLabels(prev =>
@@ -460,6 +471,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             onAdd={addSubtask}
             onRemove={removeSubtask}
             onToggle={toggleSubtask}
+            onReorder={reorderSubtasks}
             inputRef={newSubtaskRef}
           />
 

@@ -10,6 +10,7 @@ import { format, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
+import { Reorder } from 'framer-motion'
 import {
   Calendar,
   Clock,
@@ -25,6 +26,7 @@ interface TaskCardProps {
   task: Task
   onToggleComplete: (id: string) => void
   onToggleSubtask: (taskId: string, subtaskId: string) => void
+  onReorderSubtasks: (taskId: string, subtaskIds: string[]) => void
   onEdit: (task: Task) => void
   onDelete: (id: string) => void
 }
@@ -43,7 +45,7 @@ function formatRelativeDate(date: Date): string {
   return format(date, 'MMM d')
 }
 
-export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggleSubtask, onEdit, onDelete }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggleSubtask, onReorderSubtasks, onEdit, onDelete }: TaskCardProps) {
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
   const [celebrating, setCelebrating] = useState(false)
@@ -289,26 +291,35 @@ export const TaskCard = memo(function TaskCard({ task, onToggleComplete, onToggl
                     )}
                   </div>
                   <div className="mt-2 space-y-1">
-                    {task.subtasks.slice(0, 3).map((subtask) => (
-                      <button
-                        key={subtask.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onToggleSubtask(task.id, subtask.id)
-                        }}
-                        className="flex items-center gap-2 text-xs w-full text-left transition-opacity hover:opacity-80"
-                      >
-                        {subtask.completed ? (
-                          <CheckCircle2 className="size-3 text-emerald-500 shrink-0" />
-                        ) : (
-                          <Circle className="size-3 text-muted-foreground/40 shrink-0" />
-                        )}
-                        <span className={`truncate ${subtask.completed ? 'line-through text-muted-foreground/60' : ''}`}>
-                          {subtask.title}
-                        </span>
-                      </button>
-                    ))}
+                    <Reorder.Group
+                      axis="y"
+                      values={task.subtasks.slice(0, 3)}
+                      onReorder={(reordered) => onReorderSubtasks(task.id, reordered.map(st => st.id))}
+                      className="space-y-1"
+                      layoutScroll
+                    >
+                      {task.subtasks.slice(0, 3).map((subtask) => (
+                        <Reorder.Item
+                          key={subtask.id}
+                          value={subtask}
+                          className="flex items-center gap-2 text-xs w-full text-left cursor-grab active:cursor-grabbing"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onToggleSubtask(task.id, subtask.id)
+                          }}
+                        >
+                          <GripVertical className="size-2.5 text-muted-foreground/20 shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity" />
+                          {subtask.completed ? (
+                            <CheckCircle2 className="size-3 text-emerald-500 shrink-0" />
+                          ) : (
+                            <Circle className="size-3 text-muted-foreground/40 shrink-0" />
+                          )}
+                          <span className={`truncate ${subtask.completed ? 'line-through text-muted-foreground/60' : ''}`}>
+                            {subtask.title}
+                          </span>
+                        </Reorder.Item>
+                      ))}
+                    </Reorder.Group>
                     {task.subtasks.length > 3 && (
                       <div className="text-xs text-muted-foreground/70 font-medium">
                         +{task.subtasks.length - 3} more subtasks

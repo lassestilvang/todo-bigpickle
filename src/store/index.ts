@@ -252,7 +252,7 @@ export const useAppStore = create<AppStore>()(
                   actualTime: task.actualTime,
                   labels: task.labels.map(l => ({ id: l.id, name: l.name, color: l.color, icon: l.icon, createdAt: l.createdAt, updatedAt: l.updatedAt })),
                   priority: task.priority,
-                  subtasks: task.subtasks.map(st => ({ title: st.title, completed: false, createdAt: new Date(), updatedAt: new Date() })),
+                  subtasks: task.subtasks.map(st => ({ title: st.title, completed: false, position: st.position, createdAt: new Date(), updatedAt: new Date() })),
                   recurring: task.recurring,
                   recurringConfig: task.recurringConfig,
                   listId: task.listId,

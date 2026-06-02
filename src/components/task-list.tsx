@@ -57,13 +57,14 @@ interface TaskGroupProps {
   onReorder: (groupKey: string, tasks: Task[]) => void
   onToggleComplete: (id: string) => void
   onToggleSubtask: (taskId: string, subtaskId: string) => void
+  onReorderSubtasks: (taskId: string, subtaskIds: string[]) => void
   onEditTask: (task: Task) => void
   onDeleteTask: (id: string) => void
 }
 
 const TaskGroup = memo(function TaskGroup({
   tasks, hasDate, date, customOrderTasks, groupKey,
-  sortBy, onReorder, onToggleComplete, onToggleSubtask, onEditTask, onDeleteTask,
+  sortBy, onReorder, onToggleComplete, onToggleSubtask, onReorderSubtasks, onEditTask, onDeleteTask,
 }: TaskGroupProps & { groupKey: string }) {
   return (
     <div data-task-group className="mb-8">
@@ -96,6 +97,7 @@ const TaskGroup = memo(function TaskGroup({
               task={task}
               onToggleComplete={onToggleComplete}
               onToggleSubtask={onToggleSubtask}
+              onReorderSubtasks={onReorderSubtasks}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
             />
@@ -116,6 +118,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const toggleSubtask = useAppStore(s => s.toggleSubtask)
   const deleteTask = useAppStore(s => s.deleteTask)
   const reorderTasks = useAppStore(s => s.reorderTasks)
+  const updateTask = useAppStore(s => s.updateTask)
   const addTask = useAppStore(s => s.addTask)
   const currentView = useAppStore(s => s.currentView)
   const selectedListId = useAppStore(s => s.selectedListId)
@@ -347,6 +350,16 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     deleteTask(id)
   }, [deleteTask])
 
+  const handleReorderSubtasks = useCallback((taskId: string, subtaskIds: string[]) => {
+    const task = allTasks.find(t => t.id === taskId)
+    if (!task) return
+    const reordered = subtaskIds.map((id, i) => {
+      const st = task.subtasks.find(s => s.id === id)!
+      return { ...st, position: i }
+    })
+    updateTask(taskId, { subtasks: reordered })
+  }, [allTasks, updateTask])
+
   const ViewIcon = viewIcons[currentView as keyof typeof viewIcons] || LayoutList
   const isEmpty = Object.entries(groupedTasks).length === 0
 
@@ -517,6 +530,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 onReorder={handleGroupReorder}
                 onToggleComplete={handleToggleComplete}
                 onToggleSubtask={toggleSubtask}
+                onReorderSubtasks={handleReorderSubtasks}
                 onEditTask={onEditTask}
                 onDeleteTask={handleDeleteTask}
               />
