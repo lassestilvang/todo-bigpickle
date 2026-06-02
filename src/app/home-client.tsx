@@ -16,6 +16,7 @@ import { RefreshCw, AlertCircle, X } from 'lucide-react'
 
 const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
 const CommandPalette = lazy(() => import('@/components/command-palette').then(m => ({ default: m.CommandPalette })))
+const TaskPreview = lazy(() => import('@/components/task-preview').then(m => ({ default: m.TaskPreview })))
 
 function LoadingSkeleton() {
   return (
@@ -61,12 +62,16 @@ function LoadingSkeleton() {
 export default function HomeClient() {
   const [isCreatingTask, setIsCreatingTask] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>()
+  const [previewTask, setPreviewTask] = useState<Task | undefined>()
   const [formKey, setFormKey] = useState(0)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const loadData = useAppStore(s => s.loadData)
   const clearError = useAppStore(s => s.clearError)
   const isLoading = useAppStore(s => s.isLoading)
   const error = useAppStore(s => s.error)
+  const deleteTask = useAppStore(s => s.deleteTask)
+  const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
+  const toggleSubtask = useAppStore(s => s.toggleSubtask)
 
   useEffect(() => {
     loadData()
@@ -102,7 +107,9 @@ export default function HomeClient() {
       key: 'Escape',
       handler: () => {
         setCommandPaletteOpen(false)
-        if (isCreatingTask || editingTask) {
+        if (previewTask) {
+          setPreviewTask(undefined)
+        } else if (isCreatingTask || editingTask) {
           setIsCreatingTask(false)
           setEditingTask(undefined)
         }
@@ -116,7 +123,12 @@ export default function HomeClient() {
     setIsCreatingTask(true)
   }, [])
 
-  const handleEditTask = useCallback((task: Task) => {
+  const handlePreviewTask = useCallback((task: Task) => {
+    setPreviewTask(task)
+  }, [])
+
+  const handleEditFromPreview = useCallback((task: Task) => {
+    setPreviewTask(undefined)
     setFormKey(k => k + 1)
     setEditingTask(task)
   }, [])
@@ -124,6 +136,10 @@ export default function HomeClient() {
   const handleCloseForm = useCallback(() => {
     setIsCreatingTask(false)
     setEditingTask(undefined)
+  }, [])
+
+  const handleClosePreview = useCallback(() => {
+    setPreviewTask(undefined)
   }, [])
 
   return (
@@ -174,10 +190,25 @@ export default function HomeClient() {
 
                 <div data-main-content className="flex-1 overflow-y-auto">
                   <div className="animate-fade-slide-in">
-                    <TaskList onCreateTask={handleCreateTask} onEditTask={handleEditTask} />
+                    <TaskList onCreateTask={handleCreateTask} onEditTask={handlePreviewTask} />
                   </div>
                 </div>
               </SidebarInset>
+
+              <Suspense fallback={null}>
+                <TaskPreview
+                  task={previewTask}
+                  isOpen={!!previewTask}
+                  onClose={handleClosePreview}
+                  onEdit={handleEditFromPreview}
+                  onDelete={(id) => {
+                    deleteTask(id)
+                    setPreviewTask(undefined)
+                  }}
+                  onToggleComplete={toggleTaskComplete}
+                  onToggleSubtask={toggleSubtask}
+                />
+              </Suspense>
 
               <Suspense fallback={null}>
                 <TaskForm
