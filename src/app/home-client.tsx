@@ -13,7 +13,7 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useNotifications } from '@/hooks/use-notifications'
 import { Task } from '@/types'
 import { AnimatePresence } from 'framer-motion'
-import { RefreshCw, AlertCircle, X } from 'lucide-react'
+import { RefreshCw, AlertCircle, X, Search } from 'lucide-react'
 
 const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
 const CommandPalette = lazy(() => import('@/components/command-palette').then(m => ({ default: m.CommandPalette })))
@@ -55,6 +55,103 @@ function LoadingSkeleton() {
             <Skeleton className="h-24 w-full rounded-xl" />
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function TaskPreviewSkeleton() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="bg-background/80 backdrop-blur-sm absolute inset-0" />
+      <div className="relative bg-card border rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        <div className="p-6 space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+            <Skeleton className="size-8 rounded-md shrink-0" />
+          </div>
+          <Skeleton className="h-20 w-full rounded-lg" />
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-16 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-14 rounded-full" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TaskFormSkeleton() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="bg-background/80 backdrop-blur-sm absolute inset-0" />
+      <div className="relative bg-card border rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        <div className="p-6 space-y-5">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="size-8 rounded-md" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-24 w-full rounded-lg" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-10" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-14" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Skeleton className="h-9 w-20 rounded-lg" />
+            <Skeleton className="h-9 w-24 rounded-lg" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CommandPaletteSkeleton() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
+      <div className="bg-background/80 backdrop-blur-sm absolute inset-0" />
+      <div className="relative bg-card border rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        <div className="p-3">
+          <div className="flex items-center gap-3 px-3 py-2">
+            <Search className="size-4 text-muted-foreground/50" />
+            <Skeleton className="h-5 flex-1" />
+            <Skeleton className="size-5 rounded" />
+          </div>
+        </div>
+        <div className="border-t p-2 space-y-1">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-lg">
+              <Skeleton className="size-4 rounded" />
+              <div className="flex-1 space-y-1">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+              <Skeleton className="h-5 w-12 rounded" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -205,7 +302,7 @@ export default function HomeClient() {
                 </div>
               </SidebarInset>
 
-              <Suspense fallback={null}>
+              <Suspense fallback={<TaskPreviewSkeleton />}>
                 <TaskPreview
                   task={previewTask}
                   isOpen={!!previewTask}
@@ -220,7 +317,7 @@ export default function HomeClient() {
                 />
               </Suspense>
 
-              <Suspense fallback={null}>
+              <Suspense fallback={<TaskFormSkeleton />}>
                 <TaskForm
                   key={formKey}
                   task={editingTask}
@@ -229,7 +326,7 @@ export default function HomeClient() {
                 />
               </Suspense>
 
-              <Suspense fallback={null}>
+              <Suspense fallback={<CommandPaletteSkeleton />}>
                 <CommandPalette
                   open={commandPaletteOpen}
                   onClose={() => setCommandPaletteOpen(false)}
