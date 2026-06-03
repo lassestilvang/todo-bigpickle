@@ -11,6 +11,7 @@ import { Reorder } from 'framer-motion'
 import Fuse from 'fuse.js'
 import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp, CheckSquare, Square, Tag } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
+import { parseDateFromText } from '@/lib/date-parser'
 
 const sortLabels = { date: 'Date', priority: 'Priority', name: 'Name', custom: 'Custom' } as const
 const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 }
@@ -174,13 +175,23 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [])
 
   const handleQuickAdd = useCallback(async () => {
-    const name = quickAddText.trim()
-    if (!name) return
+    const raw = quickAddText.trim()
+    if (!raw) return
+
+    // Try natural language date parsing
+    const parsed = parseDateFromText(raw)
+    const name = parsed?.name || raw
+    const date = parsed?.date
+
+    // Don't keep date keywords in the name when they were parsed
+    const finalName = parsed ? name : raw
+
     try {
       const defaultList = lists.find(l => l.isDefault)
       await addTask({
-        name,
+        name: finalName,
         description: undefined,
+        date,
         priority: 'none',
         listId: selectedListId || defaultList?.id || '',
         completed: false,
