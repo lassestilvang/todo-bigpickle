@@ -36,6 +36,7 @@ import {
 import { ListManager } from '@/components/list-manager'
 import { LabelManager } from '@/components/label-manager'
 import { StatsDashboard } from '@/components/stats-dashboard'
+import { exportTasksAsCSV } from '@/lib/csv-export'
 
 const viewIcons = {
   today: CalendarDays,
@@ -331,6 +332,18 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           >
             <Settings2 className="size-3" />
             Manage Labels
+          </button>
+          <button
+            type="button"
+            onClick={() => exportTasksAsCSV(tasks)}
+            className="w-full text-xs text-muted-foreground/70 hover:text-foreground transition-colors flex items-center gap-2 px-1 py-1.5"
+          >
+            <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" x2="12" y1="15" y2="3" />
+            </svg>
+            Export CSV
           </button>
         </div>
         <div className="px-3 pb-3">
