@@ -18,6 +18,7 @@ import { RefreshCw, AlertCircle, X, Search, Maximize2, Minimize2 } from 'lucide-
 const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
 const CommandPalette = lazy(() => import('@/components/command-palette').then(m => ({ default: m.CommandPalette })))
 const TaskPreview = lazy(() => import('@/components/task-preview').then(m => ({ default: m.TaskPreview })))
+const ShortcutCheatSheet = lazy(() => import('@/components/shortcut-cheat-sheet').then(m => ({ default: m.ShortcutCheatSheet })))
 
 function LoadingSkeleton() {
   return (
@@ -163,6 +164,7 @@ export default function HomeClient() {
   const [previewTask, setPreviewTask] = useState<Task | undefined>()
   const [formKey, setFormKey] = useState(0)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [shortcutCheatSheetOpen, setShortcutCheatSheetOpen] = useState(false)
   const loadData = useAppStore(s => s.loadData)
   const clearError = useAppStore(s => s.clearError)
   const isLoading = useAppStore(s => s.isLoading)
@@ -220,6 +222,14 @@ export default function HomeClient() {
     },
     {
       key: '/',
+      shiftKey: true,
+      metaKey: true,
+      handler: () => {
+        setShortcutCheatSheetOpen(true)
+      },
+    },
+    {
+      key: '/',
       handler: () => {
         const searchInput = document.querySelector<HTMLInputElement>('input[aria-label="Search tasks"]')
         if (searchInput) {
@@ -231,6 +241,7 @@ export default function HomeClient() {
       key: 'Escape',
       handler: () => {
         setCommandPaletteOpen(false)
+        setShortcutCheatSheetOpen(false)
         if (previewTask) {
           setPreviewTask(undefined)
         } else if (isCreatingTask || editingTask) {
@@ -370,6 +381,13 @@ export default function HomeClient() {
                   open={commandPaletteOpen}
                   onClose={() => setCommandPaletteOpen(false)}
                   onCreateTask={handleCreateTask}
+                />
+              </Suspense>
+
+              <Suspense fallback={null}>
+                <ShortcutCheatSheet
+                  open={shortcutCheatSheetOpen}
+                  onClose={() => setShortcutCheatSheetOpen(false)}
                 />
               </Suspense>
             </div>
