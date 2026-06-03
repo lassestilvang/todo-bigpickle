@@ -13,7 +13,7 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useNotifications } from '@/hooks/use-notifications'
 import { Task } from '@/types'
 import { AnimatePresence } from 'framer-motion'
-import { RefreshCw, AlertCircle, X, Search } from 'lucide-react'
+import { RefreshCw, AlertCircle, X, Search, Maximize2, Minimize2 } from 'lucide-react'
 
 const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
 const CommandPalette = lazy(() => import('@/components/command-palette').then(m => ({ default: m.CommandPalette })))
@@ -177,6 +177,16 @@ export default function HomeClient() {
 
   useNotifications()
 
+  const setFocusMode = useAppStore(s => s.setFocusMode)
+  const focusMode = useAppStore(s => s.focusMode)
+
+  // Exit focus mode when sidebar is opened manually
+  useEffect(() => {
+    if (sidebarOpen && focusMode) {
+      setFocusMode(false)
+    }
+  }, [sidebarOpen, focusMode, setFocusMode])
+
   useKeyboardShortcuts([
     {
       key: 'n',
@@ -199,6 +209,13 @@ export default function HomeClient() {
       metaKey: true,
       handler: () => {
         setCommandPaletteOpen(true)
+      },
+    },
+    {
+      key: '.',
+      metaKey: true,
+      handler: () => {
+        setFocusMode(!focusMode)
       },
     },
     {
@@ -249,12 +266,14 @@ export default function HomeClient() {
     setPreviewTask(undefined)
   }, [])
 
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+
   return (
     <ThemeProvider
       defaultTheme="system"
       enableSystem
     >
-      <SidebarProvider>
+      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <div id="main-content" className="flex h-screen overflow-hidden bg-noise">
           {isLoading ? (
             <LoadingSkeleton />
@@ -266,6 +285,26 @@ export default function HomeClient() {
                 <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/70 backdrop-blur-xl sticky top-0 z-10 supports-[backdrop-filter]:bg-background/60">
                   <SidebarTrigger className="-ml-1" />
                   <div className="flex-1" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const next = !focusMode
+                      setFocusMode(next)
+                      if (next) setSidebarOpen(false)
+                      else setSidebarOpen(true)
+                    }}
+                    className={`text-muted-foreground/60 hover:text-foreground transition-all duration-200 ${
+                      focusMode ? 'text-primary bg-primary/5' : ''
+                    }`}
+                    aria-label={focusMode ? 'Exit focus mode' : 'Enter focus mode'}
+                  >
+                    {focusMode ? <Minimize2 className="size-3.5 mr-1.5" /> : <Maximize2 className="size-3.5 mr-1.5" />}
+                    {focusMode ? 'Exit Focus' : 'Focus'}
+                    <kbd className="ml-1.5 hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground/60">
+                      ⌘.
+                    </kbd>
+                  </Button>
                   <ThemeToggle />
                 </header>
 

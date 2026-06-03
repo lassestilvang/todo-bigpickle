@@ -57,12 +57,14 @@ interface AppStore extends AppState {
   isLoading: boolean
   error: string | null
   reorderVersion: number
+  focusMode: boolean
   
   // Actions
   setCurrentView: (view: ViewType) => void
   setSelectedListId: (listId: string | undefined) => void
   setShowCompleted: (show: boolean) => void
   setSearchQuery: (query: string) => void
+  setFocusMode: (focus: boolean) => void
   
   // Task actions
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history' | 'position'>) => void
@@ -107,12 +109,14 @@ export const useAppStore = create<AppStore>()(
       searchQuery: '',
       isLoading: true,
       error: null,
+      focusMode: false,
 
       // View actions
       setCurrentView: (view) => set({ currentView: view, error: null }),
       setSelectedListId: (listId) => set({ selectedListId: listId, error: null }),
       setShowCompleted: (show) => set({ showCompleted: show }),
       setSearchQuery: (query) => set({ searchQuery: query }),
+      setFocusMode: (focus) => set({ focusMode: focus }),
 
       // Task actions
       addTask: async (taskData) => {
@@ -600,6 +604,7 @@ export const useAppStore = create<AppStore>()(
         selectedListId: state.selectedListId,
         showCompleted: state.showCompleted,
         searchQuery: state.searchQuery,
+        focusMode: state.focusMode,
       })
     }
   )
