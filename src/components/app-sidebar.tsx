@@ -137,6 +137,26 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
     return counts
   }, [tasks])
 
+  const streak = useMemo(() => {
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const completedDates = new Set<string>()
+    for (const t of tasks) {
+      if (!t.completed || !t.completedAt) continue
+      completedDates.add(fmt(new Date(t.completedAt)))
+    }
+    let count = 0
+    for (let i = 0; i < 365; i++) {
+      const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000)
+      if (completedDates.has(fmt(date))) {
+        count++
+      } else if (i > 0) {
+        break
+      }
+    }
+    return count
+  }, [tasks, now])
+
   return (
     <Sidebar>
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-primary/[0.01] to-transparent pointer-events-none" />
@@ -282,7 +302,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
 
       {/* Stats section */}
       <div className="px-3 py-3 border-t border-border/50">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-1">
           <button
             type="button"
             onClick={() => setStatsOpen(true)}
@@ -310,6 +330,16 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                 : 0}%
             </div>
             <div className="text-[10px] text-muted-foreground/70 font-medium">Rate</div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatsOpen(true)}
+            className="text-center group cursor-pointer"
+          >
+            <div className={`text-lg font-bold tabular-nums transition-colors ${streak > 0 ? 'text-amber-500 group-hover:text-amber-400' : 'text-muted-foreground/40 group-hover:text-muted-foreground'}`}>
+              {streak}
+            </div>
+            <div className="text-[10px] text-muted-foreground/70 font-medium">Streak</div>
           </button>
         </div>
       </div>
