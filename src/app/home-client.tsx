@@ -173,21 +173,6 @@ export default function HomeClient() {
   const deleteTask = useAppStore(s => s.deleteTask)
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
   const toggleSubtask = useAppStore(s => s.toggleSubtask)
-
-  useEffect(() => {
-    loadData()
-  }, [loadData])
-
-  useEffect(() => {
-    const onRevisit = () => { if (!document.hidden) loadData() }
-    document.addEventListener('visibilitychange', onRevisit)
-    window.addEventListener('focus', onRevisit)
-    return () => {
-      document.removeEventListener('visibilitychange', onRevisit)
-      window.removeEventListener('focus', onRevisit)
-    }
-  }, [loadData])
-
   useNotifications()
 
   const setFocusMode = useAppStore(s => s.setFocusMode)
@@ -249,6 +234,17 @@ export default function HomeClient() {
       },
     },
     {
+      key: 'f',
+      metaKey: true,
+      handler: () => {
+        const searchInput = document.querySelector<HTMLInputElement>('input[aria-label="Search tasks"]')
+        if (searchInput) {
+          searchInput.focus()
+          searchInput.select()
+        }
+      },
+    },
+    {
       key: 'b',
       metaKey: true,
       handler: () => setSidebarOpen(prev => !prev),
@@ -291,6 +287,18 @@ export default function HomeClient() {
 
   const handleClosePreview = useCallback(() => {
     setPreviewTask(undefined)
+  }, [])
+
+  const handleNavigatePreview = useCallback((direction: 'prev' | 'next') => {
+    setPreviewTask(prev => {
+      if (!prev) return prev
+      const { tasks } = useAppStore.getState()
+      const visibleTasks = tasks.filter(t => !t.completed)
+      const idx = visibleTasks.findIndex(t => t.id === prev.id)
+      if (direction === 'prev' && idx > 0) return visibleTasks[idx - 1]
+      if (direction === 'next' && idx < visibleTasks.length - 1) return visibleTasks[idx + 1]
+      return prev
+    })
   }, [])
 
   return (
@@ -378,6 +386,7 @@ export default function HomeClient() {
                   }}
                   onToggleComplete={toggleTaskComplete}
                   onToggleSubtask={toggleSubtask}
+                  onNavigate={handleNavigatePreview}
                 />
               </Suspense>
 

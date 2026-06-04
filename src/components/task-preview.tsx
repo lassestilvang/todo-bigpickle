@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { Task } from '@/types'
 import { useAppStore } from '@/store'
 import { useNow } from '@/hooks/use-now'
@@ -22,6 +22,8 @@ import {
   Flag,
   CheckCircle2,
   Circle,
+  ChevronLeft,
+  ChevronRight,
   Pencil,
   Trash2,
   Paperclip,
@@ -49,6 +51,7 @@ interface TaskPreviewProps {
   onDelete: (id: string) => void
   onToggleComplete: (id: string) => void
   onToggleSubtask: (taskId: string, subtaskId: string) => void
+  onNavigate?: (direction: 'prev' | 'next') => void
 }
 
 export const TaskPreview = memo(function TaskPreview({
@@ -59,10 +62,26 @@ export const TaskPreview = memo(function TaskPreview({
   onDelete,
   onToggleComplete,
   onToggleSubtask,
+  onNavigate,
 }: TaskPreviewProps) {
   const [showAllHistory, setShowAllHistory] = useState(false)
   const lists = useAppStore(s => s.lists)
   const now = useNow()
+
+  useEffect(() => {
+    if (!isOpen || !onNavigate) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        onNavigate('prev')
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        onNavigate('next')
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [isOpen, onNavigate])
   if (!task) return null
 
   const isOverdue = task.deadline && task.deadline < now && !task.completed
@@ -92,6 +111,29 @@ export const TaskPreview = memo(function TaskPreview({
                   <DialogTitle className={`text-lg ${task.completed ? 'line-through text-muted-foreground/70' : ''}`}>
                     {task.name}
                   </DialogTitle>
+                  {onNavigate && (
+                    <div className="flex items-center gap-0.5 mt-1.5">
+                      <button
+                        type="button"
+                        onClick={() => onNavigate('prev')}
+                        className="p-1 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-all"
+                        aria-label="Previous task"
+                      >
+                        <ChevronLeft className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onNavigate('next')}
+                        className="p-1 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-all"
+                        aria-label="Next task"
+                      >
+                        <ChevronRight className="size-3.5" />
+                      </button>
+                      <span className="text-[10px] text-muted-foreground/40 ml-1 font-medium">
+                        <kbd className="font-mono">←</kbd> <kbd className="font-mono">→</kbd>
+                      </span>
+                    </div>
+                  )}
                   {task.description && (
                     <DialogDescription className="text-sm mt-1.5 leading-relaxed" asChild>
                       <div>

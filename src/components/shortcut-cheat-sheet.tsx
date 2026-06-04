@@ -19,6 +19,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: '⌘.', description: 'Toggle focus mode' },
       { keys: '⌘B', description: 'Toggle sidebar' },
       { keys: '/', description: 'Focus search' },
+      { keys: '⌘F', description: 'Focus and select search' },
       { keys: 'Esc', description: 'Close dialogs / modals' },
     ],
   },
@@ -28,6 +29,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: '↑ ↓', description: 'Navigate between tasks' },
       { keys: 'Enter', description: 'Open focused task' },
       { keys: '⌘K', description: 'Focus quick-add input' },
+      { keys: '← →', description: 'Navigate task preview' },
     ],
   },
   {
