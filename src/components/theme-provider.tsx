@@ -62,23 +62,33 @@ export function ThemeProvider({
     return defaultTheme
   })
 
-  // Sync DOM with theme on mount and on change
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
+
+  useEffect(() => {
+    const resolved = theme === 'system' ? getSystemTheme() : theme
+    setResolvedTheme(resolved)
+  }, [theme])
+
   useEffect(() => {
     updateDOM(theme, attribute, disableTransitionOnChange)
   }, [theme, attribute, disableTransitionOnChange])
 
-  // Listen for system preference changes
   useEffect(() => {
     if (theme !== 'system' || !enableSystem) return
 
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
     const handler = () => {
       updateDOM('system', attribute, disableTransitionOnChange)
+      setResolvedTheme(getSystemTheme())
     }
 
     mql.addEventListener('change', handler)
     return () => mql.removeEventListener('change', handler)
   }, [theme, attribute, enableSystem, disableTransitionOnChange])
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = resolvedTheme
+  }, [resolvedTheme])
 
   const setTheme = useCallback((newTheme: Theme) => {
     try {
