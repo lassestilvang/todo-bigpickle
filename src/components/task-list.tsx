@@ -7,7 +7,7 @@ import { TaskCard } from '@/components/task-card'
 import { BulkActionBar } from '@/components/bulk-action-bar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Reorder } from 'framer-motion'
+import { Reorder, AnimatePresence, motion } from 'framer-motion'
 import Fuse from 'fuse.js'
 import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp, CheckSquare, Square, Tag } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
@@ -604,11 +604,24 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/0 via-primary/[0.02] to-primary/0 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 pointer-events-none" />
         </div>
 
-        {/* Task Groups */}
+        {/* Task Groups with animated transitions */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${currentView}-${selectedListId || 'all'}-${searchQuery}-${sortBy}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
         {isEmpty ? (
-          <div className="text-center py-20 animate-fade-in">
+          <div className="text-center py-20">
             {searchQuery ? (
-              <div className="text-muted-foreground animate-fade-in">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25 }}
+                className="text-muted-foreground"
+              >
                 <div className="relative mx-auto mb-6 size-20">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-muted-foreground/10 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -619,9 +632,14 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 <p className="text-sm text-muted-foreground/70">
                   No tasks match &ldquo;{searchQuery}&rdquo;
                 </p>
-              </div>
+              </motion.div>
             ) : allTasks.length === 0 ? (
-              <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25, delay: 0.05 }}
+                className="text-muted-foreground"
+              >
                 <div className="relative mx-auto mb-8 size-36">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/15 via-primary/8 to-transparent animate-pulse" style={{ animationDuration: '0.8s' }} />
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/8 to-transparent animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.5s', transform: 'scale(0.8)' }} />
@@ -652,15 +670,20 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                   <Plus className="size-4 mr-2" />
                   Create Your First Task
                 </Button>
-              </div>
+              </motion.div>
             ) : (
-              <div className="text-muted-foreground animate-scale-in" style={{ animationDelay: '0.1s' }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25, delay: 0.05 }}
+                className="text-muted-foreground"
+              >
                 <div className="relative mx-auto mb-6 size-24">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <CheckCircle2 className="size-12 text-emerald-500/40" />
                   </div>
-                  <div className="absolute -top-1 -right-1 animate-scale-in" style={{ animationDelay: '0.2s' }}>
+                  <div className="absolute -top-1 -right-1">
                     <span className="text-lg">✨</span>
                   </div>
                 </div>
@@ -682,7 +705,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                         ? 'No tasks on the horizon'
                         : showCompleted ? 'No tasks match your filters' : 'No uncompleted tasks'}
                 </p>
-              </div>
+              </motion.div>
             )}
           </div>
         ) : (
@@ -707,6 +730,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               />
             ))
           )}
+        </motion.div>
+        </AnimatePresence>
 
         {/* Bulk action bar */}
         <BulkActionBar
