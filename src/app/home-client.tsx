@@ -165,6 +165,7 @@ export default function HomeClient() {
   const [formKey, setFormKey] = useState(0)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [shortcutCheatSheetOpen, setShortcutCheatSheetOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const loadData = useAppStore(s => s.loadData)
   const clearError = useAppStore(s => s.clearError)
   const isLoading = useAppStore(s => s.isLoading)
@@ -276,8 +277,6 @@ export default function HomeClient() {
   const handleClosePreview = useCallback(() => {
     setPreviewTask(undefined)
   }, [])
-
-  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
     <ThemeProvider
