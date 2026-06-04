@@ -18,6 +18,17 @@ globalThis.HTMLElement = win.HTMLElement
 globalThis.getComputedStyle = win.window.getComputedStyle.bind(win.window)
 globalThis.CSSStyleDeclaration = win.window.CSSStyleDeclaration
 
+globalThis.NodeFilter = win.NodeFilter
+globalThis.DocumentFragment = win.DocumentFragment
+globalThis.HTMLInputElement = win.HTMLInputElement
+globalThis.HTMLButtonElement = win.HTMLButtonElement
+globalThis.HTMLDivElement = win.HTMLDivElement
+globalThis.HTMLSpanElement = win.HTMLSpanElement
+globalThis.HTMLParagraphElement = win.HTMLParagraphElement
+globalThis.HTMLAnchorElement = win.HTMLAnchorElement
+globalThis.HTMLSelectElement = win.HTMLSelectElement
+globalThis.HTMLStyleElement = win.HTMLStyleElement
+
 globalThis.Event = win.Event
 globalThis.CustomEvent = win.CustomEvent
 globalThis.KeyboardEvent = win.KeyboardEvent
