@@ -138,6 +138,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const [quickAddText, setQuickAddText] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [selectedLabelIds, setSelectedLabelIds] = useState<Set<string>>(new Set())
+  const [labelFilterOpen, setLabelFilterOpen] = useState(false)
   const lastClickedIndexRef = useRef<number>(-1)
   const quickAddRef = useRef<HTMLInputElement>(null)
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
@@ -149,19 +150,17 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [focusedTaskIndex])
 
   useEffect(() => {
+    if (!labelFilterOpen) return
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement
       const menu = document.getElementById('label-filter-menu')
-      if (menu && !menu.classList.contains('hidden')) {
-        const trigger = menu.parentElement
-        if (trigger && !trigger.contains(target)) {
-          menu.classList.add('hidden')
-        }
+      if (menu && !menu.contains(target) && !target.closest('[data-label-filter-trigger]')) {
+        setLabelFilterOpen(false)
       }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [])
+  }, [labelFilterOpen])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -496,22 +495,21 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               )}
               {selectedIds.size > 0 ? `${selectedIds.size}` : 'Select'}
             </Button>
-            <div className="relative group">
+            <div className="relative">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  const el = document.getElementById('label-filter-menu')
-                  if (el) el.classList.toggle('hidden')
-                }}
+                data-label-filter-trigger
+                onClick={() => setLabelFilterOpen(v => !v)}
                 className={`transition-all duration-200 ${selectedLabelIds.size > 0 ? 'border-primary/50 text-primary bg-primary/5' : ''}`}
               >
                 <Tag className="size-3.5 mr-1.5" />
                 {selectedLabelIds.size > 0 ? `${selectedLabelIds.size}` : 'Label'}
               </Button>
+              {labelFilterOpen && (
               <div
                 id="label-filter-menu"
-                className="hidden absolute right-0 top-full mt-2 z-50 min-w-48 p-2 rounded-xl border bg-popover shadow-xl animate-in"
+                className="absolute right-0 top-full mt-2 z-50 min-w-48 p-2 rounded-xl border bg-popover shadow-xl animate-in"
               >
                 <div className="text-xs font-medium text-muted-foreground px-2 py-1.5">Filter by label</div>
                 {labels.length === 0 && (
@@ -560,6 +558,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                   </button>
                 )}
               </div>
+              )}
             </div>
 
             <Button
