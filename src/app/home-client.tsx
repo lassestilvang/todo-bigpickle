@@ -178,6 +178,16 @@ export default function HomeClient() {
     loadData()
   }, [loadData])
 
+  useEffect(() => {
+    const onRevisit = () => { if (!document.hidden) loadData() }
+    document.addEventListener('visibilitychange', onRevisit)
+    window.addEventListener('focus', onRevisit)
+    return () => {
+      document.removeEventListener('visibilitychange', onRevisit)
+      window.removeEventListener('focus', onRevisit)
+    }
+  }, [loadData])
+
   useNotifications()
 
   const setFocusMode = useAppStore(s => s.setFocusMode)
@@ -237,6 +247,11 @@ export default function HomeClient() {
           searchInput.focus()
         }
       },
+    },
+    {
+      key: 'b',
+      metaKey: true,
+      handler: () => setSidebarOpen(prev => !prev),
     },
     {
       key: 'Escape',

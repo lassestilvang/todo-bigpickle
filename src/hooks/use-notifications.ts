@@ -31,14 +31,6 @@ export function useNotifications() {
   const tasks = useAppStore(s => s.tasks)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const requestPermission = useCallback(async () => {
-    if (!('Notification' in window)) return false
-    if (Notification.permission === 'granted') return true
-    if (Notification.permission === 'denied') return false
-    const result = await Notification.requestPermission()
-    return result === 'granted'
-  }, [])
-
   useEffect(() => {
     if (!('Notification' in window)) return
     if (Notification.permission === 'default') {
@@ -56,7 +48,6 @@ export function useNotifications() {
       for (const task of tasks) {
         if (task.completed) continue
 
-        // Check deadlines
         if (task.deadline) {
           const deadline = task.deadline instanceof Date ? task.deadline : new Date(task.deadline)
           const minsUntil = differenceInMinutes(deadline, now)
@@ -71,7 +62,6 @@ export function useNotifications() {
           }
         }
 
-        // Check due dates (notify day-of for tasks due today)
         if (task.date) {
           const taskDate = task.date instanceof Date ? task.date : new Date(task.date)
           const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -98,6 +88,4 @@ export function useNotifications() {
       }
     }
   }, [tasks])
-
-  return { requestPermission }
 }

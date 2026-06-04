@@ -40,15 +40,19 @@ function getNextRecurringDate(recurring: RecurringType, config?: Task['recurring
   }
 }
 
+let errorTimeoutId: ReturnType<typeof setTimeout> | null = null
+
 const handleError = (message: string, error: unknown, set: (state: Partial<AppStore>) => void) => {
   const errorMessage = error instanceof Error ? error.message : message
   console.error(`${message}: ${errorMessage}`)
   set({ error: errorMessage })
-  setTimeout(() => {
+  if (errorTimeoutId) clearTimeout(errorTimeoutId)
+  errorTimeoutId = setTimeout(() => {
     const current = useAppStore.getState().error
     if (current === errorMessage) {
       useAppStore.setState({ error: null })
     }
+    errorTimeoutId = null
   }, 8000)
 }
 
@@ -570,7 +574,11 @@ export const useAppStore = create<AppStore>()(
         }
       },
 
-      clearError: () => set({ error: null }),
+      clearError: () => {
+        if (errorTimeoutId) clearTimeout(errorTimeoutId)
+        errorTimeoutId = null
+        set({ error: null })
+      },
     }
     },
     {
