@@ -20,6 +20,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: '⌘B', description: 'Toggle sidebar' },
       { keys: '/', description: 'Focus search' },
       { keys: '⌘F', description: 'Focus and select search' },
+      { keys: '⌘⇧H', description: 'Toggle show completed' },
       { keys: 'Esc', description: 'Close dialogs / modals' },
     ],
   },

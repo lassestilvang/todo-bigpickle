@@ -173,6 +173,8 @@ export default function HomeClient() {
   const deleteTask = useAppStore(s => s.deleteTask)
   const toggleTaskComplete = useAppStore(s => s.toggleTaskComplete)
   const toggleSubtask = useAppStore(s => s.toggleSubtask)
+  const setShowCompleted = useAppStore(s => s.setShowCompleted)
+  const showCompleted = useAppStore(s => s.showCompleted)
   useNotifications()
 
   const setFocusMode = useAppStore(s => s.setFocusMode)
@@ -248,6 +250,12 @@ export default function HomeClient() {
       key: 'b',
       metaKey: true,
       handler: () => setSidebarOpen(prev => !prev),
+    },
+    {
+      key: 'h',
+      metaKey: true,
+      shiftKey: true,
+      handler: () => setShowCompleted(!showCompleted),
     },
     {
       key: 'Escape',
