@@ -416,7 +416,7 @@ export const useAppStore = create<AppStore>()(
           error: null,
         }))
         const count = ids.length
-        const undoId = toast({
+        toast({
           type: 'success',
           title: completed ? `Completed ${count} ${count === 1 ? 'task' : 'tasks'}` : `Uncompleted ${count} ${count === 1 ? 'task' : 'tasks'}`,
           duration: 5000,

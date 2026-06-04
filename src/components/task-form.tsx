@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { CalendarIcon, Plus, X, Trash2, Loader2, GripVertical, Paperclip } from 'lucide-react'
 import { format, addDays, addWeeks } from 'date-fns'
-import { m, AnimatePresence, Reorder } from 'framer-motion'
+import { AnimatePresence, Reorder } from 'framer-motion'
 
 const taskSchema = z.object({
   name: z.string().min(1, 'Task name is required').max(200, 'Task name must be 200 characters or fewer'),

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, use, useEffect, useState, useCallback, useMemo, type ReactNode } from 'react'
+import { createContext, use, useEffect, useState, useCallback, useMemo, useSyncExternalStore, type ReactNode } from 'react'
 
 type Theme = 'dark' | 'light' | 'system'
 
@@ -62,29 +62,24 @@ export function ThemeProvider({
     return defaultTheme
   })
 
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
-
-  useEffect(() => {
-    const resolved = theme === 'system' ? getSystemTheme() : theme
-    setResolvedTheme(resolved)
-  }, [theme])
-
   useEffect(() => {
     updateDOM(theme, attribute, disableTransitionOnChange)
   }, [theme, attribute, disableTransitionOnChange])
 
-  useEffect(() => {
-    if (theme !== 'system' || !enableSystem) return
+  const systemPrefersDark = useSyncExternalStore(
+    (onStoreChange) => {
+      if (!enableSystem) return () => {}
+      const mql = window.matchMedia('(prefers-color-scheme: dark)')
+      mql.addEventListener('change', onStoreChange)
+      return () => mql.removeEventListener('change', onStoreChange)
+    },
+    () => enableSystem ? window.matchMedia('(prefers-color-scheme: dark)').matches : false,
+    () => false,
+  )
 
-    const mql = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = () => {
-      updateDOM('system', attribute, disableTransitionOnChange)
-      setResolvedTheme(getSystemTheme())
-    }
-
-    mql.addEventListener('change', handler)
-    return () => mql.removeEventListener('change', handler)
-  }, [theme, attribute, enableSystem, disableTransitionOnChange])
+  const resolvedTheme: 'light' | 'dark' = theme === 'system'
+    ? (systemPrefersDark ? 'dark' : 'light')
+    : theme
 
   useEffect(() => {
     document.documentElement.dataset.theme = resolvedTheme

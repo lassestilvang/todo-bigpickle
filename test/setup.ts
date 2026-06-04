@@ -18,6 +18,8 @@ globalThis.HTMLElement = win.HTMLElement
 globalThis.getComputedStyle = win.window.getComputedStyle.bind(win.window)
 globalThis.CSSStyleDeclaration = win.window.CSSStyleDeclaration
 
+globalThis.Event = win.Event
+globalThis.CustomEvent = win.CustomEvent
 globalThis.KeyboardEvent = win.KeyboardEvent
 globalThis.MouseEvent = win.MouseEvent
 globalThis.requestAnimationFrame = (cb: (t: number) => void) => setTimeout(cb, 0) as unknown as number
@@ -34,6 +36,8 @@ if (!globalThis.PointerEvent) {
   globalThis.PointerEvent = PointerEvent
   win.PointerEvent = PointerEvent
 }
+
+
 
 const matchMediaImpl = (query: string) => ({
   matches: false,

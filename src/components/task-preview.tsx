@@ -22,10 +22,8 @@ import {
   Flag,
   CheckCircle2,
   Circle,
-  AlertTriangle,
   Pencil,
   Trash2,
-  ExternalLink,
   Paperclip,
 } from 'lucide-react'
 
