@@ -96,7 +96,7 @@ export const StatsDashboard = memo(function StatsDashboard({ open, onClose }: St
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <BarChart3 className="size-5" />
-            Insights &amp; Stats
+            Insights & Stats
           </DialogTitle>
           <DialogDescription>
             Your productivity at a glance
