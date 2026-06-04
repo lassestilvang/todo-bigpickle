@@ -405,6 +405,7 @@ export const useAppStore = create<AppStore>()(
       },
 
       bulkCompleteTasks: async (ids, completed) => {
+        const prevTasks = get().tasks.filter(t => ids.includes(t.id)).map(t => ({ ...t }))
         const now = new Date()
         set((state) => ({
           tasks: state.tasks.map(t =>
@@ -415,10 +416,22 @@ export const useAppStore = create<AppStore>()(
           error: null,
         }))
         const count = ids.length
-        toast({
+        const undoId = toast({
           type: 'success',
           title: completed ? `Completed ${count} ${count === 1 ? 'task' : 'tasks'}` : `Uncompleted ${count} ${count === 1 ? 'task' : 'tasks'}`,
-          duration: 4000,
+          duration: 5000,
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              set((state) => ({
+                tasks: state.tasks.map(t => {
+                  const prev = prevTasks.find(p => p.id === t.id)
+                  return prev ? { ...prev, updatedAt: new Date() } : t
+                }),
+              }))
+              Promise.allSettled(prevTasks.map(t => api.updateTask(t.id, { completed: t.completed, completedAt: t.completedAt })))
+            },
+          },
         })
         await Promise.allSettled(ids.map(id => api.updateTask(id, { completed, completedAt: completed ? now : undefined })))
       },

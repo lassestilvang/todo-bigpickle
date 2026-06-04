@@ -293,12 +293,47 @@
   :root { interpolate-size: allow-keywords; }
 }
 
+/* View Transitions API */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(view-content),
+::view-transition-new(view-content) {
+  animation-duration: 0.25s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(view-content) {
+  animation-name: view-fade-out;
+}
+
+::view-transition-new(view-content) {
+  animation-name: view-fade-in;
+}
+
+@keyframes view-fade-out {
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+
+@keyframes view-fade-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+[data-view-content] {
+  view-transition-name: view-content;
+}
+
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 
