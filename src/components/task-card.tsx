@@ -96,6 +96,31 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
     }
   }, [editingName])
 
+  // Quick date keyboard shortcuts when card is focused and not editing
+  const cardRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = cardRef.current
+    if (!el || editingName) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.target !== el && !el.contains(e.target as Node)) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const today = new Date()
+      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+      const dates: Record<string, Date> = {
+        '1': today,
+        '2': new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        '3': nextWeek,
+      }
+      const d = dates[e.key]
+      if (d) {
+        e.preventDefault()
+        updateTask(task.id, { date: d })
+      }
+    }
+    el.addEventListener('keydown', handler)
+    return () => el.removeEventListener('keydown', handler)
+  }, [editingName, task.id, updateTask])
+
   const startEditing = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     setEditValue(task.name)
@@ -116,6 +141,7 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
 
   return (
     <div
+      ref={cardRef}
       data-task-card
       className="relative"
     >

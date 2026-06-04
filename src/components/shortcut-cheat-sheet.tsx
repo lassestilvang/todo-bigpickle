@@ -30,6 +30,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: 'Enter', description: 'Open focused task' },
       { keys: '⌘K', description: 'Focus quick-add input' },
       { keys: '← →', description: 'Navigate task preview' },
+      { keys: '1 2 3', description: 'Set date: Today / Tomorrow / Next week' },
     ],
   },
   {
