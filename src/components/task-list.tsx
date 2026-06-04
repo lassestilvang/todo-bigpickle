@@ -452,18 +452,18 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const isEmpty = Object.entries(groupedTasks).length === 0
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-3 sm:p-6">
       <div className="max-w-4xl mx-auto" data-view-content>
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-primary/5">
+              <div className="p-2 rounded-xl bg-primary/5 shrink-0">
                 <ViewIcon className="size-6 text-primary" />
               </div>
-              <div>
-                <h1 className="text-3xl font-semibold tracking-tight">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight truncate">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {tasks.length} task{tasks.length !== 1 ? 's' : ''}
                   {completedCount > 0 && ` (${completedCount} completed)`}
                 </p>
@@ -471,7 +471,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {completedCount > 0 && (
               <Button
                 variant="ghost"
@@ -479,8 +479,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 onClick={clearCompleted}
                 className="text-muted-foreground/60 hover:text-destructive transition-all duration-200"
               >
-                <CheckCircle2 className="size-3.5 mr-1.5" />
-                Clear completed
+                <CheckCircle2 className="size-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline">Clear completed</span>
               </Button>
             )}
             <Button
@@ -491,11 +491,11 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               aria-label={selectedIds.size > 0 ? 'Deselect all' : 'Select all'}
             >
               {selectedIds.size > 0 ? (
-                <CheckSquare className="size-3.5 mr-1.5" />
+                <CheckSquare className="size-3.5 sm:mr-1.5" />
               ) : (
-                <Square className="size-3.5 mr-1.5" />
+                <Square className="size-3.5 sm:mr-1.5" />
               )}
-              {selectedIds.size > 0 ? `${selectedIds.size}` : 'Select'}
+              <span className="hidden sm:inline">{selectedIds.size > 0 ? `${selectedIds.size}` : 'Select'}</span>
             </Button>
             <div className="relative">
               <Button
@@ -505,13 +505,13 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 onClick={() => setLabelFilterOpen(v => !v)}
                 className={`transition-all duration-200 ${selectedLabelIds.size > 0 ? 'border-primary/50 text-primary bg-primary/5' : ''}`}
               >
-                <Tag className="size-3.5 mr-1.5" />
-                {selectedLabelIds.size > 0 ? `${selectedLabelIds.size}` : 'Label'}
+                <Tag className="size-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline">{selectedLabelIds.size > 0 ? `${selectedLabelIds.size}` : 'Label'}</span>
               </Button>
               {labelFilterOpen && (
               <div
                 id="label-filter-menu"
-                className="absolute right-0 top-full mt-2 z-50 min-w-48 p-2 rounded-xl border bg-popover shadow-xl animate-in"
+                className="absolute right-0 sm:left-auto top-full mt-2 z-50 min-w-48 p-2 rounded-xl border bg-popover shadow-xl animate-in"
               >
                 <div className="text-xs font-medium text-muted-foreground px-2 py-1.5">Filter by label</div>
                 {labels.length === 0 && (
@@ -568,20 +568,21 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               size="sm"
               onClick={cycleSort}
               className="transition-all duration-200"
+              aria-label={`Sort by ${sortLabels[sortBy]}`}
             >
-              <ArrowUpDown className="size-3.5 mr-1.5" />
-              {sortLabels[sortBy]}
+              <ArrowUpDown className="size-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">{sortLabels[sortBy]}</span>
             </Button>
 
             <Button onClick={onCreateTask} size="sm" className="transition-all duration-200 hover:scale-105 active:scale-95">
-              <Plus className="size-4 mr-1.5" />
-              Add Task
+              <Plus className="size-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Add Task</span>
             </Button>
           </div>
         </div>
 
         {/* Quick Add */}
-        <div className="relative mb-8 group">
+        <div className="relative mb-6 sm:mb-8 group">
           <Plus className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors duration-200" />
           <Input
             ref={quickAddRef}
@@ -594,7 +595,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               }
             }}
             placeholder={`Add a task to "${getCurrentViewTitle(currentView, selectedListId, lists)}"…`}
-            className="pl-10 h-12 text-base bg-muted/30 border-dashed border-muted-foreground/25
+            className="pl-10 h-10 sm:h-12 text-sm sm:text-base bg-muted/30 border-dashed border-muted-foreground/25
               focus:bg-background focus:border-primary/50 focus:shadow-sm focus:shadow-primary/10
               transition-all duration-200"
           />
@@ -743,8 +744,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
         {tasks.length > 5 && (
           <button
             type="button"
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 animate-fade-slide-in
-              flex items-center gap-1.5 px-5 py-2.5 rounded-full
+            className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 animate-fade-slide-in
+              flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full
               bg-background/80 backdrop-blur-lg border shadow-lg text-xs text-muted-foreground
               hover:text-foreground hover:shadow-xl hover:-translate-y-1
               transition-all duration-200"

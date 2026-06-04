@@ -191,8 +191,8 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
 
         <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none ${priority.gradient}`} />
 
-        <CardContent className="p-4 pt-[15px] relative">
-          <div className="flex items-start gap-3">
+        <CardContent className="p-3 sm:p-4 pt-[13px] sm:pt-[15px] relative">
+          <div className="flex items-start gap-2 sm:gap-3">
             {onSelectToggle && (
               <div className="pt-0.5">
                 <Checkbox
