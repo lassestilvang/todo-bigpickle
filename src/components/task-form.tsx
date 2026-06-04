@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { CalendarIcon, Plus, X, Trash2, Loader2, GripVertical, Paperclip } from 'lucide-react'
+import { CalendarIcon, Plus, X, Trash2, Loader2, GripVertical, Paperclip, Bell, Clock } from 'lucide-react'
 import { format, addDays, addWeeks } from 'date-fns'
 import { AnimatePresence, Reorder } from 'framer-motion'
 
@@ -133,6 +133,99 @@ const LabelsPicker = memo(function LabelsPicker({
   )
 })
 
+const RemindersEditor = memo(function RemindersEditor({
+  reminders,
+  onAdd,
+  onRemove,
+  date,
+  deadline,
+}: {
+  reminders: Date[]
+  onAdd: (d: Date) => void
+  onRemove: (index: number) => void
+  date?: Date
+  deadline?: Date
+}) {
+  const [customDate, setCustomDate] = useState('')
+
+  const addPreset = (preset: Date) => {
+    onAdd(preset)
+  }
+
+  const addCustom = () => {
+    if (!customDate) return
+    const d = new Date(customDate)
+    if (isNaN(d.getTime())) return
+    onAdd(d)
+    setCustomDate('')
+  }
+
+  const presets: { label: string; getValue: () => Date }[] = []
+  if (deadline) {
+    presets.push(
+      { label: '15m before deadline', getValue: () => new Date(deadline.getTime() - 15 * 60 * 1000) },
+      { label: '1h before deadline', getValue: () => new Date(deadline.getTime() - 60 * 60 * 1000) },
+    )
+  }
+  if (date) {
+    presets.push(
+      { label: 'Morning (9AM)', getValue: () => new Date(new Date(date).setHours(9, 0, 0, 0)) },
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <FormLabel className="text-sm font-medium">Reminders</FormLabel>
+
+      {presets.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {presets.map(p => (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => addPreset(p.getValue())}
+              className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+            >
+              <Clock className="size-3 inline mr-1" />
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {reminders.length > 0 && (
+        <div className="space-y-1.5">
+          {reminders.map((r, i) => (
+            <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 bg-muted rounded-md text-xs">
+              <Bell className="size-3 text-amber-500 shrink-0" />
+              <span className="flex-1">{format(r, 'PPp')}</span>
+              <button
+                type="button"
+                onClick={() => onRemove(i)}
+                className="text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Input
+          type="datetime-local"
+          value={customDate}
+          onChange={(e) => setCustomDate(e.target.value)}
+          className="h-9 text-xs"
+        />
+        <Button type="button" onClick={addCustom} size="sm" variant="secondary" className="shrink-0" disabled={!customDate}>
+          <Plus className="size-3.5" />
+        </Button>
+      </div>
+    </div>
+  )
+})
+
 const SubtasksEditor = memo(function SubtasksEditor({
   subtasks,
   newSubtask,
@@ -235,6 +328,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
     task?.subtasks.map(st => ({ id: st.id, title: st.title, completed: st.completed })) || []
   )
   const [attachments, setAttachments] = useState<string[]>(task?.attachments || [])
+  const [reminders, setReminders] = useState<Date[]>(task?.reminders || [])
   const [newSubtask, setNewSubtask] = useState('')
   const [submitState, setSubmitState] = useState<{ isSubmitting: boolean; error: string | null }>({ isSubmitting: false, error: null })
   const subtaskIdCounter = useRef(0)
@@ -283,6 +377,7 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
         completed: st.completed,
         position: i,
       })),
+      reminders: reminders.length > 0 ? reminders : undefined,
       attachments: attachments.length > 0 ? attachments : undefined,
       completed: task?.completed || false,
     }
@@ -489,6 +584,14 @@ export function TaskForm({ task, isOpen, onClose }: TaskFormProps) {
             onToggle={toggleSubtask}
             onReorder={reorderSubtasks}
             inputRef={newSubtaskRef}
+          />
+
+          <RemindersEditor
+            reminders={reminders}
+            onAdd={(d) => setReminders(prev => [...prev, d])}
+            onRemove={(i) => setReminders(prev => prev.filter((_, idx) => idx !== i))}
+            date={dateValue}
+            deadline={deadlineValue}
           />
 
           <div className="space-y-2">

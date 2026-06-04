@@ -27,6 +27,7 @@ import {
   Pencil,
   Trash2,
   Paperclip,
+  Bell,
 } from 'lucide-react'
 
 function formatRelativeDate(date: Date): string {
@@ -242,6 +243,24 @@ export const TaskPreview = memo(function TaskPreview({
                         {subtask.title}
                       </span>
                     </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Reminders */}
+            {task.reminders && task.reminders.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Reminders</p>
+                <div className="flex flex-wrap gap-2">
+                  {task.reminders.map((r, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 rounded-md border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400"
+                    >
+                      <Bell className="size-3" />
+                      {format(r, 'MMM d, yyyy h:mm a')}
+                    </div>
                   ))}
                 </div>
               </div>

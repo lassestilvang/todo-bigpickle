@@ -21,6 +21,7 @@ import {
   Trash2,
   GripVertical,
   Copy,
+  Bell,
 } from 'lucide-react'
 import { Markdown } from '@/components/ui/markdown'
 import { playCompletionSound } from '@/lib/sounds'
@@ -304,6 +305,13 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                     {task.estimate >= 60
                       ? `${Math.floor(task.estimate / 60)}h ${task.estimate % 60}m`
                       : `${task.estimate}m`}
+                  </div>
+                )}
+
+                {task.reminders && task.reminders.length > 0 && (
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 transition-colors duration-200">
+                    <Bell className="size-3" />
+                    <span className="text-[10px] font-medium">{task.reminders.length}</span>
                   </div>
                 )}
 

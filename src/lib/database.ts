@@ -263,6 +263,7 @@ export class DatabaseService {
       getAttachments: this.db.query('SELECT file_path FROM attachments WHERE task_id = ? ORDER BY created_at'),
       deleteTaskLabels: this.db.query('DELETE FROM task_labels WHERE task_id = ?'),
       deleteSubtasks: this.db.query('DELETE FROM subtasks WHERE task_id = ?'),
+      deleteReminders: this.db.query('DELETE FROM reminders WHERE task_id = ?'),
       insertTaskLabel: this.db.query('INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)'),
       insertTaskHistory: this.db.query(`
         INSERT INTO task_history (id, task_id, field, old_value, new_value) VALUES (?, ?, ?, ?, ?)
@@ -768,6 +769,13 @@ export class DatabaseService {
         this.stmts.deleteSubtasks.run(id)
         for (let i = 0; i < updates.subtasks.length; i++) {
           this.createSubtask(id, updates.subtasks[i], i)
+        }
+      }
+
+      if (updates.reminders !== undefined) {
+        this.stmts.deleteReminders.run(id)
+        for (const reminder of updates.reminders) {
+          this.addReminder(id, reminder)
         }
       }
     })

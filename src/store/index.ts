@@ -137,6 +137,8 @@ export const useAppStore = create<AppStore>()(
           labels: taskData.labels || [],
           priority: taskData.priority || 'none',
           subtasks: taskData.subtasks || [],
+          reminders: taskData.reminders,
+          attachments: taskData.attachments,
           recurring: taskData.recurring,
           recurringConfig: taskData.recurringConfig,
           listId: taskData.listId,

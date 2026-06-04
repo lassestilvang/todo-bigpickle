@@ -4,8 +4,8 @@ import { useEffect, useRef } from 'react'
 import { useAppStore } from '@/store'
 import { differenceInMinutes } from 'date-fns'
 
-const CHECK_INTERVAL = 60000 // Check every minute
-const NOTIFY_BEFORE = 30 // Notify 30 minutes before deadline
+const CHECK_INTERVAL = 60000
+const NOTIFY_BEFORE = 30
 const STORAGE_KEY = 'todo-app-notified-tasks'
 
 function getNotified(): Set<string> {
@@ -25,6 +25,10 @@ function markNotified(id: string) {
   } catch {
     // Storage unavailable
   }
+}
+
+function toDate(d: Date | string): Date {
+  return d instanceof Date ? d : new Date(d)
 }
 
 export function useNotifications() {
@@ -48,8 +52,9 @@ export function useNotifications() {
       for (const task of tasks) {
         if (task.completed) continue
 
+        // Deadline-based notification (30 min before)
         if (task.deadline) {
-          const deadline = task.deadline instanceof Date ? task.deadline : new Date(task.deadline)
+          const deadline = toDate(task.deadline)
           const minsUntil = differenceInMinutes(deadline, now)
 
           if (minsUntil > 0 && minsUntil <= NOTIFY_BEFORE && !notified.has(`deadline:${task.id}`)) {
@@ -62,8 +67,9 @@ export function useNotifications() {
           }
         }
 
+        // Date-based notification (due today or overdue)
         if (task.date) {
-          const taskDate = task.date instanceof Date ? task.date : new Date(task.date)
+          const taskDate = toDate(task.date)
           const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
           const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
           const isDueToday = taskDateOnly.getTime() === today.getTime()
@@ -76,6 +82,26 @@ export function useNotifications() {
               tag: `date:${task.id}`,
             })
             markNotified(`date:${task.id}`)
+          }
+        }
+
+        // Reminder-based notification (arbitrary reminder times)
+        if (task.reminders && task.reminders.length > 0) {
+          for (const reminder of task.reminders) {
+            const reminderTime = toDate(reminder)
+            const key = `reminder:${task.id}:${reminderTime.getTime()}`
+
+            if (reminderTime <= now && !notified.has(key)) {
+              const minsAgo = differenceInMinutes(now, reminderTime)
+              new Notification('Task Reminder', {
+                body: minsAgo <= 1
+                  ? `"${task.name}" — reminder`
+                  : `"${task.name}" — reminder was ${minsAgo} ${minsAgo === 1 ? 'minute' : 'minutes'} ago`,
+                icon: '/icon.svg',
+                tag: key,
+              })
+              markNotified(key)
+            }
           }
         }
       }
