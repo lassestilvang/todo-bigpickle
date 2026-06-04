@@ -23,6 +23,7 @@ import {
   Copy,
 } from 'lucide-react'
 import { Markdown } from '@/components/ui/markdown'
+import { playCompletionSound } from '@/lib/sounds'
 
 function highlightText(text: string, query: string): ReactNode {
   if (!query) return text
@@ -81,6 +82,7 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
   useEffect(() => {
     if (task.completed && !prevCompleted.current) {
       startTransition(() => setCelebrating(true))
+      playCompletionSound()
       const timer = setTimeout(() => startTransition(() => setCelebrating(false)), 800)
       return () => clearTimeout(timer)
     }
