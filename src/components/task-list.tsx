@@ -56,6 +56,7 @@ interface TaskGroupProps {
   date: Date | null
   customOrderTasks: Task[] | undefined
   selectedIds: Set<string>
+  searchQuery: string
   sortBy: string
   onReorder: (groupKey: string, tasks: Task[]) => void
   onToggleComplete: (id: string) => void
@@ -67,7 +68,7 @@ interface TaskGroupProps {
 }
 
 const TaskGroup = memo(function TaskGroup({
-  tasks, hasDate, date, customOrderTasks, selectedIds, groupKey,
+  tasks, hasDate, date, customOrderTasks, selectedIds, searchQuery, groupKey,
   sortBy, onReorder, onToggleComplete, onToggleSubtask, onReorderSubtasks, onSelectToggle, onEditTask, onDeleteTask,
 }: TaskGroupProps & { groupKey: string }) {
   return (
@@ -100,6 +101,7 @@ const TaskGroup = memo(function TaskGroup({
             <TaskCard
               task={task}
               selected={selectedIds.has(task.id)}
+              searchQuery={searchQuery}
               onToggleComplete={onToggleComplete}
               onToggleSubtask={onToggleSubtask}
               onReorderSubtasks={onReorderSubtasks}
@@ -693,6 +695,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 date={group.date}
                 customOrderTasks={customOrder[groupKey]}
                 selectedIds={selectedIds}
+                searchQuery={searchQuery}
                 sortBy={sortBy}
                 onReorder={handleGroupReorder}
                 onToggleComplete={handleToggleComplete}

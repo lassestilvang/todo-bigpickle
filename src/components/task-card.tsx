@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useRef, useEffect, useCallback, startTransition } from 'react'
+import { memo, useState, useRef, useEffect, useCallback, startTransition, type ReactNode } from 'react'
 import { Task } from '@/types'
 import { useNow } from '@/hooks/use-now'
 import { Celebration } from '@/components/celebration'
@@ -24,9 +24,22 @@ import {
 } from 'lucide-react'
 import { Markdown } from '@/components/ui/markdown'
 
+function highlightText(text: string, query: string): ReactNode {
+  if (!query) return text
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const parts = text.split(new RegExp(`(${escaped})`, 'gi'))
+  if (parts.length === 1) return text
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase()
+      ? <mark key={i} className="rounded-sm bg-primary/20 text-foreground ring-1 ring-primary/30 font-medium px-0.5">{part}</mark>
+      : part
+  )
+}
+
 interface TaskCardProps {
   task: Task
   selected?: boolean
+  searchQuery?: string
   onToggleComplete: (id: string) => void
   onToggleSubtask: (taskId: string, subtaskId: string) => void
   onReorderSubtasks: (taskId: string, subtaskIds: string[]) => void
@@ -49,7 +62,7 @@ function formatRelativeDate(date: Date): string {
   return format(date, 'MMM d')
 }
 
-export const TaskCard = memo(function TaskCard({ task, selected, onToggleComplete, onToggleSubtask, onReorderSubtasks, onEdit, onDelete, onSelectToggle }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, onToggleComplete, onToggleSubtask, onReorderSubtasks, onEdit, onDelete, onSelectToggle }: TaskCardProps) {
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
   const [celebrating, setCelebrating] = useState(false)
@@ -221,7 +234,7 @@ export const TaskCard = memo(function TaskCard({ task, selected, onToggleComplet
                       }
                     }}
                   >
-                    {task.name}
+                    {highlightText(task.name, searchQuery || '')}
                   </button>
                 )}
                 {isOverdue && !editingName && (
