@@ -7,6 +7,7 @@ interface ShortcutConfig {
   ctrlKey?: boolean
   shiftKey?: boolean
   metaKey?: boolean
+  altKey?: boolean
   handler: (e: KeyboardEvent) => void
   disabled?: boolean
 }
@@ -33,8 +34,9 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
         const ctrlMatch = shortcut.ctrlKey === undefined || shortcut.ctrlKey === e.ctrlKey
         const shiftMatch = shortcut.shiftKey === undefined || shortcut.shiftKey === e.shiftKey
         const metaMatch = shortcut.metaKey === undefined || shortcut.metaKey === e.metaKey
+        const altMatch = shortcut.altKey === undefined || shortcut.altKey === e.altKey
 
-        if (keyMatch && ctrlMatch && shiftMatch && metaMatch) {
+        if (keyMatch && ctrlMatch && shiftMatch && metaMatch && altMatch) {
           e.preventDefault()
           shortcut.handler(e)
           return

@@ -272,6 +272,11 @@ export default function HomeClient() {
       shiftKey: true,
       handler: () => setShowCompleted(!showCompleted),
     },
+    // View switching: ⌥1-4 (Alt+1-4)
+    { key: '1', altKey: true, handler: () => { useAppStore.getState().setCurrentView('today'); useAppStore.getState().setSelectedListId(undefined) } },
+    { key: '2', altKey: true, handler: () => { useAppStore.getState().setCurrentView('next7days'); useAppStore.getState().setSelectedListId(undefined) } },
+    { key: '3', altKey: true, handler: () => { useAppStore.getState().setCurrentView('upcoming'); useAppStore.getState().setSelectedListId(undefined) } },
+    { key: '4', altKey: true, handler: () => { useAppStore.getState().setCurrentView('all'); useAppStore.getState().setSelectedListId(undefined) } },
     {
       key: 'Escape',
       handler: () => {
