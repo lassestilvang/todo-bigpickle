@@ -71,6 +71,7 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
     ? Math.floor((now.getTime() - task.deadline.getTime()) / (1000 * 60 * 60 * 24))
     : 0
   const [celebrating, setCelebrating] = useState(false)
+  const [justCompleted, setJustCompleted] = useState(false)
   const prevCompleted = useRef(task.completed)
 
   const [editingName, setEditingName] = useState(false)
@@ -86,9 +87,14 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
   useEffect(() => {
     if (task.completed && !prevCompleted.current) {
       startTransition(() => setCelebrating(true))
+      startTransition(() => setJustCompleted(true))
       playCompletionSound()
-      const timer = setTimeout(() => startTransition(() => setCelebrating(false)), 800)
-      return () => clearTimeout(timer)
+      const celebrationTimer = setTimeout(() => startTransition(() => setCelebrating(false)), 800)
+      const glowTimer = setTimeout(() => startTransition(() => setJustCompleted(false)), 2000)
+      return () => {
+        clearTimeout(celebrationTimer)
+        clearTimeout(glowTimer)
+      }
     }
     prevCompleted.current = task.completed
   }, [task.completed])
@@ -159,6 +165,7 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
             ? 'opacity-60 saturate-50 scale-[0.995]'
             : 'shadow-sm hover:shadow-primary/5'
           }
+          ${justCompleted ? 'ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-500/10' : ''}
           ${selected ? 'ring-2 ring-primary/40 shadow-lg shadow-primary/10 bg-primary/[0.02]' : ''}
           ${celebrating ? 'overflow-visible' : 'overflow-hidden'}
           before:absolute before:inset-0 before:rounded-[inherit] before:opacity-0 before:transition-opacity before:duration-300
@@ -194,6 +201,14 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
         <div className={`absolute -top-4 -right-4 size-20 rounded-full bg-gradient-to-br ${priority.bar} opacity-0 group-hover/card:opacity-[0.06] blur-3xl transition-opacity duration-500 pointer-events-none`} />
 
         <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none ${priority.gradient}`} />
+
+        {/* Completion sweep animation */}
+        {justCompleted && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent
+              animate-shimmer" style={{ animationDuration: '0.8s' }} />
+          </div>
+        )}
 
         <CardContent className="p-3 sm:p-4 pt-[13px] sm:pt-[15px] relative">
           <div className="flex items-start gap-2 sm:gap-3">
