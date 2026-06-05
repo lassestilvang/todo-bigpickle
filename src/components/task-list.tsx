@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { Task } from '@/types'
+import { Task, Priority } from '@/types'
 import { useAppStore, useShallow } from '@/store'
 import { TaskCard } from '@/components/task-card'
 import { BulkActionBar } from '@/components/bulk-action-bar'
@@ -345,10 +345,16 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [sortBy, groupedTasks])
 
   const onEditRef = useRef(onEditTask)
+  const toggleRef = useRef(toggleTaskComplete)
+  const updateRef = useRef(updateTask)
+  const deleteRef = useRef(deleteTask)
 
   useEffect(() => {
     onEditRef.current = onEditTask
   }, [onEditTask])
+  useEffect(() => { toggleRef.current = toggleTaskComplete }, [toggleTaskComplete])
+  useEffect(() => { updateRef.current = updateTask }, [updateTask])
+  useEffect(() => { deleteRef.current = deleteTask }, [deleteTask])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -381,6 +387,18 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           e.preventDefault()
           onEditRef.current(currentTasks[currentIndex])
         }
+      } else if ((e.key === 'c' || e.key === 'x') && currentIndex >= 0 && currentTasks[currentIndex]) {
+        e.preventDefault()
+        toggleRef.current(currentTasks[currentIndex].id)
+      } else if (e.key === 'd' && currentIndex >= 0 && currentTasks[currentIndex]) {
+        e.preventDefault()
+        deleteRef.current(currentTasks[currentIndex].id)
+      } else if (e.key === 'p' && currentIndex >= 0 && currentTasks[currentIndex]) {
+        e.preventDefault()
+        const task = currentTasks[currentIndex]
+        const cycle: Priority[] = ['none', 'low', 'medium', 'high']
+        const idx = cycle.indexOf(task.priority)
+        updateRef.current(task.id, { priority: cycle[(idx + 1) % cycle.length] })
       }
     }
 
