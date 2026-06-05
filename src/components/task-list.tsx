@@ -284,8 +284,13 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
 
   const sortedTasks = useMemo(() => {
+    const now = new Date()
+    const isOverdue = (t: Task) => t.deadline && t.deadline < now && !t.completed
     if (sortBy === 'custom') return tasks
     return tasks.toSorted((a, b) => {
+      const aOver = isOverdue(a) ? 1 : 0
+      const bOver = isOverdue(b) ? 1 : 0
+      if (aOver !== bOver) return bOver - aOver
       switch (sortBy) {
         case 'date':
           if (!a.date && !b.date) return 0
