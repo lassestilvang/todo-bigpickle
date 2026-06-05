@@ -177,6 +177,8 @@ export default function HomeClient() {
   const showCompleted = useAppStore(s => s.showCompleted)
   useNotifications()
 
+  const searchQuery = useAppStore(s => s.searchQuery)
+  const setSearchQuery = useAppStore(s => s.setSearchQuery)
   const setFocusMode = useAppStore(s => s.setFocusMode)
   const focusMode = useAppStore(s => s.focusMode)
 
@@ -345,7 +347,28 @@ export default function HomeClient() {
               <SidebarInset className="flex-1 flex flex-col bg-grid-pattern">
                 <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/70 backdrop-blur-xl sticky top-0 z-10 supports-[backdrop-filter]:bg-background/60">
                   <SidebarTrigger className="-ml-1" />
-                  <div className="flex-1" />
+                  <div className="flex-1 flex items-center justify-center max-w-md mx-auto">
+                    <div className="relative w-full max-w-xs">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/50 pointer-events-none" />
+                      <input
+                        type="search"
+                        placeholder="Search tasks..."
+                        aria-label="Search tasks"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-8 pl-8 pr-8 text-sm rounded-md bg-muted/50 border border-muted-foreground/20 focus:bg-background focus:border-primary/40 transition-all duration-200 outline-none [&::-webkit-search-cancel-button]:hidden placeholder:text-muted-foreground/50"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                          aria-label="Clear search"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
