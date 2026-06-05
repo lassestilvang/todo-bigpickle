@@ -140,6 +140,8 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name' | 'custom'>('custom')
   const [quickAddText, setQuickAddText] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const selectedIdsRef = useRef(selectedIds)
+  useEffect(() => { selectedIdsRef.current = selectedIds }, [selectedIds])
   const [selectedLabelIds, setSelectedLabelIds] = useState<Set<string>>(new Set())
   const [labelFilterOpen, setLabelFilterOpen] = useState(false)
   const lastClickedIndexRef = useRef<number>(-1)
@@ -399,6 +401,9 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
         const cycle: Priority[] = ['none', 'low', 'medium', 'high']
         const idx = cycle.indexOf(task.priority)
         updateRef.current(task.id, { priority: cycle[(idx + 1) % cycle.length] })
+      } else if (e.key === 'Escape' && selectedIdsRef.current.size > 0) {
+        e.preventDefault()
+        setSelectedIds(new Set())
       }
     }
 
