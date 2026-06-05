@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useState, useRef, useEffect, useCallback, startTransition, type ReactNode } from 'react'
-import { Task } from '@/types'
+import { Task, Priority } from '@/types'
 import { useNow } from '@/hooks/use-now'
 import { Celebration } from '@/components/celebration'
 import { Input } from '@/components/ui/input'
@@ -70,6 +70,14 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
   const overdueDays = isOverdue && task.deadline
     ? Math.floor((now.getTime() - task.deadline.getTime()) / (1000 * 60 * 60 * 24))
     : 0
+  const cyclePriority = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    const cycle: Priority[] = ['none', 'low', 'medium', 'high']
+    const idx = cycle.indexOf(task.priority)
+    const next = cycle[(idx + 1) % cycle.length]
+    updateTask(task.id, { priority: next })
+  }, [task.priority, task.id, updateTask])
+
   const [celebrating, setCelebrating] = useState(false)
   const [justCompleted, setJustCompleted] = useState(false)
   const prevCompleted = useRef(task.completed)
@@ -345,12 +353,17 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                   </div>
                 )}
 
-                <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border ${priority.badge}`}>
+                <button
+                  type="button"
+                  onClick={cyclePriority}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 ${priority.badge}`}
+                  aria-label={`Priority: ${priority.label}. Click to cycle.`}
+                >
                   <Flag className={`size-3 ${priority.text}`} />
                   <span className={`text-[10px] font-semibold`}>
                     {priority.label}
                   </span>
-                </div>
+                </button>
 
                 {task.labels.length > 0 && (
                   <div className="flex items-center gap-1">
