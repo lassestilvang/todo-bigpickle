@@ -67,6 +67,9 @@ function formatRelativeDate(date: Date): string {
 export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, onToggleComplete, onToggleSubtask, onReorderSubtasks, onEdit, onDelete, onSelectToggle }: TaskCardProps) {
   const now = useNow()
   const isOverdue = task.deadline && task.deadline < now && !task.completed
+  const overdueDays = isOverdue && task.deadline
+    ? Math.floor((now.getTime() - task.deadline.getTime()) / (1000 * 60 * 60 * 24))
+    : 0
   const [celebrating, setCelebrating] = useState(false)
   const prevCompleted = useRef(task.completed)
 
@@ -267,9 +270,15 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                   </button>
                 )}
                 {isOverdue && !editingName && (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[10px] font-semibold whitespace-nowrap border border-red-500/20 shrink-0 animate-in shadow-sm shadow-red-500/10">
+                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap border shrink-0 animate-in shadow-sm ${
+                    overdueDays >= 7
+                      ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 shadow-red-500/10'
+                      : overdueDays >= 3
+                        ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30 shadow-orange-500/10'
+                        : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 shadow-amber-500/10'
+                  }`}>
                     <AlertTriangle className="size-3" data-testid="alert-triangle" />
-                    Overdue
+                    {overdueDays === 0 ? 'Due today' : overdueDays === 1 ? '1 day overdue' : `${overdueDays} days overdue`}
                   </div>
                 )}
               </div>
@@ -291,11 +300,17 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                 {task.deadline && (
                   <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border transition-all duration-200 ${
                     isOverdue
-                      ? 'bg-red-500/10 text-red-500 font-medium border-red-500/20 hover:bg-red-500/[0.12]'
+                      ? overdueDays >= 7
+                        ? 'bg-red-500/10 text-red-500 font-medium border-red-500/20 hover:bg-red-500/[0.12]'
+                        : overdueDays >= 3
+                          ? 'bg-orange-500/10 text-orange-500 font-medium border-orange-500/20 hover:bg-orange-500/[0.12]'
+                          : 'bg-amber-500/10 text-amber-500 font-medium border-amber-500/20 hover:bg-amber-500/[0.12]'
                       : 'bg-muted/60 border-border/40 hover:bg-muted/80'
                   }`}>
                     <Clock className="size-3" />
-                    {isOverdue ? 'Overdue!' : formatRelativeDate(task.deadline)}
+                    {isOverdue
+                      ? overdueDays === 0 ? 'Due today' : `${overdueDays}d overdue`
+                      : formatRelativeDate(task.deadline)}
                   </div>
                 )}
 
