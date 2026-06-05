@@ -21,6 +21,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: '/', description: 'Focus search' },
       { keys: '⌘F', description: 'Focus and select search' },
       { keys: '⌘⇧H', description: 'Toggle show completed' },
+      { keys: '⌥1-4', description: 'Switch views: Today / 7d / Upcoming / All' },
       { keys: 'Esc', description: 'Close dialogs / modals' },
     ],
   },
@@ -35,6 +36,14 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: '← →', description: 'Navigate task preview' },
       { keys: '1 2 3', description: 'Set date: Today / Tomorrow / Next week' },
       { keys: '?', description: 'Show keyboard shortcuts' },
+    ],
+  },
+  {
+    group: 'Task Actions (focused)',
+    shortcuts: [
+      { keys: 'c', description: 'Toggle complete focused task' },
+      { keys: 'd', description: 'Delete focused task' },
+      { keys: 'p', description: 'Cycle priority focused task' },
     ],
   },
   {
