@@ -22,6 +22,7 @@ import {
   GripVertical,
   Copy,
   Bell,
+  X,
 } from 'lucide-react'
 import { Markdown } from '@/components/ui/markdown'
 import { playCompletionSound } from '@/lib/sounds'
@@ -316,9 +317,19 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
 
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
                 {task.date && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40 transition-colors duration-200 hover:bg-muted/80">
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40 transition-colors duration-200 hover:bg-muted/80">
                     <Calendar className="size-3" />
-                    {formatRelativeDate(task.date)}
+                    <span>{formatRelativeDate(task.date)}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        updateTask(task.id, { date: undefined })
+                      }}
+                      className="ml-0.5 text-muted-foreground/30 hover:text-muted-foreground transition-colors rounded-sm hover:bg-muted/80 p-0.5"
+                      aria-label="Clear date"
+                    >
+                      <X className="size-2.5" />
+                    </button>
                   </div>
                 )}
 
