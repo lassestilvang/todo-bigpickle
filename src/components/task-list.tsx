@@ -12,7 +12,6 @@ import Fuse from 'fuse.js'
 import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp, CheckSquare, Square, Tag } from 'lucide-react'
 import { format, isToday, isYesterday } from 'date-fns'
 import { parseDateFromText } from '@/lib/date-parser'
-import { toast } from '@/hooks/use-toast'
 
 const sortLabels = { date: 'Date', priority: 'Priority', name: 'Name', custom: 'Custom' } as const
 const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 }
@@ -159,7 +158,9 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     if (container) {
       container.scrollTo({ top: 0, behavior: 'smooth' })
     }
-    setFocusedTaskIndex(-1)
+    focusedTaskIndexRef.current = -1
+    const id = requestAnimationFrame(() => setFocusedTaskIndex(-1))
+    return () => cancelAnimationFrame(id)
   }, [currentView, selectedListId, sortBy, searchQuery])
 
   useEffect(() => {
