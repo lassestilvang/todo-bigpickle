@@ -354,10 +354,13 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
 
       const currentIndex = focusedTaskIndexRef.current
 
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      const isNavDown = e.key === 'ArrowDown' || e.key === 'j'
+      const isNavUp = e.key === 'ArrowUp' || e.key === 'k'
+
+      if (isNavDown || isNavUp) {
         e.preventDefault()
         setFocusedTaskIndex(prev => {
-          const next = e.key === 'ArrowDown'
+          const next = isNavDown
             ? Math.min(prev + 1, currentTasks.length - 1)
             : Math.max(prev - 1, 0)
           const cards = document.querySelectorAll<HTMLElement>('[data-task-card]')
@@ -596,6 +599,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
           <Plus className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors duration-200" />
           <Input
             ref={quickAddRef}
+            data-quick-add
             value={quickAddText}
             onChange={(e) => setQuickAddText(e.target.value)}
             onKeyDown={(e) => {

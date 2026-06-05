@@ -27,11 +27,14 @@ const shortcutGroups: ShortcutGroup[] = [
   {
     group: 'Task Navigation',
     shortcuts: [
+      { keys: 'j k', description: 'Navigate between tasks' },
       { keys: '↑ ↓', description: 'Navigate between tasks' },
       { keys: 'Enter', description: 'Open focused task' },
+      { keys: 'n', description: 'Focus quick-add input' },
       { keys: '⌘K', description: 'Focus quick-add input' },
       { keys: '← →', description: 'Navigate task preview' },
       { keys: '1 2 3', description: 'Set date: Today / Tomorrow / Next week' },
+      { keys: '?', description: 'Show keyboard shortcuts' },
     ],
   },
   {

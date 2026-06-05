@@ -227,7 +227,22 @@ export default function HomeClient() {
       },
     },
     {
+      key: 'n',
+      handler: () => {
+        const quickAdd = document.querySelector<HTMLInputElement>('[data-quick-add]')
+        if (quickAdd) quickAdd.focus()
+      },
+    },
+    {
       key: '/',
+      shiftKey: true,
+      handler: () => {
+        setShortcutCheatSheetOpen(true)
+      },
+    },
+    {
+      key: '/',
+      shiftKey: false,
       handler: () => {
         const searchInput = document.querySelector<HTMLInputElement>('input[aria-label="Search tasks"]')
         if (searchInput) {
