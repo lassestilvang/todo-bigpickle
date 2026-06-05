@@ -137,6 +137,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const lists = useAppStore(useShallow(s => s.lists))
   const labels = useAppStore(useShallow(s => s.labels))
   const clearCompleted = useAppStore(s => s.clearCompleted)
+  const focusMode = useAppStore(s => s.focusMode)
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'name' | 'custom'>('custom')
   const [quickAddText, setQuickAddText] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -474,8 +475,19 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               <div className="p-2 rounded-xl bg-primary/5 shrink-0">
                 <ViewIcon className="size-6 text-primary" />
               </div>
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight truncate">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
+               <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight truncate">{getCurrentViewTitle(currentView, selectedListId, lists)}</h1>
+                  {focusMode && (
+                    <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold border border-primary/20 animate-fade-in">
+                      <svg className="size-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M3 3l18 18" />
+                      </svg>
+                      Focus
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   {tasks.length} task{tasks.length !== 1 ? 's' : ''}
                   {completedCount > 0 && ` (${completedCount} completed)`}
@@ -484,6 +496,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
             </div>
           </div>
 
+          {!focusMode && (
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {completedCount > 0 && (
               <Button
@@ -592,6 +605,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               <span className="hidden sm:inline">Add Task</span>
             </Button>
           </div>
+          )}
         </div>
 
         {/* Quick Add */}
@@ -613,9 +627,11 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
               focus:bg-background focus:border-primary/50 focus:shadow-sm focus:shadow-primary/10
               transition-all duration-200"
           />
+          {!focusMode && (
           <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground/60">
             ⌘K
           </kbd>
+          )}
           <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/0 via-primary/[0.02] to-primary/0 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 pointer-events-none" />
         </div>
 
@@ -749,13 +765,15 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
         </AnimatePresence>
 
         {/* Bulk action bar */}
+        {!focusMode && (
         <BulkActionBar
           selectedIds={Array.from(selectedIds)}
           onClearSelection={handleClearSelection}
         />
+        )}
 
         {/* Scroll to top */}
-        {tasks.length > 5 && (
+        {!focusMode && tasks.length > 5 && (
           <button
             type="button"
             className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 animate-fade-slide-in
