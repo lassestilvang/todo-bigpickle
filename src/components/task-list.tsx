@@ -284,6 +284,10 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     return fuse.search(searchQuery).map(r => r.item)
   }, [baseTasks, searchQuery, fuse])
   const completedCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks])
+  const overdueCount = useMemo(() => {
+    const now = new Date()
+    return tasks.filter(t => t.deadline && t.deadline < now && !t.completed).length
+  }, [tasks])
 
   const sortedTasks = useMemo(() => {
     const now = new Date()
@@ -519,6 +523,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+                  {overdueCount > 0 && ` (${overdueCount} overdue)`}
                   {completedCount > 0 && ` (${completedCount} completed)`}
                 </p>
               </div>
