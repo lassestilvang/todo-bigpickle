@@ -7,6 +7,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { ThemeProvider } from '@/components/theme-provider'
+import { MoodBackground } from '@/components/mood-background'
 import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
@@ -359,6 +360,7 @@ export default function HomeClient() {
       defaultTheme="system"
       enableSystem
     >
+      <MoodBackground />
       <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <div id="main-content" className="flex h-screen overflow-hidden bg-noise">
           {isLoading ? (

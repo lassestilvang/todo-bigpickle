@@ -149,6 +149,7 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const lastClickedIndexRef = useRef<number>(-1)
   const quickAddRef = useRef<HTMLInputElement>(null)
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
+  const [showInboxZeroCelebration, setShowInboxZeroCelebration] = useState(false)
   const focusedTaskIndexRef = useRef(focusedTaskIndex)
   const flatTasksRef = useRef<Task[]>([])
 
@@ -314,6 +315,18 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
       }
     })
   }, [tasks, sortBy])
+
+  const isEmpty = tasks.length === 0
+  const prevIsEmpty = useRef(isEmpty)
+
+  useEffect(() => {
+    if (isEmpty && !prevIsEmpty.current && !searchQuery) {
+      setShowInboxZeroCelebration(true)
+      const timer = setTimeout(() => setShowInboxZeroCelebration(false), 2000)
+      return () => clearTimeout(timer)
+    }
+    prevIsEmpty.current = isEmpty
+  }, [isEmpty, searchQuery])
 
   const groupedTasks = useMemo(() => {
     const groups: Record<string, { date: Date | null; tasks: Task[] }> = {}
@@ -498,10 +511,12 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [allTasks, updateTask])
 
   const ViewIcon = viewIcons[currentView as keyof typeof viewIcons] || LayoutList
-  const isEmpty = Object.entries(groupedTasks).length === 0
 
   return (
-    <div className="flex-1 p-3 sm:p-6">
+    <div className="flex-1 p-3 sm:p-6 relative">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50">
+        <Celebration active={showInboxZeroCelebration} />
+      </div>
       <div className="max-w-4xl mx-auto" data-view-content>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">

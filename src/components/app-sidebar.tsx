@@ -36,6 +36,7 @@ import {
 import { ListManager } from '@/components/list-manager'
 import { LabelManager } from '@/components/label-manager'
 import { StatsDashboard } from '@/components/stats-dashboard'
+import { ProgressRing } from '@/components/ui/progress-ring'
 import { exportTasksAsCSV } from '@/lib/csv-export'
 
 const viewIcons = {
@@ -129,13 +130,54 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   }, [tasks, now])
 
   const listTaskCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
+    const total: Record<string, number> = {}
+    const completed: Record<string, number> = {}
+    
     for (const t of tasks) {
-      if (t.completed) continue
-      counts[t.listId] = (counts[t.listId] || 0) + 1
+      total[t.listId] = (total[t.listId] || 0) + 1
+      if (t.completed) completed[t.listId] = (completed[t.listId] || 0) + 1
     }
-    return counts
+    
+    return { total, completed }
   }, [tasks])
+
+  const viewTaskCounts = useMemo(() => {
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+
+    const counts = {
+      today: { total: 0, completed: 0 },
+      next7days: { total: 0, completed: 0 },
+      upcoming: { total: 0, completed: 0 },
+      all: { total: 0, completed: 0 },
+    }
+
+    for (const t of tasks) {
+      counts.all.total++
+      if (t.completed) counts.all.completed++
+
+      if (!t.date) continue
+      const taskDate = new Date(t.date)
+      const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate())
+
+      if (taskDateOnly.getTime() === today.getTime()) {
+        counts.today.total++
+        if (t.completed) counts.today.completed++
+      }
+      
+      if (taskDateOnly >= today && taskDateOnly <= nextWeek) {
+        counts.next7days.total++
+        if (t.completed) counts.next7days.completed++
+      }
+
+      if (taskDateOnly > today) {
+        counts.upcoming.total++
+        if (t.completed) counts.upcoming.completed++
+      }
+    }
+
+    return counts
+  }, [tasks, now])
 
   const streak = useMemo(() => {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -207,16 +249,26 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                     >
                       <Icon className="size-4" />
                       <span>{label}</span>
-                      {count !== undefined && count > 0 && (
-                        <Badge
-                          variant={isActive ? 'default' : 'secondary'}
-                          className="ml-auto text-[10px] px-1.5 min-w-5 h-5 flex items-center justify-center"
-                        >
-                          <span key={count} className="animate-count-in">
-                            {count}
-                          </span>
-                        </Badge>
-                      )}
+                      <div className="ml-auto flex items-center gap-2">
+                        {view === 'today' && overdueCount > 0 && (
+                          <Badge
+                            variant="destructive"
+                            className="text-[10px] px-1.5 h-5"
+                          >
+                            {overdueCount}
+                          </Badge>
+                        )}
+                        <ProgressRing
+                          progress={
+                            viewTaskCounts[view as keyof typeof viewTaskCounts].total > 0
+                              ? viewTaskCounts[view as keyof typeof viewTaskCounts].completed / viewTaskCounts[view as keyof typeof viewTaskCounts].total
+                              : 0
+                          }
+                          size={14}
+                          strokeWidth={2}
+                          active={isActive}
+                        />
+                      </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
@@ -263,11 +315,18 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                           style={{ backgroundColor: list.color }}
                         />
                         <span>{list.icon} {list.name}</span>
-                        {listTaskCounts[list.id] > 0 && (
-                          <span className="ml-auto text-[10px] text-muted-foreground font-medium tabular-nums">
-                            {listTaskCounts[list.id]}
-                          </span>
-                        )}
+                        <div className="ml-auto">
+                          <ProgressRing
+                            progress={
+                              listTaskCounts.total[list.id] > 0
+                                ? listTaskCounts.completed[list.id] / listTaskCounts.total[list.id]
+                                : 0
+                            }
+                            size={14}
+                            strokeWidth={2}
+                            active={selectedListId === list.id}
+                          />
+                        </div>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   </div>
