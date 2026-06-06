@@ -181,6 +181,30 @@ export default function HomeClient() {
   const setSearchQuery = useAppStore(s => s.setSearchQuery)
   const setFocusMode = useAppStore(s => s.setFocusMode)
   const focusMode = useAppStore(s => s.focusMode)
+  const addTask = useAppStore(s => s.addTask)
+  const lists = useAppStore(s => s.lists)
+
+  // Handle custom events from Command Palette
+  useEffect(() => {
+    const handlePreview = (e: any) => setPreviewTask(e.detail)
+    const handleQuickAdd = async (e: any) => {
+      const defaultList = lists.find(l => l.isDefault)
+      await addTask({
+        name: e.detail,
+        priority: 'none',
+        listId: defaultList?.id || '',
+        completed: false,
+        labels: [],
+        subtasks: [],
+      })
+    }
+    window.addEventListener('preview-task', handlePreview)
+    window.addEventListener('quick-add-task', handleQuickAdd)
+    return () => {
+      window.removeEventListener('preview-task', handlePreview)
+      window.removeEventListener('quick-add-task', handleQuickAdd)
+    }
+  }, [addTask, lists])
 
   // Exit focus mode when sidebar is opened manually
   useEffect(() => {

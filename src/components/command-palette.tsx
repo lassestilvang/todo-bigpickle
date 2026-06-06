@@ -121,10 +121,41 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
     const allCmds = groups.flatMap(g => g.commands)
     if (!query) return allCmds
     const q = query.toLowerCase()
-    return allCmds.filter(cmd =>
+    
+    const matchedCmds = allCmds.filter(cmd =>
       cmd.label.toLowerCase().includes(q) || (cmd.description?.toLowerCase().includes(q) ?? false)
     )
-  }, [groups, query])
+
+    const matchedTasks = tasks.filter(t => 
+      t.name.toLowerCase().includes(q) || (t.description?.toLowerCase().includes(q) ?? false)
+    ).slice(0, 5).map(t => ({
+      id: `task-${t.id}`,
+      label: t.name,
+      description: `Task in ${lists.find(l => l.id === t.listId)?.name || 'Inbox'}`,
+      icon: CheckSquare,
+      shortcut: '',
+      action: () => {
+        (window as any).dispatchEvent(new CustomEvent('preview-task', { detail: t }))
+      }
+    }))
+
+    const results = [...matchedCmds, ...matchedTasks]
+    
+    if (query.length > 2) {
+      results.push({
+        id: 'quick-create',
+        label: `Create task "${query}"`,
+        description: 'Press Enter to quick add',
+        icon: Plus,
+        shortcut: '↵',
+        action: () => {
+          (window as any).dispatchEvent(new CustomEvent('quick-add-task', { detail: query }))
+        }
+      })
+    }
+
+    return results
+  }, [groups, query, tasks, lists])
 
   const flatIndexLookup = useMemo(() => {
     if (query) return null
