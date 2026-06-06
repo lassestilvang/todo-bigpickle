@@ -1,6 +1,40 @@
-import { expect } from 'bun:test'
+import { expect, mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
+import * as React from 'react'
 import * as matchers from '@testing-library/jest-dom/matchers'
+
+// Mock framer-motion
+mock.module('framer-motion', () => {
+  const React = require('react')
+  const Dummy = (props: any) => React.createElement('div', props, props.children)
+  const MotionProxy = new Proxy(Dummy, {
+    get: (target, key) => {
+      if (key === '__esModule') return true
+      if (typeof key === 'string' && key.length > 0) return Dummy
+      return Dummy
+    }
+  })
+  
+  return {
+    __esModule: true,
+    motion: MotionProxy,
+    m: MotionProxy,
+    AnimatePresence: ({ children }: any) => children,
+    LazyMotion: ({ children }: any) => children,
+    domMax: {},
+    domAnimation: {},
+    Reorder: {
+      Group: Dummy,
+      Item: Dummy,
+    },
+    useScroll: () => ({ scrollYProgress: { onChange: () => {} } }),
+    useSpring: (v: any) => v,
+    useTransform: (v: any) => v,
+    useReducedMotion: () => false,
+    useAnimation: () => ({ start: () => Promise.resolve(), stop: () => {} }),
+    useCycle: (items: any[]) => [items[0], () => {}],
+  }
+})
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
   url: 'http://localhost',
