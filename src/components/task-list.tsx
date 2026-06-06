@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Reorder, AnimatePresence, motion } from 'framer-motion'
 import Fuse from 'fuse.js'
 import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp, CheckSquare, Square, Tag } from 'lucide-react'
+import { playDeleteSound } from '@/lib/sounds'
 import { format, isToday, isYesterday } from 'date-fns'
 import { parseQuickAddTask } from '@/lib/date-parser'
 

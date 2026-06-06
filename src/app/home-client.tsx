@@ -401,7 +401,10 @@ export default function HomeClient() {
                     onClick={() => {
                       const next = !focusMode
                       setFocusMode(next)
-                      if (next) setSidebarOpen(false)
+                      if (next) {
+                        setSidebarOpen(false)
+                        playFocusStartSound()
+                      }
                       else setSidebarOpen(true)
                     }}
                     className={`text-muted-foreground/60 hover:text-foreground transition-all duration-200 ${
