@@ -344,8 +344,11 @@ export default function HomeClient() {
             <div className="flex flex-1 overflow-hidden animate-fade-in">
               <AppSidebar onCreateTask={handleCreateTask} />
 
-              <SidebarInset className="flex-1 flex flex-col bg-grid-pattern">
-                <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/70 backdrop-blur-xl sticky top-0 z-10 supports-[backdrop-filter]:bg-background/60">
+                  <SidebarInset className={`flex-1 flex flex-col bg-grid-pattern transition-all duration-700 ease-in-out ${focusMode ? 'scale-[0.98] rounded-2xl shadow-2xl ring-1 ring-border/50' : ''}`}>
+                    {focusMode && (
+                      <div className="absolute inset-0 pointer-events-none z-50 rounded-2xl ring-inset ring-[40px] ring-background/20 blur-2xl opacity-50" />
+                    )}
+                    <header className={`flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/70 backdrop-blur-xl sticky top-0 z-20 transition-all duration-500 supports-[backdrop-filter]:bg-background/60 ${focusMode ? 'rounded-t-2xl' : ''}`}>
                   <SidebarTrigger className="-ml-1" />
                   <div className="flex-1 flex items-center justify-center max-w-md mx-auto">
                     <div className="relative w-full max-w-xs">
