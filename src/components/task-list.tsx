@@ -11,6 +11,7 @@ import { Reorder, AnimatePresence, motion } from 'framer-motion'
 import Fuse from 'fuse.js'
 import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp, CheckSquare, Square, Tag } from 'lucide-react'
 import { playDeleteSound } from '@/lib/sounds'
+import { EmptyState } from '@/components/empty-state'
 import { format, isToday, isYesterday } from 'date-fns'
 import { parseQuickAddTask } from '@/lib/date-parser'
 
@@ -680,100 +681,42 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
         {isEmpty ? (
-          <div className="text-center py-20">
-            {searchQuery ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.25 }}
-                className="text-muted-foreground"
-              >
-                <div className="relative mx-auto mb-6 size-20">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-muted-foreground/10 to-transparent" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <SearchX className="size-10 text-muted-foreground/30" />
-                  </div>
-                </div>
-                <p className="text-lg font-medium mb-1">No results found</p>
-                <p className="text-sm text-muted-foreground/70">
-                  No tasks match &ldquo;{searchQuery}&rdquo;
-                </p>
-              </motion.div>
-            ) : allTasks.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.25, delay: 0.05 }}
-                className="text-muted-foreground"
-              >
-                <div className="relative mx-auto mb-8 size-36">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/15 via-primary/8 to-transparent animate-pulse" style={{ animationDuration: '0.8s' }} />
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/8 to-transparent animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.5s', transform: 'scale(0.8)' }} />
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/[0.03] to-transparent" style={{ transform: 'scale(0.6)' }} />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Sparkles className="size-14 text-primary/30" />
-                  </div>
-                </div>
-                <p className="text-xl font-medium mb-2">
-                  {selectedListId
-                    ? 'This list is empty'
-                    : currentView === 'today'
-                      ? 'No tasks for today'
-                      : currentView === 'next7days'
-                        ? 'Nothing this week'
-                        : currentView === 'upcoming'
-                          ? 'No upcoming tasks'
-                          : 'Your task list is empty'}
-                </p>
-                <p className="text-sm text-muted-foreground/70 mb-8">
-                  {selectedListId
-                    ? 'Add a task to get started'
-                    : currentView === 'today'
-                      ? 'Schedule a task for today'
-                      : 'Create your first task and get things done'}
-                </p>
-                <Button onClick={onCreateTask} size="lg" className="transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl">
+          searchQuery ? (
+            <EmptyState
+              type="search"
+              title="No results found"
+              description={`We couldn't find any tasks matching "${searchQuery}". Try a different term or clear the search.`}
+              action={
+                <Button variant="outline" size="sm" onClick={() => useAppStore.getState().setSearchQuery('')}>
+                  Clear search
+                </Button>
+              }
+            />
+          ) : allTasks.length === 0 ? (
+            <EmptyState
+              type="inbox"
+              title={selectedListId ? "Ready to fill this list?" : "Start your journey"}
+              description={selectedListId ? "This list is currently empty. Add your first task to get started." : "Your task list is empty. Create your first task and stay organized."}
+              action={
+                <Button onClick={onCreateTask} size="sm">
                   <Plus className="size-4 mr-2" />
                   Create Your First Task
                 </Button>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.25, delay: 0.05 }}
-                className="text-muted-foreground"
-              >
-                <div className="relative mx-auto mb-6 size-24">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <CheckCircle2 className="size-12 text-emerald-500/40" />
-                  </div>
-                  <div className="absolute -top-1 -right-1">
-                    <span className="text-lg">✨</span>
-                  </div>
-                </div>
-                <p className="text-lg font-medium mb-1">
-                  {currentView === 'today'
-                    ? 'All done for today!'
-                    : currentView === 'next7days'
-                      ? 'All set for the week!'
-                      : currentView === 'upcoming'
-                        ? 'Nothing upcoming'
-                        : 'All done!'}
-                </p>
-                <p className="text-sm text-muted-foreground/70">
-                  {currentView === 'today'
-                    ? 'Enjoy your free time'
-                    : currentView === 'next7days'
-                      ? 'Enjoy your week'
-                      : currentView === 'upcoming'
-                        ? 'No tasks on the horizon'
-                        : showCompleted ? 'No tasks match your filters' : 'No uncompleted tasks'}
-                </p>
-              </motion.div>
-            )}
-          </div>
+              }
+            />
+          ) : (
+            <EmptyState
+              type="completed"
+              title={currentView === 'today' ? "All done for today!" : "You're caught up!"}
+              description={currentView === 'today' ? "Enjoy your free time. You've earned it." : "All tasks in this view are completed. Great work!"}
+              action={
+                <Button onClick={onCreateTask} variant="outline" size="sm">
+                  <Plus className="size-4 mr-2" />
+                  Add something else
+                </Button>
+              }
+            />
+          )
         ) : (
           Object.entries(groupedTasks).map(([groupKey, group]) => (
               <TaskGroup
