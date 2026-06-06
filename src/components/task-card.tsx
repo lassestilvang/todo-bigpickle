@@ -248,17 +248,23 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                   aria-label="Drag to reorder"
                 />
               </div>
-              <Checkbox
-                checked={task.completed}
-                onCheckedChange={() => onToggleComplete(task.id)}
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`Mark "${task.name}" as ${task.completed ? 'incomplete' : 'complete'}`}
-                className={`transition-all duration-200 hover:scale-110 active:scale-90
-                  ${task.completed
-                    ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:shadow-lg data-[state=checked]:shadow-emerald-500/40'
-                    : 'hover:border-emerald-400 hover:shadow-sm hover:shadow-emerald-500/20'
-                  }`}
-              />
+              <motion.div
+                whileTap={{ scale: 0.8 }}
+                whileHover={{ scale: 1.1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+              >
+                <Checkbox
+                  checked={task.completed}
+                  onCheckedChange={() => onToggleComplete(task.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={`Mark "${task.name}" as ${task.completed ? 'incomplete' : 'complete'}`}
+                  className={`transition-all duration-200
+                    ${task.completed
+                      ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:shadow-lg data-[state=checked]:shadow-emerald-500/40'
+                      : 'hover:border-emerald-400 hover:shadow-sm hover:shadow-emerald-500/20'
+                    }`}
+                />
+              </motion.div>
             </div>
 
             <div className="flex-1 min-w-0">
