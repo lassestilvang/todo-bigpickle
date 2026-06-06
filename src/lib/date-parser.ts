@@ -1,4 +1,5 @@
-import { addDays, addWeeks, addMonths, nextDay, getDay } from 'date-fns'
+import { addDays, addWeeks, addMonths, nextDay, getDay, addHours, setHours, setMinutes, startOfHour } from 'date-fns'
+import { Priority } from '@/types'
 
 const dayNames: Record<string, number> = {
   sunday: 0, sun: 0,
@@ -10,76 +11,112 @@ const dayNames: Record<string, number> = {
   saturday: 6, sat: 6,
 }
 
-export function parseDateFromText(input: string): { name: string; date?: Date } | null {
-  const trimmed = input.trim()
-  if (!trimmed) return null
+export interface ParsedTask {
+  name: string
+  date?: Date
+  priority: Priority
+  listName?: string
+  labels: string[]
+}
 
-  // Try "name on [day]" or "name [day]"
-  const dayPatterns = [
+export function parseQuickAddTask(input: string): ParsedTask {
+  let text = input.trim()
+  const result: ParsedTask = {
+    name: '',
+    priority: 'none',
+    labels: [],
+  }
+
+  // 1. Extract Priority: !high, !medium, !low, !none or !1, !2, !3
+  const priorityMatch = text.match(/\!(high|medium|low|none|1|2|3)\b/i)
+  if (priorityMatch) {
+    const p = priorityMatch[1].toLowerCase()
+    if (p === 'high' || p === '1') result.priority = 'high'
+    else if (p === 'medium' || p === '2') result.priority = 'medium'
+    else if (p === 'low' || p === '3') result.priority = 'low'
+    else result.priority = 'none'
+    text = text.replace(priorityMatch[0], '').trim()
+  }
+
+  // 2. Extract List: @listname (can be quoted if it has spaces, e.g. @"Work Stuff")
+  const listMatch = text.match(/@(?:"([^"]+)"|(\S+))/i)
+  if (listMatch) {
+    result.listName = listMatch[1] || listMatch[2]
+    text = text.replace(listMatch[0], '').trim()
+  }
+
+  // 3. Extract Labels: #label1 #label2
+  const labelMatches = text.matchAll(/#(?:"([^"]+)"|(\S+))/gi)
+  for (const match of labelMatches) {
+    result.labels.push(match[1] || match[2])
+    text = text.replace(match[0], '').trim()
+  }
+
+  // 4. Extract Dates (more robust)
+  const now = new Date()
+  
+  const datePatterns = [
+    // "in N hours"
+    { regex: /\bin\s+(\d+)\s+(hour|hours|hr|hrs)\b/i, handler: (num: string) => addHours(startOfHour(now), parseInt(num) + 1) },
+    // "at 5pm", "at 5:30am"
+    { regex: /\bat\s+(\d+)(?::(\d+))?\s*(am|pm)?\b/i, handler: (h: string, m: string, ampm: string) => {
+      let hours = parseInt(h)
+      const mins = m ? parseInt(m) : 0
+      if (ampm?.toLowerCase() === 'pm' && hours < 12) hours += 12
+      if (ampm?.toLowerCase() === 'am' && hours === 12) hours = 0
+      const d = new Date(now)
+      return setMinutes(setHours(d, hours), mins)
+    }},
     // "next [dayname]"
-    { regex: /^(.*?)\s+next\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\s*$/i, handler: (name: string, dayStr: string) => {
+    { regex: /\bnext\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/i, handler: (dayStr: string) => {
       const dayIndex = dayNames[dayStr.toLowerCase()]
-      if (dayIndex === undefined) return null
-      return { name, date: nextDay(new Date(), dayIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6) }
+      return dayIndex !== undefined ? nextDay(now, dayIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6) : undefined
     }},
     // "this [dayname]" or "on [dayname]"
-    { regex: /^(.*?)\s+(?:this|on)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\s*$/i, handler: (name: string, dayStr: string) => {
+    { regex: /\b(?:this|on)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/i, handler: (dayStr: string) => {
       const dayIndex = dayNames[dayStr.toLowerCase()]
-      if (dayIndex === undefined) return null
-      const today = new Date()
-      const currentDay = getDay(today)
-      if (currentDay <= dayIndex) {
-        return { name, date: addDays(today, dayIndex - currentDay) }
-      }
-      return { name, date: nextDay(today, dayIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6) }
+      if (dayIndex === undefined) return undefined
+      const currentDay = getDay(now)
+      return currentDay <= dayIndex ? addDays(now, dayIndex - currentDay) : nextDay(now, dayIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6)
     }},
     // "in [N] [days/weeks/months]"
-    { regex: /^(.*?)\s+in\s+(\d+)\s+(day|days|week|weeks|month|months)\s*$/i, handler: (name: string, num: string, unit: string) => {
+    { regex: /\bin\s+(\d+)\s+(day|days|week|weeks|month|months)\b/i, handler: (num: string, unit: string) => {
       const n = parseInt(num)
       const unitLower = unit.toLowerCase()
-      if (unitLower.startsWith('day')) return { name, date: addDays(new Date(), n) }
-      if (unitLower.startsWith('week')) return { name, date: addWeeks(new Date(), n) }
-      if (unitLower.startsWith('month')) return { name, date: addMonths(new Date(), n) }
-      return null
+      if (unitLower.startsWith('day')) return addDays(now, n)
+      if (unitLower.startsWith('week')) return addWeeks(now, n)
+      if (unitLower.startsWith('month')) return addMonths(now, n)
+      return undefined
     }},
     // "next week"
-    { regex: /^(.*?)\s+next\s+week\s*$/i, handler: (name: string) => {
-      return { name, date: addWeeks(new Date(), 1) }
-    }},
+    { regex: /\bnext\s+week\b/i, handler: () => addWeeks(now, 1) },
     // "next month"
-    { regex: /^(.*?)\s+next\s+month\s*$/i, handler: (name: string) => {
-      return { name, date: addMonths(new Date(), 1) }
-    }},
-    // "today" at the end
-    { regex: /^(.*?)\s+today\s*$/i, handler: (name: string) => {
-      return { name, date: new Date() }
-    }},
-    // "tomorrow" at the end
-    { regex: /^(.*?)\s+tomorrow\s*$/i, handler: (name: string) => {
-      return { name, date: addDays(new Date(), 1) }
-    }},
+    { regex: /\bnext\s+month\b/i, handler: () => addMonths(now, 1) },
+    // "today"
+    { regex: /\btoday\b/i, handler: () => now },
+    // "tomorrow"
+    { regex: /\btomorrow\b/i, handler: () => addDays(now, 1) },
   ]
 
-  for (const { regex, handler } of dayPatterns) {
-    const match = trimmed.match(regex)
+  for (const { regex, handler } of datePatterns) {
+    const match = text.match(regex)
     if (match) {
-      const name = match[1].trim()
-      if (name) {
-        const result = handler(name, match[2], match[3])
-        if (result) return result
+      const parsedDate = (handler as any)(...match.slice(1))
+      if (parsedDate) {
+        result.date = parsedDate
+        text = text.replace(match[0], '').trim()
+        break // Only one date for now
       }
     }
   }
 
-  // "today" as the entire text
-  if (/^today\s*$/i.test(trimmed)) {
-    return { name: trimmed, date: new Date() }
+  // Final name is whatever is left, cleaned up
+  result.name = text.replace(/\s+/g, ' ').trim()
+  
+  // Fallback: If name became empty but original input wasn't, use original
+  if (!result.name && input.trim()) {
+    result.name = input.trim()
   }
 
-  // "tomorrow" as the entire text
-  if (/^tomorrow\s*$/i.test(trimmed)) {
-    return { name: trimmed, date: addDays(new Date(), 1) }
-  }
-
-  return null
+  return result
 }
