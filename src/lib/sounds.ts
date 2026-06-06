@@ -17,17 +17,53 @@ export function playCompletionSound() {
     const gain = ctx.createGain()
     gain.connect(ctx.destination)
     gain.gain.setValueAtTime(0.08, now)
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6)
 
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       osc.type = 'sine'
-      osc.frequency.setValueAtTime(freq, now + i * 0.12)
+      osc.frequency.setValueAtTime(freq, now + i * 0.1)
       osc.connect(gain)
-      osc.start(now + i * 0.12)
-      osc.stop(now + 0.5)
+      osc.start(now + i * 0.1)
+      osc.stop(now + 0.6)
     })
-  } catch {
-    // Audio not available
-  }
+  } catch { /* Audio not available */ }
+}
+
+export function playFocusStartSound() {
+  try {
+    const ctx = getAudioContext()
+    const now = ctx.currentTime
+    const gain = ctx.createGain()
+    gain.connect(ctx.destination)
+    gain.gain.setValueAtTime(0.05, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5)
+
+    const osc = ctx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(220, now)
+    osc.frequency.exponentialRampToValueAtTime(110, now + 1.2)
+    osc.connect(gain)
+    osc.start(now)
+    osc.stop(now + 1.5)
+  } catch { /* Audio not available */ }
+}
+
+export function playDeleteSound() {
+  try {
+    const ctx = getAudioContext()
+    const now = ctx.currentTime
+    const gain = ctx.createGain()
+    gain.connect(ctx.destination)
+    gain.gain.setValueAtTime(0.03, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3)
+
+    const osc = ctx.createOscillator()
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(150, now)
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.25)
+    osc.connect(gain)
+    osc.start(now)
+    osc.stop(now + 0.3)
+  } catch { /* Audio not available */ }
 }

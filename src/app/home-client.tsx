@@ -175,14 +175,13 @@ export default function HomeClient() {
   const toggleSubtask = useAppStore(s => s.toggleSubtask)
   const setShowCompleted = useAppStore(s => s.setShowCompleted)
   const showCompleted = useAppStore(s => s.showCompleted)
-  useNotifications()
-
   const searchQuery = useAppStore(s => s.searchQuery)
   const setSearchQuery = useAppStore(s => s.setSearchQuery)
   const setFocusMode = useAppStore(s => s.setFocusMode)
   const focusMode = useAppStore(s => s.focusMode)
   const addTask = useAppStore(s => s.addTask)
   const lists = useAppStore(s => s.lists)
+  useNotifications()
 
   // Handle custom events from Command Palette
   useEffect(() => {
