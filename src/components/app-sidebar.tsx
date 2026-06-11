@@ -22,16 +22,17 @@ import {
   SidebarGroupContent,
   SidebarFooter
 } from '@/components/ui/sidebar'
-import { 
-  CalendarDays, 
+import {
+  CalendarDays,
   CalendarRange,
-  List, 
+  List,
   LayoutList,
-  Plus, 
-  Search, 
+  Plus,
+  Search,
   CheckCircle2,
   AlertTriangle,
-  Settings2
+  Settings2,
+  Target,
 } from 'lucide-react'
 import { ListManager } from '@/components/list-manager'
 import { LabelManager } from '@/components/label-manager'
@@ -128,6 +129,16 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
 
     return { overdueCount: overdue, todayCount, next7Count }
   }, [tasks, now])
+
+  const completedToday = useMemo(() => {
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    return tasks.filter(t => 
+      t.completed && t.completedAt && 
+      new Date(t.completedAt).toDateString() === today.toDateString()
+    ).length
+  }, [tasks, now])
+  const dailyGoal = 5
+  const goalProgress = Math.min(completedToday / dailyGoal, 1)
 
   const listTaskCounts = useMemo(() => {
     const total: Record<string, number> = {}
@@ -279,6 +290,29 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <div className="px-4 py-3 mx-2 my-2 rounded-xl bg-primary/5 border border-primary/10 animate-in fade-in duration-700">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+              <Target className="size-3.5" />
+              Daily Goal
+            </div>
+            <span className="text-[10px] font-bold text-primary tabular-nums">
+              {completedToday}/{dailyGoal}
+            </span>
+          </div>
+          <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-1000 ease-out"
+              style={{ width: `${goalProgress * 100}%` }}
+            />
+          </div>
+          <p className="mt-2 text-[9px] text-muted-foreground/70 font-medium leading-tight">
+            {completedToday >= dailyGoal 
+              ? "Goal achieved! You're crushing it! 🚀" 
+              : `${dailyGoal - completedToday} more to reach your daily goal.`}
+          </p>
+        </div>
 
         <Separator className="my-2" />
 
