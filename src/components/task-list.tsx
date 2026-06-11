@@ -145,7 +145,9 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   const selectedIdsRef = useRef(selectedIds)
   useEffect(() => { selectedIdsRef.current = selectedIds }, [selectedIds])
   const [selectedLabelIds, setSelectedLabelIds] = useState<Set<string>>(new Set())
+  const [selectedPriorities, setSelectedPriorities] = useState<Set<Priority>>(new Set())
   const [labelFilterOpen, setLabelFilterOpen] = useState(false)
+  const [priorityFilterOpen, setPriorityFilterOpen] = useState(false)
   const lastClickedIndexRef = useRef<number>(-1)
   const quickAddRef = useRef<HTMLInputElement>(null)
   const [focusedTaskIndex, setFocusedTaskIndex] = useState(-1)
@@ -169,17 +171,22 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
   }, [currentView, selectedListId, sortBy, searchQuery])
 
   useEffect(() => {
-    if (!labelFilterOpen) return
+    if (!labelFilterOpen && !priorityFilterOpen) return
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement
-      const menu = document.getElementById('label-filter-menu')
-      if (menu && !menu.contains(target) && !target.closest('[data-label-filter-trigger]')) {
+      const labelMenu = document.getElementById('label-filter-menu')
+      const priorityMenu = document.getElementById('priority-filter-menu')
+      
+      if (labelMenu && !labelMenu.contains(target) && !target.closest('[data-label-filter-trigger]')) {
         setLabelFilterOpen(false)
+      }
+      if (priorityMenu && !priorityMenu.contains(target) && !target.closest('[data-priority-filter-trigger]')) {
+        setPriorityFilterOpen(false)
       }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [labelFilterOpen])
+  }, [labelFilterOpen, priorityFilterOpen])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -262,6 +269,12 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     if (selectedLabelIds.size > 0) {
       filtered = filtered.filter(task =>
         task.labels.some(l => selectedLabelIds.has(l.id))
+      )
+    }
+
+    if (selectedPriorities.size > 0) {
+      filtered = filtered.filter(task =>
+        selectedPriorities.has(task.priority)
       )
     }
 
@@ -636,6 +649,73 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
                   <button
                     type="button"
                     onClick={() => setSelectedLabelIds(new Set())}
+                    className="w-full mt-1 px-2 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-left"
+                  >
+                    Clear filter
+                  </button>
+                )}
+              </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                data-priority-filter-trigger
+                onClick={() => setPriorityFilterOpen(v => !v)}
+                className={`transition-all duration-200 ${selectedPriorities.size > 0 ? 'border-primary/50 text-primary bg-primary/5' : ''}`}
+              >
+                <Flag className="size-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline">{selectedPriorities.size > 0 ? `${selectedPriorities.size}` : 'Priority'}</span>
+              </Button>
+              {priorityFilterOpen && (
+              <div
+                id="priority-filter-menu"
+                className="absolute right-0 top-full mt-2 z-50 min-w-40 p-2 rounded-xl border bg-popover shadow-xl animate-in"
+              >
+                <div className="text-xs font-medium text-muted-foreground px-2 py-1.5">Filter by priority</div>
+                {(['high', 'medium', 'low', 'none'] as Priority[]).map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPriorities(prev => {
+                        const next = new Set(prev)
+                        if (next.has(p)) next.delete(p)
+                        else next.add(p)
+                        return next
+                      })
+                    }}
+                    className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-sm transition-colors hover:bg-accent ${
+                      selectedPriorities.has(p) ? 'bg-accent font-medium' : ''
+                    }`}
+                  >
+                    <div
+                      className={`size-3.5 rounded border-2 transition-all ${
+                        selectedPriorities.has(p)
+                          ? 'border-current bg-current'
+                          : 'border-muted-foreground/30'
+                      } ${
+                        p === 'high' ? 'text-red-500' : 
+                        p === 'medium' ? 'text-amber-500' : 
+                        p === 'low' ? 'text-emerald-500' : 
+                        'text-zinc-400'
+                      }`}
+                    >
+                      {selectedPriorities.has(p) && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="capitalize">{p}</span>
+                  </button>
+                ))}
+                {selectedPriorities.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPriorities(new Set())}
                     className="w-full mt-1 px-2 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-left"
                   >
                     Clear filter
