@@ -2,7 +2,7 @@
 
 import { memo } from 'react'
 import { motion } from 'framer-motion'
-import { Sparkles, ClipboardCheck, Coffee, Sun, CloudRain, Target, PartyPopper } from 'lucide-react'
+import { Sparkles, ClipboardCheck, CloudRain, Target, PartyPopper } from 'lucide-react'
 
 interface EmptyStateProps {
   type: 'inbox' | 'completed' | 'search' | 'list'
