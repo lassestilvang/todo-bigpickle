@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Reorder, AnimatePresence, motion } from 'framer-motion'
 import Fuse from 'fuse.js'
-import { Plus, ArrowUpDown, SearchX, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, Sparkles, ChevronUp, CheckSquare, Square, Tag } from 'lucide-react'
-import { playDeleteSound } from '@/lib/sounds'
+import { Plus, ArrowUpDown, CheckCircle2, CalendarDays, CalendarRange, List, LayoutList, ChevronUp, CheckSquare, Square, Tag } from 'lucide-react'
 import { EmptyState } from '@/components/empty-state'
+import { Celebration } from '@/components/celebration'
 import { format, isToday, isYesterday } from 'date-fns'
 import { parseQuickAddTask } from '@/lib/date-parser'
 
@@ -197,12 +197,10 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
     if (!raw) return
 
     // Try natural language date parsing
-    const parsed = parseDateFromText(raw)
+    const parsed = parseQuickAddTask(raw)
     const name = parsed?.name || raw
     const date = parsed?.date
-
-    // Don't keep date keywords in the name when they were parsed
-    const finalName = parsed ? name : raw
+    const finalName = name
 
     try {
       const defaultList = lists.find(l => l.isDefault)
@@ -772,23 +770,6 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
             className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 animate-fade-slide-in
               flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full
               bg-background/80 backdrop-blur-lg border shadow-lg text-xs text-muted-foreground
-              hover:text-foreground hover:shadow-xl hover:-translate-y-1
-              transition-all duration-200"
-            onClick={() => {
-              const container = document.querySelector('[data-main-content]')
-              container?.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
-            aria-label="Scroll to top"
-          >
-            <ChevronUp className="size-3.5" />
-            Back to top
-          </button>
-        )}
-      </div>
-    </div>
-  )
-})
-d
               hover:text-foreground hover:shadow-xl hover:-translate-y-1
               transition-all duration-200"
             onClick={() => {
