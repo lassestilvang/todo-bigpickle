@@ -115,8 +115,7 @@ describe('Store task actions', () => {
 
       expect(useAppStore.getState().tasks).toHaveLength(1)
 
-      await addPromise
-
+      await expect(addPromise).rejects.toThrow('Network error')
       expect(useAppStore.getState().tasks).toHaveLength(0)
     })
   })
@@ -128,11 +127,11 @@ describe('Store task actions', () => {
 
       mockApi.updateTask.mockRejectedValue(new Error('Save failed'))
 
-      useAppStore.getState().updateTask('t1', { name: 'Updated' })
+      const updatePromise = useAppStore.getState().updateTask('t1', { name: 'Updated' })
 
       expect(useAppStore.getState().tasks[0].name).toBe('Updated')
 
-      await new Promise(resolve => setTimeout(resolve, 0))
+      await expect(updatePromise).rejects.toThrow('Save failed')
       expect(useAppStore.getState().tasks[0].name).toBe('Original')
     })
   })
