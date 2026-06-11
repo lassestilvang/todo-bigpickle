@@ -15,6 +15,7 @@ import { useNotifications } from '@/hooks/use-notifications'
 import { Task } from '@/types'
 import { AnimatePresence } from 'framer-motion'
 import { RefreshCw, AlertCircle, X, Search, Maximize2, Minimize2 } from 'lucide-react'
+import { playFocusStartSound } from '@/lib/sounds'
 
 const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
 const CommandPalette = lazy(() => import('@/components/command-palette').then(m => ({ default: m.CommandPalette })))
@@ -241,7 +242,14 @@ export default function HomeClient() {
       key: '.',
       metaKey: true,
       handler: () => {
-        setFocusMode(!focusMode)
+        const next = !focusMode
+        setFocusMode(next)
+        if (next) {
+          setSidebarOpen(false)
+          playFocusStartSound()
+        } else {
+          setSidebarOpen(true)
+        }
       },
     },
     {
