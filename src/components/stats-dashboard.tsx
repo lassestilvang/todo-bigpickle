@@ -74,6 +74,15 @@ export const StatsDashboard = memo(function StatsDashboard({ open, onClose }: St
 
     const completedThisWeek = last7Days.reduce((sum, d) => sum + d.count, 0)
 
+    // Tasks completed in last 28 days for heatmap
+    const last28Days = Array.from({ length: 28 }, (_, i) => {
+      const day = subDays(startOfDay(now), 27 - i)
+      const count = tasks.filter(t =>
+        t.completed && t.completedAt && isSameDay(new Date(t.completedAt), day)
+      ).length
+      return { date: day, count }
+    })
+
     // Average completion time (if we have estimate data)
     const tasksWithActual = tasks.filter(t => t.completed && t.actualTime)
     const avgCompletionTime = tasksWithActual.length > 0
@@ -87,7 +96,7 @@ export const StatsDashboard = memo(function StatsDashboard({ open, onClose }: St
     return {
       total, completed, active, completionRate,
       byPriority, byList, overdue, withDeadlines, withDates,
-      last7Days, completedThisWeek, avgCompletionTime,
+      last7Days, last28Days, completedThisWeek, avgCompletionTime,
       totalSubtasks, completedSubtasks,
     }
   }, [tasks])
@@ -170,6 +179,49 @@ export const StatsDashboard = memo(function StatsDashboard({ open, onClose }: St
                 className="h-full rounded-full bg-gradient-to-r from-primary/60 to-primary transition-all duration-1000"
                 style={{ width: `${stats.completionRate}%` }}
               />
+            </div>
+          </div>
+
+          {/* Activity Heatmap */}
+          <div className="bg-muted/30 rounded-xl p-4 border border-border/40">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <TrendingUp className="size-4 text-primary" />
+                Monthly Activity
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="text-[10px] text-muted-foreground mr-1">Less</div>
+                {[0.1, 0.4, 0.7, 1].map(o => (
+                  <div key={o} className="size-2 rounded-sm bg-primary" style={{ opacity: o }} />
+                ))}
+                <div className="text-[10px] text-muted-foreground ml-1">More</div>
+              </div>
+            </div>
+            <div className="flex justify-between items-end gap-1 px-1 relative">
+              {stats.last28Days.map((d, i) => {
+                const opacity = d.count === 0 ? 0.05 : Math.min(0.2 + (d.count / 5) * 0.8, 1)
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 flex flex-col items-center gap-1.5 group/day"
+                  >
+                    <div
+                      className="w-full aspect-square rounded-sm bg-primary transition-all duration-300 group-hover/day:scale-110 group-hover/day:shadow-md"
+                      style={{ opacity }}
+                    />
+                    {i % 7 === 0 && (
+                      <span className="text-[8px] text-muted-foreground font-medium uppercase tracking-tighter">
+                        {format(d.date, 'MMM d')}
+                      </span>
+                    )}
+                    <div className="absolute bottom-full mb-2 hidden group-hover/day:block z-50">
+                      <div className="bg-popover border text-[10px] px-2 py-1 rounded-md shadow-xl whitespace-nowrap">
+                        <span className="font-bold">{d.count}</span> tasks on {format(d.date, 'PPP')}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
 
