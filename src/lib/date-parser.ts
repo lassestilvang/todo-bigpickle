@@ -57,7 +57,7 @@ export function parseQuickAddTask(input: string): ParsedTask {
   
   const datePatterns = [
     // "in N hours"
-    { regex: /\bin\s+(\d+)\s+(hour|hours|hr|hrs)\b/i, handler: (num: string) => addHours(startOfHour(now), parseInt(num) + 1) },
+    { regex: /\bin\s+(\d+)\s+(hour|hours|hr|hrs)\b/i, handler: (num: string) => addHours(now, parseInt(num)) },
     // "at 5pm", "at 5:30am"
     { regex: /\bat\s+(\d+)(?::(\d+))?\s*(am|pm)?\b/i, handler: (h: string, m: string, ampm: string) => {
       let hours = parseInt(h)
