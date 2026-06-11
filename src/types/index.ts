@@ -77,4 +77,5 @@ export interface AppState {
   selectedListId?: string
   showCompleted: boolean
   searchQuery: string
+  focusMode: boolean
 }
