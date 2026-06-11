@@ -376,8 +376,11 @@ export class DatabaseService {
     if (!existing) throw new Error('List not found')
     if (existing.isDefault) throw new Error('Cannot delete default list')
 
-    this.db.run('DELETE FROM tasks WHERE list_id = ?', id)
-    this.db.run('DELETE FROM lists WHERE id = ?', id)
+    const remove = this.db.transaction(() => {
+      this.db.run('DELETE FROM tasks WHERE list_id = ?', id)
+      this.db.run('DELETE FROM lists WHERE id = ?', id)
+    })
+    remove()
   }
 
   getLabels(): Label[] {
