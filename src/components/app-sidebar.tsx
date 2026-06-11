@@ -250,6 +250,9 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
                       <Icon className="size-4" />
                       <span>{label}</span>
                       <div className="ml-auto flex items-center gap-2">
+                        {count !== undefined && count > 0 && (
+                          <span className="text-[10px] text-muted-foreground/50 font-medium tabular-nums">{count}</span>
+                        )}
                         {view === 'today' && overdueCount > 0 && (
                           <Badge
                             variant="destructive"
