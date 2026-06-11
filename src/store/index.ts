@@ -87,6 +87,7 @@ interface AppStore extends AppState {
   addList: (list: Omit<List, 'id' | 'createdAt' | 'updatedAt'>) => void
   updateList: (id: string, updates: Partial<List>) => void
   deleteList: (id: string) => void
+  duplicateList: (id: string) => void
   
   // Label actions
   addLabel: (label: Omit<Label, 'id' | 'createdAt' | 'updatedAt'>) => void
@@ -555,6 +556,50 @@ export const useAppStore = create<AppStore>()(
         } catch (error) {
           handleError('Failed to delete list', error, set)
           throw error
+        }
+      },
+
+      duplicateList: async (id) => {
+        const sourceList = get().lists.find(l => l.id === id)
+        if (!sourceList) return
+
+        try {
+          // 1. Create new list
+          const newList = await api.createList({
+            name: `${sourceList.name} (copy)`,
+            icon: sourceList.icon,
+            color: sourceList.color,
+          })
+
+          set(state => ({ lists: [...state.lists, newList] }))
+
+          // 2. Duplicate tasks
+          const listTasks = get().tasks.filter(t => t.listId === id)
+          for (const task of listTasks) {
+            await api.createTask({
+              name: task.name,
+              description: task.description,
+              date: task.date,
+              deadline: task.deadline,
+              estimate: task.estimate,
+              actualTime: task.actualTime,
+              labels: task.labels.map(l => ({ id: l.id, name: l.name, color: l.color, icon: l.icon })),
+              priority: task.priority,
+              subtasks: task.subtasks.map(s => ({ title: s.title, completed: false })),
+              recurring: task.recurring,
+              recurringConfig: task.recurringConfig,
+              listId: newList.id,
+              completed: false,
+            })
+          }
+
+          // 3. Reload data to get everything synced
+          const tasks = await api.getTasks()
+          set({ tasks })
+          toast({ type: 'success', title: 'List duplicated', description: sourceList.name })
+        } catch (error) {
+          handleError('Failed to duplicate list', error, set)
+          toast({ type: 'error', title: 'Failed to duplicate list' })
         }
       },
 

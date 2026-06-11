@@ -13,7 +13,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Plus, Pencil, Trash2, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Copy } from 'lucide-react'
 
 const LIST_COLORS = [
   '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
@@ -110,6 +110,7 @@ export function ListManager({
   const addList = useAppStore(s => s.addList)
   const updateList = useAppStore(s => s.updateList)
   const deleteList = useAppStore(s => s.deleteList)
+  const duplicateList = useAppStore(s => s.duplicateList)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -158,6 +159,15 @@ export function ListManager({
       setError('Failed to delete list')
     }
   }, [deleteList])
+
+  const handleDuplicate = useCallback(async (id: string) => {
+    try {
+      setError(null)
+      await duplicateList(id)
+    } catch {
+      setError('Failed to duplicate list')
+    }
+  }, [duplicateList])
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -238,9 +248,19 @@ export function ListManager({
                     )}
                     <button
                       type="button"
+                      onClick={() => handleDuplicate(list.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-primary transition-all"
+                      aria-label={`Duplicate ${list.name}`}
+                      title="Duplicate list"
+                    >
+                      <Copy className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setEditingId(list.id)}
                       className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all"
                       aria-label={`Edit ${list.name}`}
+                      title="Edit list"
                     >
                       <Pencil className="size-3.5" />
                     </button>
