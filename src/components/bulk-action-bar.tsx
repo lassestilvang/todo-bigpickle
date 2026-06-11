@@ -4,7 +4,7 @@ import { memo, useCallback, useMemo } from 'react'
 import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CheckCircle2, Trash2, Move, X, RotateCcw, Copy } from 'lucide-react'
+import { CheckCircle2, Trash2, Move, X, RotateCcw, Copy, Flag } from 'lucide-react'
 
 interface BulkActionBarProps {
   selectedIds: string[]
@@ -62,6 +62,15 @@ export const BulkActionBar = memo(function BulkActionBar({
     }
   }, [selectedIds, bulkMoveTasks, onClearSelection])
 
+  const handlePriorityChange = useCallback((priority: string) => {
+    if (priority) {
+      for (const id of selectedIds) {
+        useAppStore.getState().updateTask(id, { priority: priority as any })
+      }
+      onClearSelection()
+    }
+  }, [selectedIds, onClearSelection])
+
   const count = selectedIds.length
   if (count === 0) return null
 
@@ -113,6 +122,18 @@ export const BulkActionBar = memo(function BulkActionBar({
                 {list.icon} {list.name}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select onValueChange={handlePriorityChange}>
+          <SelectTrigger className="h-8 w-auto gap-1 text-xs border-dashed">
+            <Flag className="size-3.5" />
+            <SelectValue placeholder="Priority..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="high" className="text-xs text-red-500 font-medium">High</SelectItem>
+            <SelectItem value="medium" className="text-xs text-amber-500 font-medium">Medium</SelectItem>
+            <SelectItem value="low" className="text-xs text-emerald-500 font-medium">Low</SelectItem>
+            <SelectItem value="none" className="text-xs text-muted-foreground font-medium">None</SelectItem>
           </SelectContent>
         </Select>
         <div className="w-px h-6 bg-border/50 mx-1" />
