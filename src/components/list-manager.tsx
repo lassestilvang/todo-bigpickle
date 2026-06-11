@@ -266,7 +266,7 @@ export function ListManager({
                 <p className="text-sm text-muted-foreground">
                   This will permanently delete the list{' '}
                   <span className="font-medium text-foreground">{confirmDeleteList.icon} {confirmDeleteList.name}</span>{' '}
-                  and remove it from all tasks. Tasks in this list will not be deleted.
+                  and all tasks within it. This action cannot be undone.
                 </p>
               </div>
               <div className="flex justify-end gap-2">
