@@ -20,8 +20,10 @@ import {
   AlertTriangle,
   Sparkles,
   Trash2,
+  Download,
 } from 'lucide-react'
 import { format, subDays, startOfDay, isSameDay } from 'date-fns'
+import { exportTasksAsCSV } from '@/lib/csv-export'
 
 interface StatsDashboardProps {
   open: boolean
@@ -96,13 +98,26 @@ export const StatsDashboard = memo(function StatsDashboard({ open, onClose }: St
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <BarChart3 className="size-5" />
-            Insights & Stats
-          </DialogTitle>
-          <DialogDescription>
-            Your productivity at a glance
-          </DialogDescription>
+          <div className="flex items-center justify-between pr-8">
+            <div className="space-y-1.5">
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <BarChart3 className="size-5" />
+                Insights & Stats
+              </DialogTitle>
+              <DialogDescription>
+                Your productivity at a glance
+              </DialogDescription>
+            </div>
+            <button
+              type="button"
+              onClick={() => exportTasksAsCSV(tasks, lists)}
+              className="p-2 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-colors flex items-center gap-2 text-xs font-medium"
+              title="Export tasks as CSV"
+            >
+              <Download className="size-4" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6 py-2">
