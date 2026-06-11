@@ -18,18 +18,18 @@ export const Markdown = memo(function Markdown({ content, className = '' }: Mark
               {children}
             </a>
           ),
-          code: ({ className: cn, children, ...props }) => {
+          code: ({ className: cn, children }) => {
             const isInline = !cn
             if (isInline) {
               return (
-                <code className="px-1 py-0.5 rounded bg-muted text-xs font-mono" {...props}>
+                <code className="px-1 py-0.5 rounded bg-muted text-xs font-mono">
                   {children}
                 </code>
               )
             }
             return (
               <pre className="p-3 rounded-lg bg-muted overflow-x-auto text-xs">
-                <code className={cn} {...props}>{children}</code>
+                <code className={cn}>{children}</code>
               </pre>
             )
           },
@@ -53,8 +53,8 @@ export const Markdown = memo(function Markdown({ content, className = '' }: Mark
           ),
           th: ({ children }) => <th className="border border-border/50 px-2 py-1 text-left font-medium">{children}</th>,
           td: ({ children }) => <td className="border border-border/50 px-2 py-1">{children}</td>,
-          input: ({ checked, ...props }) => (
-            <input type="checkbox" checked={checked} readOnly className="mr-1.5" {...props} />
+          input: ({ checked }) => (
+            <input type="checkbox" checked={checked} readOnly aria-label="Completed" className="mr-1.5" />
           ),
           strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
           em: ({ children }) => <em className="italic">{children}</em>,
