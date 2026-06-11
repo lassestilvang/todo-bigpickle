@@ -45,7 +45,7 @@ const priorityConfig = {
 } as const
 
 interface TaskPreviewProps {
-  task: Task | null
+  task: Task | null | undefined
   isOpen: boolean
   onClose: () => void
   onEdit: (task: Task) => void
