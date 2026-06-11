@@ -300,10 +300,14 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
       if (aOver !== bOver) return bOver - aOver
       switch (sortBy) {
         case 'date':
-          if (!a.date && !b.date) return 0
-          if (!a.date) return 1
-          if (!b.date) return -1
-          return a.date.getTime() - b.date.getTime()
+          if (a.date?.getTime() !== b.date?.getTime()) {
+            if (!a.date && !b.date) return 0
+            if (!a.date) return 1
+            if (!b.date) return -1
+            return a.date.getTime() - b.date.getTime()
+          }
+          // Same date, sort by priority
+          return priorityOrder[a.priority] - priorityOrder[b.priority]
         case 'priority':
           return priorityOrder[a.priority] - priorityOrder[b.priority]
         case 'name':
