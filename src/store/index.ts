@@ -160,6 +160,7 @@ export const useAppStore = create<AppStore>()(
           set((state) => ({ tasks: state.tasks.filter(t => t.id !== tempId) }))
           handleError('Failed to create task', error, set)
           toast({ type: 'error', title: 'Failed to create task' })
+          throw error
         }
       },
 
@@ -176,6 +177,7 @@ export const useAppStore = create<AppStore>()(
           set((state) => ({ tasks: state.tasks.map(t => t.id === id ? prev : t) }))
           handleError('Failed to update task', error, set)
           toast({ type: 'error', title: 'Failed to update task' })
+          throw error
         }
       },
 
