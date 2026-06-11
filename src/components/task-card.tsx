@@ -135,14 +135,14 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
       const d = dates[e.key]
       if (d) {
         e.preventDefault()
-        updateTask(task.id, { date: d })
+        updateTaskRef.current(task.id, { date: d })
       }
     }
     el.addEventListener('keydown', handler)
     return () => el.removeEventListener('keydown', handler)
-  }, [editingName, task.id, updateTask])
+  }, [editingName, task.id])
 
-  const startEditing = useCallback((e: React.MouseEvent) => {
+  const startEditing = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation()
     setEditValue(task.name)
     setEditingName(true)
@@ -151,10 +151,10 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
   const saveEdit = useCallback(() => {
     const trimmed = editValue.trim()
     if (trimmed && trimmed !== task.name) {
-      updateTask(task.id, { name: trimmed })
+      updateTaskRef.current(task.id, { name: trimmed })
     }
     setEditingName(false)
-  }, [editValue, task.id, task.name, updateTask])
+  }, [editValue, task.id, task.name])
 
   const cancelEdit = useCallback(() => {
     setEditingName(false)
@@ -287,8 +287,7 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                     onClick={startEditing}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        e.stopPropagation()
-                        startEditing(e as unknown as React.MouseEvent)
+                        startEditing(e)
                       }
                     }}
                   >
