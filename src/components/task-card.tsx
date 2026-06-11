@@ -476,21 +476,33 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                         <Reorder.Item
                           key={subtask.id}
                           value={subtask}
-                          className="flex items-center gap-2 text-xs w-full text-left cursor-grab active:cursor-grabbing"
+                          className="flex items-center gap-2 text-xs w-full text-left cursor-grab active:cursor-grabbing group/subtask"
                           onClick={(e) => {
                             e.stopPropagation()
                             onToggleSubtask(task.id, subtask.id)
                           }}
                         >
-                          <GripVertical className="size-2.5 text-muted-foreground/20 shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity" />
+                          <GripVertical className="size-2.5 text-muted-foreground/20 shrink-0 opacity-0 group-hover/subtask:opacity-100 transition-opacity" />
                           {subtask.completed ? (
                             <CheckCircle2 className="size-3 text-emerald-500 shrink-0" />
                           ) : (
                             <Circle className="size-3 text-muted-foreground/40 shrink-0" />
                           )}
-                          <span className={`truncate ${subtask.completed ? 'line-through text-muted-foreground/60' : ''}`}>
+                          <span className={`flex-1 truncate ${subtask.completed ? 'line-through text-muted-foreground/60' : ''}`}>
                             {subtask.title}
                           </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              const updated = task.subtasks.filter(st => st.id !== subtask.id)
+                              updateTask(task.id, { subtasks: updated })
+                            }}
+                            className="size-5 flex items-center justify-center rounded-md text-muted-foreground/0 group-hover/subtask:text-red-500/50 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                            aria-label={`Delete subtask "${subtask.title}"`}
+                          >
+                            <Trash2 className="size-3" />
+                          </button>
                         </Reorder.Item>
                       ))}
                     </Reorder.Group>
