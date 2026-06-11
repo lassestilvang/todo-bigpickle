@@ -205,27 +205,36 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
 
     // Try natural language date parsing
     const parsed = parseQuickAddTask(raw)
-    const name = parsed?.name || raw
-    const date = parsed?.date
-    const finalName = name
-
+    const name = parsed.name
+    const date = parsed.date
+    const deadline = parsed.deadline
+    const estimate = parsed.estimate
+    const priority = parsed.priority
+    const labelsToApply = parsed.labels.map(l => labels.find(label => label.name.toLowerCase() === l.toLowerCase())).filter(Boolean) as any[]
+    
     try {
       const defaultList = lists.find(l => l.isDefault)
+      const targetList = parsed.listName 
+        ? lists.find(l => l.name.toLowerCase() === parsed.listName?.toLowerCase()) 
+        : (selectedListId ? lists.find(l => l.id === selectedListId) : defaultList)
+
       await addTask({
-        name: finalName,
+        name,
         description: undefined,
         date,
-        priority: 'none',
-        listId: selectedListId || defaultList?.id || '',
+        deadline,
+        estimate,
+        priority,
+        listId: targetList?.id || defaultList?.id || '',
         completed: false,
-        labels: [],
+        labels: labelsToApply,
         subtasks: [],
       })
       setQuickAddText('')
     } catch {
       // Error handled by store
     }
-  }, [quickAddText, addTask, lists, selectedListId])
+  }, [quickAddText, addTask, lists, labels, selectedListId])
 
   // Step 1: filter by view/status/completed (no search)
   const baseTasks = useMemo(() => {

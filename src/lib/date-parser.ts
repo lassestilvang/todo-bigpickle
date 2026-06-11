@@ -14,6 +14,8 @@ const dayNames: Record<string, number> = {
 export interface ParsedTask {
   name: string
   date?: Date
+  deadline?: Date
+  estimate?: number // in minutes
   priority: Priority
   listName?: string
   labels: string[]
@@ -46,13 +48,22 @@ export function parseQuickAddTask(input: string): ParsedTask {
   }
 
   // 3. Extract Labels: #label1 #label2
-  const labelMatches = text.matchAll(/#(?:"([^"]+)"|(\S+))/gi)
+  const labelMatches = Array.from(text.matchAll(/#(?:"([^"]+)"|(\S+))/gi))
   for (const match of labelMatches) {
     result.labels.push(match[1] || match[2])
     text = text.replace(match[0], '').trim()
   }
 
-  // 4. Extract Dates (more robust)
+  // 4. Extract Estimates: "takes 30m", "for 2h", "estimate 1.5h"
+  const estimateMatch = text.match(/\b(?:takes|for|estimate|est)\s+(\d+(?:\.\d+)?)\s*(m|min|mins|h|hour|hours|hr|hrs)\b/i)
+  if (estimateMatch) {
+    const num = parseFloat(estimateMatch[1])
+    const unit = estimateMatch[2].toLowerCase()
+    result.estimate = unit.startsWith('h') ? Math.round(num * 60) : Math.round(num)
+    text = text.replace(estimateMatch[0], '').trim()
+  }
+
+  // 5. Extract Dates and Deadlines
   const now = new Date()
   
   const datePatterns = [
@@ -72,8 +83,8 @@ export function parseQuickAddTask(input: string): ParsedTask {
       const dayIndex = dayNames[dayStr.toLowerCase()]
       return dayIndex !== undefined ? nextDay(now, dayIndex as 0 | 1 | 2 | 3 | 4 | 5 | 6) : undefined
     }},
-    // "this [dayname]" or "on [dayname]"
-    { regex: /\b(?:this|on)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/i, handler: (dayStr: string) => {
+    // "this [dayname]" or "on [dayname]" or "due [dayname]" or "by [dayname]"
+    { regex: /\b(?:this|on|due|by)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/i, handler: (dayStr: string) => {
       const dayIndex = dayNames[dayStr.toLowerCase()]
       if (dayIndex === undefined) return undefined
       const currentDay = getDay(now)
@@ -103,9 +114,15 @@ export function parseQuickAddTask(input: string): ParsedTask {
     if (match) {
       const parsedDate = (handler as any)(...match.slice(1))
       if (parsedDate) {
-        result.date = parsedDate
+        // If it was prefixed by "by" or "due", it's a deadline
+        const fullMatch = match[0].toLowerCase()
+        if (fullMatch.includes('by') || fullMatch.includes('due')) {
+          result.deadline = parsedDate
+        } else {
+          result.date = parsedDate
+        }
         text = text.replace(match[0], '').trim()
-        break // Only one date for now
+        break // Only one date/deadline for now
       }
     }
   }
