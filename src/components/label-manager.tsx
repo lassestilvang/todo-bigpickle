@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -115,6 +115,15 @@ export function LabelManager({
   const [error, setError] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const confirmDeleteLabel = labels.find(l => l.id === confirmDeleteId)
+
+  useEffect(() => {
+    if (!open) {
+      setShowAddForm(false)
+      setEditingId(null)
+      setConfirmDeleteId(null)
+      setError(null)
+    }
+  }, [open])
 
   const handleAdd = useCallback(async (data: { name: string; icon: string; color: string }) => {
     try {
