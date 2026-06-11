@@ -1,25 +1,33 @@
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/store'
 
-export const MoodBackground = memo(function MoodBackground() {
-  const focusMode = useAppStore(s => s.focusMode)
-  const tasks = useAppStore(s => s.tasks)
-  
-  const mood = useMemo(() => {
-    const now = new Date()
-    const overdue = tasks.filter(t => !t.completed && t.deadline && t.deadline < now).length
-    const completedToday = tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt).toDateString() === now.toDateString()).length
-    
-    if (focusMode) return 'focus'
-    if (overdue > 3) return 'stressed'
-    if (completedToday > 5) return 'productive'
-    return 'neutral'
-  }, [focusMode, tasks])
+type Mood = 'focus' | 'stressed' | 'productive' | 'neutral'
 
-  const colors = {
+function computeMood(focusMode: boolean, tasks: { completed: boolean; deadline?: Date | null; completedAt?: Date | null }[]): Mood {
+  if (focusMode) return 'focus'
+  const now = new Date()
+  let overdue = 0
+  let completedToday = 0
+  const todayStr = now.toDateString()
+  for (const t of tasks) {
+    if (!t.completed && t.deadline && t.deadline < now) {
+      overdue++
+    } else if (t.completed && t.completedAt && new Date(t.completedAt).toDateString() === todayStr) {
+      completedToday++
+    }
+  }
+  if (overdue > 3) return 'stressed'
+  if (completedToday > 5) return 'productive'
+  return 'neutral'
+}
+
+export const MoodBackground = memo(function MoodBackground() {
+  const mood = useAppStore(s => computeMood(s.focusMode, s.tasks))
+
+  const colors: Record<Mood, string> = {
     focus: 'from-blue-500/5 via-indigo-500/5 to-purple-500/5',
     stressed: 'from-orange-500/5 via-red-500/5 to-transparent',
     productive: 'from-emerald-500/5 via-teal-500/5 to-transparent',
@@ -35,7 +43,7 @@ export const MoodBackground = memo(function MoodBackground() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 2 }}
-          className={`absolute inset-0 bg-gradient-to-br ${colors[mood as keyof typeof colors]} transition-colors duration-1000`}
+          className={`absolute inset-0 bg-gradient-to-br ${colors[mood]} transition-colors duration-1000`}
         />
       </AnimatePresence>
       
