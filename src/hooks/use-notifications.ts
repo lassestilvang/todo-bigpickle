@@ -27,6 +27,26 @@ function markNotified(id: string) {
   }
 }
 
+function pruneNotifiedTasks(activeTasks: { id: string; completed: boolean }[]) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return
+    const stored: string[] = JSON.parse(raw)
+    const isActive = new Map(activeTasks.map(t => [t.id, !t.completed]))
+    const filtered = stored.filter(key => {
+      const taskId = key.startsWith('reminder:')
+        ? key.split(':')[1]
+        : key.split(':')[1]
+      return isActive.get(taskId) === true
+    })
+    if (filtered.length < stored.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
+    }
+  } catch {
+    // Storage unavailable
+  }
+}
+
 function toDate(d: Date | string): Date {
   return d instanceof Date ? d : new Date(d)
 }
@@ -57,6 +77,9 @@ export function useNotifications() {
       const now = new Date()
       const notified = getNotified()
       const tasks = tasksRef.current
+
+      // Prune stale entries for completed/non-existent tasks
+      pruneNotifiedTasks(tasks)
 
       for (const task of tasks) {
         if (task.completed) continue
