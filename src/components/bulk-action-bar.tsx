@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useCallback, useMemo } from 'react'
-import { useAppStore, useShallow } from '@/store'
+import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CheckCircle2, Trash2, Move, X, RotateCcw, Copy } from 'lucide-react'
@@ -20,7 +20,12 @@ export const BulkActionBar = memo(function BulkActionBar({
   const bulkMoveTasks = useAppStore(s => s.bulkMoveTasks)
   const duplicateTask = useAppStore(s => s.duplicateTask)
   const lists = useAppStore(s => s.lists)
-  const tasks = useAppStore(useShallow(s => s.tasks))
+  const allTasks = useAppStore(s => s.tasks)
+
+  const tasks = useMemo(
+    () => allTasks.filter(t => selectedIds.includes(t.id)),
+    [allTasks, selectedIds]
+  )
 
   const hasCompleted = useMemo(
     () => selectedIds.some(id => tasks.find(t => t.id === id)?.completed),
