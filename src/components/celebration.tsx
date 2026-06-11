@@ -79,6 +79,8 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
       {active && (
         <m.div
           key={active ? 'celebrating' : 'idle'}
+          role="status"
+          aria-live="polite"
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
@@ -111,15 +113,15 @@ export const Celebration = memo(function Celebration({ active }: CelebrationProp
               }}
             >
               {p.shape === 'star' ? (
-                <svg width={p.size} height={p.size} viewBox={`0 0 ${p.size} ${p.size}`}>
+                <svg width={p.size} height={p.size} viewBox={`${-p.size / 2} ${-p.size / 2} ${p.size} ${p.size}`}>
                   <StarShape size={p.size} />
                 </svg>
               ) : p.shape === 'diamond' ? (
-                <svg width={p.size} height={p.size} viewBox={`0 0 ${p.size} ${p.size}`}>
+                <svg width={p.size} height={p.size} viewBox={`${-p.size / 2} ${-p.size / 2} ${p.size} ${p.size}`}>
                   <DiamondShape size={p.size} />
                 </svg>
               ) : p.shape === 'square' ? (
-                <svg width={p.size} height={p.size} viewBox={`0 0 ${p.size} ${p.size}`}>
+                <svg width={p.size} height={p.size} viewBox={`${-p.size / 2} ${-p.size / 2} ${p.size} ${p.size}`}>
                   <SquareShape size={p.size} />
                 </svg>
               ) : (
