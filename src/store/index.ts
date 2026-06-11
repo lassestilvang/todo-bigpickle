@@ -435,7 +435,17 @@ export const useAppStore = create<AppStore>()(
             },
           },
         })
-        await Promise.allSettled(ids.map(id => api.updateTask(id, { completed, completedAt: completed ? now : undefined })))
+        try {
+          await Promise.all(ids.map(id => api.updateTask(id, { completed, completedAt: completed ? now : undefined })))
+        } catch (error) {
+          set((state) => ({
+            tasks: state.tasks.map(t => {
+              const prev = prevTasks.find(p => p.id === t.id)
+              return prev ? { ...prev, updatedAt: new Date() } : t
+            }),
+          }))
+          handleError(`Failed to ${completed ? 'complete' : 'uncomplete'} tasks`, error, set)
+        }
       },
 
       bulkDeleteTasks: async (ids) => {
@@ -445,13 +455,14 @@ export const useAppStore = create<AppStore>()(
           error: null,
         }))
         const count = ids.length
-        toast({
+        const toastId = toast({
           type: 'success',
           title: `Deleted ${count} ${count === 1 ? 'task' : 'tasks'}`,
           duration: 5000,
           action: {
             label: 'Undo',
             onClick: () => {
+              dismissToast(toastId)
               set((state) => ({
                 tasks: [...state.tasks, ...prevTasks].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
               }))
@@ -460,11 +471,20 @@ export const useAppStore = create<AppStore>()(
             },
           },
         })
-        await api.deleteCompletedTasks(ids).catch(() => {})
+        try {
+          await api.deleteCompletedTasks(ids)
+        } catch (error) {
+          set((state) => ({
+            tasks: [...state.tasks, ...prevTasks].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
+          }))
+          handleError('Failed to delete tasks', error, set)
+          toast({ type: 'error', title: 'Failed to delete tasks' })
+        }
       },
 
       bulkMoveTasks: async (ids, listId) => {
         const list = get().lists.find(l => l.id === listId)
+        const prevSnapshot = get().tasks.filter(t => ids.includes(t.id)).map(t => ({ id: t.id, listId: t.listId }))
         set((state) => ({
           tasks: state.tasks.map(t =>
             ids.includes(t.id) ? { ...t, listId, updatedAt: new Date() } : t
@@ -477,7 +497,17 @@ export const useAppStore = create<AppStore>()(
           title: `Moved ${count} ${count === 1 ? 'task' : 'tasks'} to ${list?.name || 'list'}`,
           duration: 4000,
         })
-        await Promise.allSettled(ids.map(id => api.updateTask(id, { listId })))
+        try {
+          await Promise.all(ids.map(id => api.updateTask(id, { listId })))
+        } catch (error) {
+          set((state) => ({
+            tasks: state.tasks.map(t => {
+              const prev = prevSnapshot.find(p => p.id === t.id)
+              return prev ? { ...t, listId: prev.listId, updatedAt: new Date() } : t
+            }),
+          }))
+          handleError('Failed to move tasks', error, set)
+        }
       },
 
       // List actions
