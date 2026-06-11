@@ -6,6 +6,7 @@ import { useNow } from '@/hooks/use-now'
 import { Celebration } from '@/components/celebration'
 import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/store'
+import { toast } from '@/hooks/use-toast'
 import { format, isToday, isTomorrow, isYesterday } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -21,6 +22,7 @@ import {
   Trash2,
   GripVertical,
   Copy,
+  Share2,
   Bell,
   X,
 } from 'lucide-react'
@@ -82,6 +84,18 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
   const updateTaskRef = useRef(updateTask)
   useEffect(() => { updateTaskRef.current = updateTask }, [updateTask])
   const duplicateTask = useAppStore(s => s.duplicateTask)
+
+  const copyAsMarkdown = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    const priorityEmoji = task.priority === 'high' ? '🔴 ' : task.priority === 'medium' ? '🟡 ' : task.priority === 'low' ? '🟢 ' : ''
+    const markdown = `${priorityEmoji}**${task.name}**\n${task.description ? `\n${task.description}\n` : ''}${task.deadline ? `\nDue: ${format(task.deadline, 'PPP')}` : ''}`
+    navigator.clipboard.writeText(markdown)
+    toast({
+      type: 'success',
+      title: 'Copied to clipboard',
+      description: 'Task details copied as Markdown',
+    })
+  }, [task])
 
   const cyclePriority = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
@@ -465,6 +479,16 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
           </div>
 
           <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 group-focus-within/card:opacity-100 focus-visible:opacity-100 transition-all duration-200">
+            <button
+              type="button"
+              onClick={copyAsMarkdown}
+              className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-accent hover:scale-110 active:scale-90 transition-all duration-200"
+              aria-label={`Copy "${task.name}" as Markdown`}
+              title="Copy as Markdown"
+              tabIndex={0}
+            >
+              <Share2 className="size-4" />
+            </button>
             <button
               type="button"
               onClick={(e) => {
