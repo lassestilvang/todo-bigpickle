@@ -424,7 +424,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           </button>
           <button
             type="button"
-            onClick={() => exportTasksAsCSV(tasks)}
+            onClick={() => exportTasksAsCSV(tasks, lists)}
             className="w-full text-xs text-muted-foreground/70 hover:text-foreground transition-colors flex items-center gap-2 px-1 py-1.5"
           >
             <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
