@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
 import { Reorder } from 'framer-motion'
+import { ProgressRing } from '@/components/ui/progress-ring'
 import {
   Calendar,
   Clock,
@@ -108,6 +109,7 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
   const completedSubtasks = task.subtasks.filter(st => st.completed).length
   const totalSubtasks = task.subtasks.length
   const progress = totalSubtasks > 0 ? completedSubtasks / totalSubtasks : 0
+  const taskAgeDays = Math.floor((now.getTime() - new Date(task.createdAt).getTime()) / (1000 * 60 * 60 * 24))
 
   useEffect(() => {
     if (task.completed && !prevCompleted.current) {
@@ -262,17 +264,24 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                   aria-label="Drag to reorder"
                 />
               </div>
-              <Checkbox
-                checked={task.completed}
-                onCheckedChange={() => onToggleComplete(task.id)}
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`Mark "${task.name}" as ${task.completed ? 'incomplete' : 'complete'}`}
-                className={`transition-all duration-200 hover:scale-110 active:scale-95
-                  ${task.completed
-                    ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:shadow-lg data-[state=checked]:shadow-emerald-500/40'
-                    : 'hover:border-emerald-400 hover:shadow-sm hover:shadow-emerald-500/20'
-                  }`}
-              />
+              <div className="relative group/check">
+                {totalSubtasks > 0 && (
+                  <div className="absolute inset-0 -m-1 pointer-events-none scale-125 opacity-40 group-hover/check:opacity-100 transition-opacity">
+                    <ProgressRing progress={progress} size={24} strokeWidth={2} />
+                  </div>
+                )}
+                <Checkbox
+                  checked={task.completed}
+                  onCheckedChange={() => onToggleComplete(task.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={`Mark "${task.name}" as ${task.completed ? 'incomplete' : 'complete'}`}
+                  className={`transition-all duration-200 hover:scale-110 active:scale-95 relative z-10
+                    ${task.completed
+                      ? 'data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:shadow-lg data-[state=checked]:shadow-emerald-500/40'
+                      : 'hover:border-emerald-400 hover:shadow-sm hover:shadow-emerald-500/20'
+                    }`}
+                />
+              </div>
             </div>
 
             <div className="flex-1 min-w-0">
@@ -308,7 +317,13 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                     {highlightText(task.name, searchQuery || '')}
                   </button>
                 )}
-                {isOverdue && !editingName && (
+                <div className="flex items-center gap-1 shrink-0">
+                  {taskAgeDays > 3 && !task.completed && (
+                    <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/50 border border-border/50 text-[10px] text-muted-foreground/60 font-medium">
+                      {taskAgeDays}d old
+                    </div>
+                  )}
+                  {isOverdue && !editingName && (
                   <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap border shrink-0 animate-in shadow-sm ${
                     overdueDays >= 7
                       ? 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 shadow-red-500/10'
