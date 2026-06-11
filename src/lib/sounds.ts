@@ -1,15 +1,18 @@
 let audioCtx: AudioContext | null = null
 
-function getAudioContext() {
+async function getAudioContext() {
   if (!audioCtx) {
     audioCtx = new AudioContext()
+  }
+  if (audioCtx.state === 'suspended') {
+    await audioCtx.resume()
   }
   return audioCtx
 }
 
-export function playCompletionSound() {
+export async function playCompletionSound() {
   try {
-    const ctx = getAudioContext()
+    const ctx = await getAudioContext()
     const now = ctx.currentTime
 
     // Two-tone chime: C5 -> E5 (major third)
@@ -30,9 +33,9 @@ export function playCompletionSound() {
   } catch { /* Audio not available */ }
 }
 
-export function playFocusStartSound() {
+export async function playFocusStartSound() {
   try {
-    const ctx = getAudioContext()
+    const ctx = await getAudioContext()
     const now = ctx.currentTime
     const gain = ctx.createGain()
     gain.connect(ctx.destination)
@@ -49,9 +52,9 @@ export function playFocusStartSound() {
   } catch { /* Audio not available */ }
 }
 
-export function playDeleteSound() {
+export async function playDeleteSound() {
   try {
-    const ctx = getAudioContext()
+    const ctx = await getAudioContext()
     const now = ctx.currentTime
     const gain = ctx.createGain()
     gain.connect(ctx.destination)
