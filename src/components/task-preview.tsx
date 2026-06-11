@@ -253,9 +253,9 @@ export const TaskPreview = memo(function TaskPreview({
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2">Reminders</p>
                 <div className="flex flex-wrap gap-2">
-                  {task.reminders.map((r, i) => (
+                  {task.reminders.map((r) => (
                     <div
-                      key={i}
+                      key={r.getTime()}
                       className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 rounded-md border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400"
                     >
                       <Bell className="size-3" />
