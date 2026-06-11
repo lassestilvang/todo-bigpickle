@@ -19,6 +19,7 @@ import {
   Clock,
   AlertTriangle,
   Sparkles,
+  Trash2,
 } from 'lucide-react'
 import { format, subDays, startOfDay, isSameDay } from 'date-fns'
 
@@ -30,6 +31,7 @@ interface StatsDashboardProps {
 export const StatsDashboard = memo(function StatsDashboard({ open, onClose }: StatsDashboardProps) {
   const tasks = useAppStore(s => s.tasks)
   const lists = useAppStore(s => s.lists)
+  const clearCompleted = useAppStore(s => s.clearCompleted)
 
   const stats = useMemo(() => {
     const total = tasks.length
@@ -110,9 +112,24 @@ export const StatsDashboard = memo(function StatsDashboard({ open, onClose }: St
               <p className="text-2xl font-bold tabular-nums">{stats.total}</p>
               <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Total</p>
             </div>
-            <div className="bg-emerald-500/5 rounded-xl p-3 border border-emerald-500/20 text-center">
+            <div className="bg-emerald-500/5 rounded-xl p-3 border border-emerald-500/20 text-center relative group/stat">
               <p className="text-2xl font-bold tabular-nums text-emerald-500">{stats.completed}</p>
               <p className="text-[10px] text-emerald-500/70 font-medium mt-0.5">Done</p>
+              {stats.completed > 0 && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    clearCompleted()
+                  }}
+                  className="absolute -top-1.5 -right-1.5 size-6 rounded-full bg-emerald-500 text-white 
+                    flex items-center justify-center opacity-0 group-hover/stat:opacity-100 
+                    hover:scale-110 active:scale-90 transition-all shadow-lg"
+                  title="Clear all completed"
+                >
+                  <Trash2 className="size-3" />
+                </button>
+              )}
             </div>
             <div className="bg-amber-500/5 rounded-xl p-3 border border-amber-500/20 text-center">
               <p className="text-2xl font-bold tabular-nums text-amber-500">{stats.active}</p>
