@@ -62,6 +62,7 @@ export const CommandPalette = memo(function CommandPalette({ open, onClose, onCr
   const setShowCompleted = useAppStore(s => s.setShowCompleted)
   const showCompleted = useAppStore(s => s.showCompleted)
   const lists = useAppStore(s => s.lists)
+  const tasks = useAppStore(s => s.tasks)
   const { setTheme } = useTheme()
 
   const query = state.query
