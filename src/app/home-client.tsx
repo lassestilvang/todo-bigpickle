@@ -183,7 +183,13 @@ export default function HomeClient() {
   const setFocusMode = useAppStore(s => s.setFocusMode)
   const focusMode = useAppStore(s => s.focusMode)
   const addTask = useAppStore(s => s.addTask)
+  const tasks = useAppStore(s => s.tasks)
   const lists = useAppStore(s => s.lists)
+  
+  useEffect(() => {
+    const activeCount = tasks.filter(t => !t.completed).length
+    document.title = activeCount > 0 ? `(${activeCount}) Todo App` : 'Todo App'
+  }, [tasks])
   const addTaskRef = useRef(addTask)
   const listsRef = useRef(lists)
   useEffect(() => { addTaskRef.current = addTask }, [addTask])
