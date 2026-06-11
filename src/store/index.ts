@@ -69,6 +69,7 @@ interface AppStore extends AppState {
   setShowCompleted: (show: boolean) => void
   setSearchQuery: (query: string) => void
   setFocusMode: (focus: boolean) => void
+  setMuteSounds: (mute: boolean) => void
   
   // Task actions
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'history' | 'position'>) => void
@@ -115,6 +116,7 @@ export const useAppStore = create<AppStore>()(
       isLoading: true,
       error: null,
       focusMode: false,
+      muteSounds: false,
 
       // View actions
       setCurrentView: (view) => set({ currentView: view, error: null }),
@@ -122,6 +124,7 @@ export const useAppStore = create<AppStore>()(
       setShowCompleted: (show) => set({ showCompleted: show }),
       setSearchQuery: (query) => set({ searchQuery: query }),
       setFocusMode: (focus) => set({ focusMode: focus }),
+      setMuteSounds: (mute) => set({ muteSounds: mute }),
 
       // Task actions
       addTask: async (taskData) => {
@@ -705,6 +708,7 @@ export const useAppStore = create<AppStore>()(
         showCompleted: state.showCompleted,
         searchQuery: state.searchQuery,
         focusMode: state.focusMode,
+        muteSounds: state.muteSounds,
       })
     }
   )

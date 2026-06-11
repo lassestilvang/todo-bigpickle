@@ -78,4 +78,5 @@ export interface AppState {
   showCompleted: boolean
   searchQuery: string
   focusMode: boolean
+  muteSounds: boolean
 }

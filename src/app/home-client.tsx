@@ -15,7 +15,7 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useNotifications } from '@/hooks/use-notifications'
 import { Task } from '@/types'
 import { AnimatePresence } from 'framer-motion'
-import { RefreshCw, AlertCircle, X, Search, Maximize2, Minimize2 } from 'lucide-react'
+import { RefreshCw, AlertCircle, X, Search, Maximize2, Minimize2, Volume2, VolumeX } from 'lucide-react'
 import { playFocusStartSound } from '@/lib/sounds'
 
 const TaskForm = lazy(() => import('@/components/task-form').then(m => ({ default: m.TaskForm })))
@@ -182,6 +182,8 @@ export default function HomeClient() {
   const setSearchQuery = useAppStore(s => s.setSearchQuery)
   const setFocusMode = useAppStore(s => s.setFocusMode)
   const focusMode = useAppStore(s => s.focusMode)
+  const muteSounds = useAppStore(s => s.muteSounds)
+  const setMuteSounds = useAppStore(s => s.setMuteSounds)
   const addTask = useAppStore(s => s.addTask)
   const tasks = useAppStore(s => s.tasks)
   const lists = useAppStore(s => s.lists)
@@ -439,6 +441,16 @@ export default function HomeClient() {
                     <kbd className="ml-1.5 hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground/60">
                       ⌘.
                     </kbd>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setMuteSounds(!muteSounds)}
+                    className="size-9 text-muted-foreground/60 hover:text-foreground"
+                    aria-label={muteSounds ? 'Unmute sounds' : 'Mute sounds'}
+                    title={muteSounds ? 'Unmute sounds' : 'Mute sounds'}
+                  >
+                    {muteSounds ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
                   </Button>
                   <ThemeToggle />
                 </header>

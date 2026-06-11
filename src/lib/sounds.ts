@@ -1,3 +1,5 @@
+import { useAppStore } from '@/store'
+
 let audioCtx: AudioContext | null = null
 
 async function getAudioContext() {
@@ -11,6 +13,7 @@ async function getAudioContext() {
 }
 
 export async function playCompletionSound() {
+  if (useAppStore.getState().muteSounds) return
   try {
     const ctx = await getAudioContext()
     const now = ctx.currentTime
@@ -34,6 +37,7 @@ export async function playCompletionSound() {
 }
 
 export async function playFocusStartSound() {
+  if (useAppStore.getState().muteSounds) return
   try {
     const ctx = await getAudioContext()
     const now = ctx.currentTime
@@ -53,6 +57,7 @@ export async function playFocusStartSound() {
 }
 
 export async function playDeleteSound() {
+  if (useAppStore.getState().muteSounds) return
   try {
     const ctx = await getAudioContext()
     const now = ctx.currentTime
