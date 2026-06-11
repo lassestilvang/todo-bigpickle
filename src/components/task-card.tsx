@@ -24,6 +24,7 @@ import {
   GripVertical,
   Copy,
   Share2,
+  ListTodo,
   Bell,
   X,
 } from 'lucide-react'
@@ -85,6 +86,35 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
   const updateTaskRef = useRef(updateTask)
   useEffect(() => { updateTaskRef.current = updateTask }, [updateTask])
   const duplicateTask = useAppStore(s => s.duplicateTask)
+
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false)
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
+  const subtaskInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAddSubtask = useCallback(() => {
+    const title = newSubtaskTitle.trim()
+    if (!title) {
+      setIsAddingSubtask(false)
+      return
+    }
+    const newSubtask = {
+      id: crypto.randomUUID(),
+      title,
+      completed: false,
+      position: task.subtasks.length,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    updateTask(task.id, { subtasks: [...task.subtasks, newSubtask] })
+    setNewSubtaskTitle('')
+    setIsAddingSubtask(false)
+  }, [newSubtaskTitle, task.id, task.subtasks, updateTask])
+
+  useEffect(() => {
+    if (isAddingSubtask) {
+      subtaskInputRef.current?.focus()
+    }
+  }, [isAddingSubtask])
 
   const copyAsMarkdown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
@@ -440,76 +470,112 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
 
               </div>
 
-              {totalSubtasks > 0 && (
+              {(totalSubtasks > 0 || isAddingSubtask) && (
                 <div className="mt-3">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-medium text-muted-foreground/70">Subtasks</span>
-                    <span className={`text-[10px] font-semibold tabular-nums ${progress >= 1 ? 'text-emerald-500' : 'text-muted-foreground/70'}`}>
-                      {completedSubtasks}/{totalSubtasks}
-                    </span>
-                  </div>
-                  <div className="h-2 bg-muted/70 rounded-full overflow-hidden ring-1 ring-inset ring-black/[0.02] relative">
-                    {progress > 0 && (
-                      <div
-                        className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${
-                          progress >= 1
-                            ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
-                            : 'bg-gradient-to-r from-primary/70 to-primary/40'
-                        }`}
-                        style={{ width: `${Math.max(progress * 100, 8)}%` }}
-                      >
-                        {progress > 0 && progress < 1 && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                  {totalSubtasks > 0 && (
+                    <>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-medium text-muted-foreground/70">Subtasks</span>
+                        <span className={`text-[10px] font-semibold tabular-nums ${progress >= 1 ? 'text-emerald-500' : 'text-muted-foreground/70'}`}>
+                          {completedSubtasks}/{totalSubtasks}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/70 rounded-full overflow-hidden ring-1 ring-inset ring-black/[0.02] relative">
+                        {progress > 0 && (
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${
+                              progress >= 1
+                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                                : 'bg-gradient-to-r from-primary/70 to-primary/40'
+                            }`}
+                            style={{ width: `${Math.max(progress * 100, 8)}%` }}
+                          >
+                            {progress > 0 && progress < 1 && (
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
                   <div className="mt-2 space-y-1">
-                    <Reorder.Group
-                      axis="y"
-                      values={task.subtasks.slice(0, 3)}
-                      onReorder={(reordered) => onReorderSubtasks(task.id, reordered.map(st => st.id))}
-                      className="space-y-1"
-                      layoutScroll
-                    >
-                      {task.subtasks.slice(0, 3).map((subtask) => (
-                        <Reorder.Item
-                          key={subtask.id}
-                          value={subtask}
-                          className="flex items-center gap-2 text-xs w-full text-left cursor-grab active:cursor-grabbing group/subtask"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onToggleSubtask(task.id, subtask.id)
-                          }}
-                        >
-                          <GripVertical className="size-2.5 text-muted-foreground/20 shrink-0 opacity-0 group-hover/subtask:opacity-100 transition-opacity" />
-                          {subtask.completed ? (
-                            <CheckCircle2 className="size-3 text-emerald-500 shrink-0" />
-                          ) : (
-                            <Circle className="size-3 text-muted-foreground/40 shrink-0" />
-                          )}
-                          <span className={`flex-1 truncate ${subtask.completed ? 'line-through text-muted-foreground/60' : ''}`}>
-                            {subtask.title}
-                          </span>
-                          <button
-                            type="button"
+                    {totalSubtasks > 0 && (
+                      <Reorder.Group
+                        axis="y"
+                        values={task.subtasks.slice(0, 3)}
+                        onReorder={(reordered) => onReorderSubtasks(task.id, reordered.map(st => st.id))}
+                        className="space-y-1"
+                        layoutScroll
+                      >
+                        {task.subtasks.slice(0, 3).map((subtask) => (
+                          <Reorder.Item
+                            key={subtask.id}
+                            value={subtask}
+                            className="flex items-center gap-2 text-xs w-full text-left cursor-grab active:cursor-grabbing group/subtask"
                             onClick={(e) => {
                               e.stopPropagation()
-                              const updated = task.subtasks.filter(st => st.id !== subtask.id)
-                              updateTask(task.id, { subtasks: updated })
+                              onToggleSubtask(task.id, subtask.id)
                             }}
-                            className="size-5 flex items-center justify-center rounded-md text-muted-foreground/0 group-hover/subtask:text-red-500/50 hover:text-red-500 hover:bg-red-500/10 transition-all"
-                            aria-label={`Delete subtask "${subtask.title}"`}
                           >
-                            <Trash2 className="size-3" />
-                          </button>
-                        </Reorder.Item>
-                      ))}
-                    </Reorder.Group>
+                            <GripVertical className="size-2.5 text-muted-foreground/20 shrink-0 opacity-0 group-hover/subtask:opacity-100 transition-opacity" />
+                            {subtask.completed ? (
+                              <CheckCircle2 className="size-3 text-emerald-500 shrink-0" />
+                            ) : (
+                              <Circle className="size-3 text-muted-foreground/40 shrink-0" />
+                            )}
+                            <span className={`flex-1 truncate ${subtask.completed ? 'line-through text-muted-foreground/60' : ''}`}>
+                              {subtask.title}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const updated = task.subtasks.filter(st => st.id !== subtask.id)
+                                updateTask(task.id, { subtasks: updated })
+                              }}
+                              className="size-5 flex items-center justify-center rounded-md text-muted-foreground/0 group-hover/subtask:text-red-500/50 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                              aria-label={`Delete subtask "${subtask.title}"`}
+                            >
+                              <Trash2 className="size-3" />
+                            </button>
+                          </Reorder.Item>
+                        ))}
+                      </Reorder.Group>
+                    )}
                     {task.subtasks.length > 3 && (
                       <div className="text-xs text-muted-foreground/70 font-medium">
                         +{task.subtasks.length - 3} more subtasks
                       </div>
+                    )}
+                    {isAddingSubtask ? (
+                      <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
+                        <Plus className="size-3 text-primary shrink-0" />
+                        <Input
+                          ref={subtaskInputRef}
+                          value={newSubtaskTitle}
+                          onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleAddSubtask()
+                            if (e.key === 'Escape') setIsAddingSubtask(false)
+                          }}
+                          onBlur={handleAddSubtask}
+                          placeholder="Subtask name..."
+                          className="h-6 py-0 text-[10px] bg-background/50 border-primary/20"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setIsAddingSubtask(true)
+                        }}
+                        className="flex items-center gap-2 text-[10px] text-muted-foreground/50 hover:text-primary transition-colors py-1 group/add-st"
+                      >
+                        <Plus className="size-3 transition-transform group-hover/add-st:rotate-90" />
+                        <span>Add subtask</span>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -518,6 +584,19 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
           </div>
 
           <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 group-focus-within/card:opacity-100 focus-visible:opacity-100 transition-all duration-200">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsAddingSubtask(true)
+              }}
+              className="p-1.5 rounded-md text-muted-foreground/50 hover:text-primary hover:bg-primary/10 hover:scale-110 active:scale-90 transition-all duration-200"
+              aria-label={`Add subtask to "${task.name}"`}
+              title="Add Subtask"
+              tabIndex={0}
+            >
+              <ListTodo className="size-4" />
+            </button>
             <button
               type="button"
               onClick={copyAsMarkdown}
