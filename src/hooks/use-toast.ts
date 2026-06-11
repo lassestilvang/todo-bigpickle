@@ -24,6 +24,7 @@ const MAX_TOASTS = 5
 let toasts: Toast[] = []
 const listeners: Set<Listener> = new Set()
 let counter = 0
+const timeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
 function notify() {
   for (const listener of listeners) {
@@ -36,21 +37,28 @@ function addToast(t: Omit<Toast, 'id'>) {
   toasts = [...toasts, { ...t, id }]
 
   if (toasts.length > MAX_TOASTS) {
-    toasts = toasts.slice(toasts.length - MAX_TOASTS)
+    const removed = toasts.shift()
+    if (removed) timeouts.delete(removed.id)
   }
 
   notify()
 
   const duration = Number.isFinite(t.duration) ? (t.duration ?? 4000) : 4000
   if (duration > 0) {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       dismissToast(id)
     }, duration)
+    timeouts.set(id, timer)
   }
   return id
 }
 
 export function dismissToast(id: string) {
+  const timer = timeouts.get(id)
+  if (timer) {
+    clearTimeout(timer)
+    timeouts.delete(id)
+  }
   toasts = toasts.filter(t => t.id !== id)
   notify()
 }
@@ -67,6 +75,10 @@ export function subscribeToasts(listener: Listener) {
 
 /** @internal — reset state between tests */
 export function resetToasts() {
+  for (const timer of timeouts.values()) {
+    clearTimeout(timer)
+  }
+  timeouts.clear()
   toasts = []
   listeners.clear()
   counter = 0
