@@ -32,8 +32,16 @@ function toDate(d: Date | string): Date {
 }
 
 export function useNotifications() {
-  const tasks = useAppStore(s => s.tasks)
+  const tasksRef = useRef(useAppStore.getState().tasks)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    const unsubscribe = useAppStore.subscribe(
+      (state) => state.tasks,
+      (tasks) => { tasksRef.current = tasks }
+    )
+    return unsubscribe
+  }, [])
 
   useEffect(() => {
     if (!('Notification' in window)) return
@@ -48,6 +56,7 @@ export function useNotifications() {
 
       const now = new Date()
       const notified = getNotified()
+      const tasks = tasksRef.current
 
       for (const task of tasks) {
         if (task.completed) continue
@@ -113,5 +122,5 @@ export function useNotifications() {
         intervalRef.current = null
       }
     }
-  }, [tasks])
+  }, [])
 }
