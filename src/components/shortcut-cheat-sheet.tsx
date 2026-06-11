@@ -1,6 +1,6 @@
 'use client'
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Command, Keyboard } from 'lucide-react'
 
 interface ShortcutGroup {
@@ -73,9 +73,9 @@ export function ShortcutCheatSheet({
             </div>
             <div>
               <DialogTitle className="text-lg">Keyboard Shortcuts</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <DialogDescription className="text-sm text-muted-foreground mt-0.5">
                 Master your workflow
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -101,9 +101,6 @@ export function ShortcutCheatSheet({
                             part
                           ) : (
                             <span className="tracking-normal">{part}</span>
-                          )}
-                          {i < shortcut.keys.split(' ').length - 1 && shortcut.keys.split(' ')[i + 1] !== '+' && (
-                            <span className="mx-0.5 text-muted-foreground/40">+</span>
                           )}
                         </span>
                       ))}
