@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { AppSidebar } from '@/components/app-sidebar'
 import { TaskList } from '@/components/task-list'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -183,14 +183,18 @@ export default function HomeClient() {
   const focusMode = useAppStore(s => s.focusMode)
   const addTask = useAppStore(s => s.addTask)
   const lists = useAppStore(s => s.lists)
+  const addTaskRef = useRef(addTask)
+  const listsRef = useRef(lists)
+  useEffect(() => { addTaskRef.current = addTask }, [addTask])
+  useEffect(() => { listsRef.current = lists }, [lists])
   useNotifications()
 
   // Handle custom events from Command Palette
   useEffect(() => {
     const handlePreview = (e: any) => setPreviewTask(e.detail)
     const handleQuickAdd = async (e: any) => {
-      const defaultList = lists.find(l => l.isDefault)
-      await addTask({
+      const defaultList = listsRef.current.find(l => l.isDefault)
+      await addTaskRef.current({
         name: e.detail,
         priority: 'none',
         listId: defaultList?.id || '',
@@ -205,7 +209,7 @@ export default function HomeClient() {
       window.removeEventListener('preview-task', handlePreview)
       window.removeEventListener('quick-add-task', handleQuickAdd)
     }
-  }, [addTask, lists])
+  }, [])
 
   // Exit focus mode when sidebar is opened manually
   useEffect(() => {
@@ -354,8 +358,8 @@ export default function HomeClient() {
   const handleNavigatePreview = useCallback((direction: 'prev' | 'next') => {
     setPreviewTask(prev => {
       if (!prev) return prev
-      const { tasks } = useAppStore.getState()
-      const visibleTasks = tasks.filter(t => !t.completed)
+      const { tasks, showCompleted } = useAppStore.getState()
+      const visibleTasks = showCompleted ? tasks : tasks.filter(t => !t.completed)
       const idx = visibleTasks.findIndex(t => t.id === prev.id)
       if (direction === 'prev' && idx > 0) return visibleTasks[idx - 1]
       if (direction === 'next' && idx < visibleTasks.length - 1) return visibleTasks[idx + 1]
