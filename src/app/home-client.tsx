@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { ThemeProvider } from '@/components/theme-provider'
 import { MoodBackground } from '@/components/mood-background'
+import { FocusTimer } from '@/components/focus-timer'
 import { useAppStore } from '@/store'
 import { Button } from '@/components/ui/button'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
@@ -387,7 +388,8 @@ export default function HomeClient() {
                     )}
                     <header className={`flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/70 backdrop-blur-xl sticky top-0 z-20 transition-all duration-500 supports-[backdrop-filter]:bg-background/60 ${focusMode ? 'rounded-t-2xl' : ''}`}>
                   <SidebarTrigger className="-ml-1" />
-                  <div className="flex-1 flex items-center justify-center max-w-md mx-auto">
+                  <div className="flex-1 flex items-center justify-center max-w-md mx-auto gap-4">
+                    {focusMode && <FocusTimer />}
                     <div className="relative w-full max-w-xs">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/50 pointer-events-none" />
                       <input
