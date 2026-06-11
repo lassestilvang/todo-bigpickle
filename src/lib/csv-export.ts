@@ -1,4 +1,4 @@
-import { Task } from '@/types'
+import { Task, List } from '@/types'
 import { format } from 'date-fns'
 
 function escapeCSV(value: unknown): string {
@@ -10,7 +10,9 @@ function escapeCSV(value: unknown): string {
   return str
 }
 
-export function exportTasksAsCSV(tasks: Task[]): void {
+export function exportTasksAsCSV(tasks: Task[], lists: List[]): void {
+  const listMap = new Map(lists.map(l => [l.id, l.name]))
+
   const headers = [
     'Name',
     'Description',
@@ -34,7 +36,7 @@ export function exportTasksAsCSV(tasks: Task[]): void {
     escapeCSV(task.date ? format(task.date, 'yyyy-MM-dd') : ''),
     escapeCSV(task.deadline ? format(task.deadline, 'yyyy-MM-dd') : ''),
     escapeCSV(task.estimate ?? ''),
-    escapeCSV(task.listId),
+    escapeCSV(listMap.get(task.listId) || task.listId),
     escapeCSV(task.labels.map((l) => l.name).join('; ')),
     escapeCSV(task.completed ? 'Yes' : 'No'),
     escapeCSV(task.completedAt ? format(task.completedAt, 'yyyy-MM-dd HH:mm') : ''),
