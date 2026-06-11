@@ -421,6 +421,9 @@ export const TaskList = memo(function TaskList({ onCreateTask, onEditTask }: Tas
       } else if (e.key === 'Escape' && selectedIdsRef.current.size > 0) {
         e.preventDefault()
         setSelectedIds(new Set())
+      } else if ((e.key === 'k' && e.metaKey) || (e.key === 'n' && !e.metaKey && !e.ctrlKey)) {
+        e.preventDefault()
+        quickAddRef.current?.focus()
       }
     }
 
