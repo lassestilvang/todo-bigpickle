@@ -364,11 +364,23 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                 )}
 
                 {task.estimate && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40 transition-colors duration-200 hover:bg-muted/80">
-                    <Clock className="size-3" />
-                    {task.estimate >= 60
-                      ? `${Math.floor(task.estimate / 60)}h ${task.estimate % 60}m`
-                      : `${task.estimate}m`}
+                  <div className="flex flex-col gap-1 min-w-[60px]">
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40 transition-colors duration-200 hover:bg-muted/80">
+                      <Clock className="size-3" />
+                      {task.estimate >= 60
+                        ? `${Math.floor(task.estimate / 60)}h ${task.estimate % 60}m`
+                        : `${task.estimate}m`}
+                    </div>
+                    {task.actualTime && (
+                      <div className="h-1 w-full bg-muted/60 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-500 ${
+                            task.actualTime > task.estimate ? 'bg-red-500' : 'bg-emerald-500'
+                          }`}
+                          style={{ width: `${Math.min((task.actualTime / task.estimate) * 100, 100)}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
