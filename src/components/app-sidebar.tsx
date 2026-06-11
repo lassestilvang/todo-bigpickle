@@ -38,6 +38,7 @@ import { ListManager } from '@/components/list-manager'
 import { LabelManager } from '@/components/label-manager'
 import { StatsDashboard } from '@/components/stats-dashboard'
 import { ProgressRing } from '@/components/ui/progress-ring'
+import { Celebration } from '@/components/celebration'
 import { exportTasksAsCSV } from '@/lib/csv-export'
 
 const viewIcons = {
@@ -62,6 +63,9 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
   const [listManagerOpen, setListManagerOpen] = useState(false)
   const [labelManagerOpen, setLabelManagerOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
+  const [goalReachedCelebration, setGoalReachedCelebration] = useState(false)
+  const prevCompletedToday = useRef(0)
+
   const { lists, currentView, selectedListId, showCompleted, tasks } = useAppStore(
     useShallow(s => ({
       lists: s.lists,
@@ -71,6 +75,24 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
       tasks: s.tasks,
     }))
   )
+
+  const dailyGoal = 5
+  const completedTodayCount = useMemo(() => {
+    const today = new Date().toDateString()
+    return tasks.filter(t => 
+      t.completed && t.completedAt && 
+      new Date(t.completedAt).toDateString() === today
+    ).length
+  }, [tasks])
+
+  useEffect(() => {
+    if (completedTodayCount >= dailyGoal && prevCompletedToday.current < dailyGoal) {
+      setGoalReachedCelebration(true)
+      const timer = setTimeout(() => setGoalReachedCelebration(false), 2000)
+      return () => clearTimeout(timer)
+    }
+    prevCompletedToday.current = completedTodayCount
+  }, [completedTodayCount, dailyGoal])
   const searchQuery = useAppStore(s => s.searchQuery)
   const setCurrentView = useAppStore(s => s.setCurrentView)
   const setSelectedListId = useAppStore(s => s.setSelectedListId)
@@ -130,15 +152,7 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
     return { overdueCount: overdue, todayCount, next7Count }
   }, [tasks, now])
 
-  const completedToday = useMemo(() => {
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    return tasks.filter(t => 
-      t.completed && t.completedAt && 
-      new Date(t.completedAt).toDateString() === today.toDateString()
-    ).length
-  }, [tasks, now])
-  const dailyGoal = 5
-  const goalProgress = Math.min(completedToday / dailyGoal, 1)
+  const goalProgress = Math.min(completedTodayCount / dailyGoal, 1)
 
   const listTaskCounts = useMemo(() => {
     const total: Record<string, number> = {}
@@ -291,14 +305,17 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <div className="px-4 py-3 mx-2 my-2 rounded-xl bg-primary/5 border border-primary/10 animate-in fade-in duration-700">
+        <div className="px-4 py-3 mx-2 my-2 rounded-xl bg-primary/5 border border-primary/10 animate-in fade-in duration-700 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none z-50">
+            <Celebration active={goalReachedCelebration} />
+          </div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-xs font-semibold text-primary">
               <Target className="size-3.5" />
               Daily Goal
             </div>
             <span className="text-[10px] font-bold text-primary tabular-nums">
-              {completedToday}/{dailyGoal}
+              {completedTodayCount}/{dailyGoal}
             </span>
           </div>
           <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
@@ -308,9 +325,9 @@ export const AppSidebar = memo(function AppSidebar({ onCreateTask }: AppSidebarP
             />
           </div>
           <p className="mt-2 text-[9px] text-muted-foreground/70 font-medium leading-tight">
-            {completedToday >= dailyGoal 
+            {completedTodayCount >= dailyGoal 
               ? "Goal achieved! You're crushing it! 🚀" 
-              : `${dailyGoal - completedToday} more to reach your daily goal.`}
+              : `${dailyGoal - completedTodayCount} more to reach your daily goal.`}
           </p>
         </div>
 
