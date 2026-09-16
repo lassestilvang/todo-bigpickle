@@ -26,6 +26,7 @@ import {
   Share2,
   ListTodo,
   Bell,
+  Plus,
   X,
 } from 'lucide-react'
 import { Markdown } from '@/components/ui/markdown'
@@ -365,6 +366,7 @@ export const TaskCard = memo(function TaskCard({ task, selected, searchQuery, on
                     {overdueDays === 0 ? 'Due today' : overdueDays === 1 ? '1 day overdue' : `${overdueDays} days overdue`}
                   </div>
                 )}
+                </div>
               </div>
 
               {task.description && (
